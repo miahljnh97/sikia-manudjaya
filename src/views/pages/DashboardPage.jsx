@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Edit3 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
@@ -13,7 +13,23 @@ import { useDashboardController } from '../../controllers/useDashboardController
 
 export default function DashboardPage({ currentUser, onLogout }) {
   const [activeMenu, setActiveMenu] = useState('Dashboard');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // Di desktop default terbuka, di HP default tertutup
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    return typeof window !== 'undefined' ? window.innerWidth >= 1024 : true;
+  });
+
+  // Listener resize layar
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const {
     loading,
@@ -31,7 +47,7 @@ export default function DashboardPage({ currentUser, onLogout }) {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans antialiased text-slate-800 relative overflow-x-hidden">
-      {/* 1. Left Sidebar Navigation dengan drawer mobile */}
+      {/* 1. Left Sidebar Navigation */}
       <Sidebar 
         activeMenu={activeMenu} 
         onMenuClick={setActiveMenu} 
@@ -40,7 +56,7 @@ export default function DashboardPage({ currentUser, onLogout }) {
       />
 
       {/* 2. Main Workspace Content */}
-      <div className="flex-1 flex flex-col min-w-0 w-full">
+      <div className="flex-1 flex flex-col min-w-0 w-full transition-all duration-300">
         <Navbar 
           user={currentUser} 
           onLogout={onLogout} 

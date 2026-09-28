@@ -12,7 +12,7 @@ import {
 export default function Sidebar({ 
   activeMenu = 'Dashboard', 
   onMenuClick, 
-  isOpen = false, 
+  isOpen = true, 
   onClose 
 }) {
   const menuItems = [
@@ -25,26 +25,31 @@ export default function Sidebar({
 
   const handleSelect = (id) => {
     if (onMenuClick) onMenuClick(id);
-    if (onClose) onClose();
+    // Di layar HP tutup otomatis saat item diklik
+    if (window.innerWidth < 1024 && onClose) {
+      onClose();
+    }
   };
 
   return (
     <>
-      {/* Mobile Backdrop Overlay (Hanya muncul di HP saat sidebar terbuka) */}
+      {/* Mobile Backdrop Overlay (Hanya saat di HP & terbuka) */}
       {isOpen && (
         <div 
           onClick={onClose}
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 lg:hidden transition-opacity"
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 lg:hidden transition-opacity"
         />
       )}
 
       {/* Sidebar Container */}
       <aside 
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white border-r border-slate-100 flex flex-col justify-between shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
-          isOpen ? 'translate-x-0 shadow-2xl lg:shadow-none' : '-translate-x-full'
+        className={`fixed lg:static top-0 bottom-0 left-0 z-50 bg-white border-r border-slate-100 flex flex-col justify-between shrink-0 transition-all duration-300 ease-in-out ${
+          isOpen 
+            ? 'w-64 translate-x-0 shadow-2xl lg:shadow-none' 
+            : 'w-0 -translate-x-full lg:w-0 lg:-translate-x-full overflow-hidden border-none'
         }`}
       >
-        <div>
+        <div className="w-64">
           {/* Brand Logo & Mobile Close Button */}
           <div className="p-6 flex items-center justify-between">
             <div>
@@ -85,7 +90,7 @@ export default function Sidebar({
         </div>
 
         {/* Bottom Settings */}
-        <div className="p-4 border-t border-slate-100">
+        <div className="w-64 p-4 border-t border-slate-100">
           <button 
             onClick={() => handleSelect('Pengaturan')}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
