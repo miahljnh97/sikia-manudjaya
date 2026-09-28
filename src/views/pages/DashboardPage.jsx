@@ -13,6 +13,8 @@ import { useDashboardController } from '../../controllers/useDashboardController
 
 export default function DashboardPage({ currentUser, onLogout }) {
   const [activeMenu, setActiveMenu] = useState('Dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const {
     loading,
     pesertaList,
@@ -28,15 +30,24 @@ export default function DashboardPage({ currentUser, onLogout }) {
   } = useDashboardController();
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex font-sans antialiased text-slate-800">
-      {/* 1. Left Sidebar Navigation */}
-      <Sidebar activeMenu={activeMenu} onMenuClick={setActiveMenu} />
+    <div className="min-h-screen bg-[#F8FAFC] flex font-sans antialiased text-slate-800 relative overflow-x-hidden">
+      {/* 1. Left Sidebar Navigation dengan drawer mobile */}
+      <Sidebar 
+        activeMenu={activeMenu} 
+        onMenuClick={setActiveMenu} 
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
 
       {/* 2. Main Workspace Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <Navbar user={currentUser} onLogout={onLogout} />
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <Navbar 
+          user={currentUser} 
+          onLogout={onLogout} 
+          onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+        />
 
-        <main className="p-8 space-y-6 max-w-7xl w-full mx-auto">
+        <main className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
           {activeMenu === 'Registrasi Kunjungan' ? (
             <RegistrasiPage 
               currentUser={currentUser} 
@@ -56,7 +67,7 @@ export default function DashboardPage({ currentUser, onLogout }) {
               {/* Top Greeting & Date Widget */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
                     Selamat pagi, {currentUser?.nama?.split(' ')[0] || 'Annisa'} <span>👋</span>
                   </h1>
                   <p className="text-xs text-slate-500 font-medium mt-1">
@@ -65,9 +76,9 @@ export default function DashboardPage({ currentUser, onLogout }) {
                 </div>
 
                 {/* Date Widget Pill */}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <div className="bg-white border border-slate-100 shadow-xs px-3.5 py-2 rounded-xl flex items-center gap-2.5">
-                    <Calendar size={18} className="text-blue-500" />
+                    <Calendar size={18} className="text-blue-500 shrink-0" />
                     <div className="text-left">
                       <div className="text-xs font-bold text-slate-800 leading-tight">
                         Sabtu, 27 September 2026
@@ -118,4 +129,3 @@ export default function DashboardPage({ currentUser, onLogout }) {
     </div>
   );
 }
-
