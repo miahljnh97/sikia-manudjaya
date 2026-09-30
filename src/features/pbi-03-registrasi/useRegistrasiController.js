@@ -89,10 +89,11 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi) {
         catatan: catatan
       });
 
-      alert(`Registrasi Kunjungan untuk "${selectedPeserta?.nama}" Berhasil Disimpan!`);
+      const suksesMsg = `Registrasi Kunjungan untuk "${selectedPeserta?.nama}" Berhasil Disimpan!`;
       if (onSuccessRegistrasi) {
-        onSuccessRegistrasi();
+        onSuccessRegistrasi(suksesMsg);
       } else {
+        alert(suksesMsg);
         setMode('pencarian');
         setCurrentStep(1);
       }

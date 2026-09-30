@@ -9,10 +9,15 @@ import RegistrasiModal from '../components/RegistrasiModal';
 import RegistrasiPage from '../../features/pbi-03-registrasi/RegistrasiPage';
 import DataPesertaPage from '../../features/data-peserta/DataPesertaPage';
 import UnderDevelopmentPage from '../../shared/components/UnderDevelopmentPage';
+import IbuDashboardView from '../../features/dashboard/components/IbuDashboardView';
+import Toast from '../../shared/components/Toast';
 import { useDashboardController } from '../../controllers/useDashboardController';
 
 export default function DashboardPage({ currentUser, onLogout }) {
   const [activeMenu, setActiveMenu] = useState('Dashboard');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const isIbuRole = currentUser?.role === 'Ibu Balita' || currentUser?.role === 'ibu';
+
   // Di desktop default terbuka, di HP default tertutup
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
     return typeof window !== 'undefined' ? window.innerWidth >= 1024 : true;
@@ -45,6 +50,24 @@ export default function DashboardPage({ currentUser, onLogout }) {
     setIsModalOpen
   } = useDashboardController();
 
+  const handleUpdateStatusWithToast = async (id, nextStatus) => {
+    await handleUpdateStatus(id, nextStatus);
+    setToast({
+      show: true,
+      message: `Status kehadiran berhasil diubah menjadi "${nextStatus}"`,
+      type: 'success'
+    });
+  };
+
+  const handleRegistrasiSuccess = (suksesMsg) => {
+    setActiveMenu('Dashboard');
+    setToast({
+      show: true,
+      message: suksesMsg || 'Registrasi kunjungan berhasil disimpan!',
+      type: 'success'
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans antialiased text-slate-800 relative overflow-x-hidden">
       {/* 1. Left Sidebar Navigation */}
@@ -64,14 +87,17 @@ export default function DashboardPage({ currentUser, onLogout }) {
         />
 
         <main className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
-          {activeMenu === 'Registrasi Kunjungan' ? (
+          {activeMenu === 'Data Peserta' ? (
+            <DataPesertaPage
+              currentUser={currentUser}
+              onTambahPesertaBaru={() => setIsModalOpen(true)}
+            />
+          ) : isIbuRole ? (
+            <IbuDashboardView user={currentUser} />
+          ) : activeMenu === 'Registrasi Kunjungan' ? (
             <RegistrasiPage 
               currentUser={currentUser} 
-              onBackToDashboard={() => setActiveMenu('Dashboard')} 
-            />
-          ) : activeMenu === 'Data Peserta' ? (
-            <DataPesertaPage
-              onTambahPesertaBaru={() => setIsModalOpen(true)}
+              onBackToDashboard={handleRegistrasiSuccess} 
             />
           ) : activeMenu !== 'Dashboard' ? (
             <UnderDevelopmentPage
@@ -106,7 +132,7 @@ export default function DashboardPage({ currentUser, onLogout }) {
                   </div>
 
                   <button
-                    onClick={() => alert('Fitur ubah tanggal kegiatan.')}
+                    onClick={() => setToast({ show: true, message: 'Fitur ubah tanggal kegiatan akan aktif di Sprint 2.', type: 'info' })}
                     className="bg-white border border-slate-200 shadow-xs px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors inline-flex items-center gap-1.5"
                   >
                     <Edit3 size={14} className="text-slate-500" />
@@ -128,7 +154,7 @@ export default function DashboardPage({ currentUser, onLogout }) {
                 setSearchQuery={setSearchQuery}
                 filterType={filterType}
                 setFilterType={setFilterType}
-                onUpdateStatus={handleUpdateStatus}
+                onUpdateStatus={handleUpdateStatusWithToast}
                 loading={loading}
               />
             </>
@@ -142,6 +168,15 @@ export default function DashboardPage({ currentUser, onLogout }) {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleTambahPeserta}
       />
+
+      {/* Modern Toast Notification */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </div>
   );
 }

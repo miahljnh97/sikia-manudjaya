@@ -110,8 +110,16 @@ export const DUMMY_DATA_PESERTA = [
   }
 ];
 
-export default function DataPesertaPage({ onTambahPesertaBaru }) {
-  const [selectedPeserta, setSelectedPeserta] = useState(null);
+export default function DataPesertaPage({ currentUser, onTambahPesertaBaru }) {
+  const isIbuRole = currentUser?.role === 'Ibu Balita' || currentUser?.role === 'ibu';
+
+  // Jika user adalah Ibu Balita, ambil data pribadinya (Siti Aminah / Budi Santoso)
+  const ibuSelfData = DUMMY_DATA_PESERTA[0]; // Data Siti Aminah
+
+  const [selectedPeserta, setSelectedPeserta] = useState(() => {
+    return isIbuRole ? ibuSelfData : null;
+  });
+
   const [searchQuery, setSearchQuery] = useState('siti');
   const [jenisFilter, setJenisFilter] = useState('Semua');
   const [statusFilter, setStatusFilter] = useState('Aktif');
@@ -139,7 +147,19 @@ export default function DataPesertaPage({ onTambahPesertaBaru }) {
     setWilayahFilter('Semua');
   };
 
-  // Jika sedang melihat detail salah satu pasien
+  // Jika user adalah Ibu Balita, langsung kunci tampilan ke Detail Datanya sendiri
+  if (isIbuRole) {
+    return (
+      <div className="space-y-4">
+        <DetailPeserta
+          peserta={ibuSelfData}
+          onBack={null} // Tidak ada tombol kembali ke tabel warga lain untuk menjaga privasi
+        />
+      </div>
+    );
+  }
+
+  // Jika sedang melihat detail salah satu pasien (untuk Kader/Bidan)
   if (selectedPeserta) {
     return (
       <DetailPeserta
