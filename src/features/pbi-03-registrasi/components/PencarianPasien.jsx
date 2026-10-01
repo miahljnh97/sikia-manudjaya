@@ -159,7 +159,7 @@ export default function PencarianPasien({
                       {item.jenis_peserta}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 text-slate-500">12 Mei 1996</td>
+                  <td className="py-3.5 px-4 text-slate-500">{item.tanggal_lahir || '12 Mei 1996'}</td>
                   <td className="py-3.5 px-4">{item.usia}</td>
                   <td className="py-3.5 px-4">{item.alamat}</td>
                   <td className="py-3.5 px-4">

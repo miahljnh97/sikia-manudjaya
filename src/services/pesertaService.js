@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../config/supabaseClient';
 import { INITIAL_DUMMY_PESERTA } from '../models/pesertaModel';
+import { dataStoreService } from './dataStoreService';
 
 export const pesertaService = {
   /**
@@ -16,8 +17,8 @@ export const pesertaService = {
         return data;
       }
     }
-    // Fallback: Mengembalikan dummy data jika belum ada/koneksi belum diset
-    return INITIAL_DUMMY_PESERTA;
+    // Fallback: Mengembalikan data dari Central Store (LocalStorage + State)
+    return dataStoreService.getPesertaList();
   },
 
   /**

@@ -8,13 +8,17 @@ import ParticipantTable from '../components/ParticipantTable';
 import RegistrasiModal from '../components/RegistrasiModal';
 import RegistrasiPage from '../../features/pbi-03-registrasi/RegistrasiPage';
 import DataPesertaPage from '../../features/data-peserta/DataPesertaPage';
+import RiwayatKunjunganPage from '../../features/riwayat-kunjungan/RiwayatKunjunganPage';
+import KelolaKaderPage from '../../features/super-admin/KelolaKaderPage';
 import UnderDevelopmentPage from '../../shared/components/UnderDevelopmentPage';
 import IbuDashboardView from '../../features/dashboard/components/IbuDashboardView';
 import Toast from '../../shared/components/Toast';
+import { getTanggalHariIniLengkap } from '../../utils/dateUtils';
 import { useDashboardController } from '../../controllers/useDashboardController';
 
 export default function DashboardPage({ currentUser, onLogout }) {
   const [activeMenu, setActiveMenu] = useState('Dashboard');
+  const [selectedPesertaIdForDetail, setSelectedPesertaIdForDetail] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const isIbuRole = currentUser?.role === 'Ibu Balita' || currentUser?.role === 'ibu';
 
@@ -68,14 +72,23 @@ export default function DashboardPage({ currentUser, onLogout }) {
     });
   };
 
+  const handleLihatDetailDariDashboard = (peserta) => {
+    setSelectedPesertaIdForDetail(peserta.id);
+    setActiveMenu('Data Peserta');
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans antialiased text-slate-800 relative overflow-x-hidden">
       {/* 1. Left Sidebar Navigation */}
       <Sidebar 
         activeMenu={activeMenu} 
-        onMenuClick={setActiveMenu} 
+        onMenuClick={(menu) => {
+          setSelectedPesertaIdForDetail(null);
+          setActiveMenu(menu);
+        }} 
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        currentUser={currentUser}
       />
 
       {/* 2. Main Workspace Content */}
@@ -90,7 +103,19 @@ export default function DashboardPage({ currentUser, onLogout }) {
           {activeMenu === 'Data Peserta' ? (
             <DataPesertaPage
               currentUser={currentUser}
+              initialSelectedId={selectedPesertaIdForDetail}
+              onBackToDashboard={() => {
+                setSelectedPesertaIdForDetail(null);
+                setActiveMenu('Dashboard');
+              }}
               onTambahPesertaBaru={() => setIsModalOpen(true)}
+            />
+          ) : activeMenu === 'Riwayat Kunjungan' ? (
+            <RiwayatKunjunganPage currentUser={currentUser} />
+          ) : activeMenu === 'Kelola Kader' ? (
+            <KelolaKaderPage 
+              currentUser={currentUser}
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
             />
           ) : isIbuRole ? (
             <IbuDashboardView user={currentUser} />
@@ -123,7 +148,7 @@ export default function DashboardPage({ currentUser, onLogout }) {
                     <Calendar size={18} className="text-blue-500 shrink-0" />
                     <div className="text-left">
                       <div className="text-xs font-bold text-slate-800 leading-tight">
-                        Sabtu, 27 September 2026
+                        {getTanggalHariIniLengkap()}
                       </div>
                       <div className="text-[10px] text-slate-400 font-medium">
                         Posyandu Desa Manud Jaya
@@ -132,8 +157,8 @@ export default function DashboardPage({ currentUser, onLogout }) {
                   </div>
 
                   <button
-                    onClick={() => setToast({ show: true, message: 'Fitur ubah tanggal kegiatan akan aktif di Sprint 2.', type: 'info' })}
-                    className="bg-white border border-slate-200 shadow-xs px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors inline-flex items-center gap-1.5"
+                    onClick={() => setToast({ show: true, message: 'Tanggal kegiatan mengikuti jadwal operasional resmi Posyandu hari ini.', type: 'info' })}
+                    className="bg-white border border-slate-200 shadow-xs px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                   >
                     <Edit3 size={14} className="text-slate-500" />
                     <span>Ubah Tanggal</span>
@@ -155,6 +180,7 @@ export default function DashboardPage({ currentUser, onLogout }) {
                 filterType={filterType}
                 setFilterType={setFilterType}
                 onUpdateStatus={handleUpdateStatusWithToast}
+                onLihatDetail={handleLihatDetailDariDashboard}
                 loading={loading}
               />
             </>

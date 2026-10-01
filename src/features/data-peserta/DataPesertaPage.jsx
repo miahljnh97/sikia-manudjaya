@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, RotateCcw, Plus, FileText, ChevronLeft, ChevronRight, User } from 'lucide-react';
 import DetailPeserta from './components/DetailPeserta';
+import { dataStoreService } from '../../services/dataStoreService';
 
 export const DUMMY_DATA_PESERTA = [
   {
@@ -110,17 +111,30 @@ export const DUMMY_DATA_PESERTA = [
   }
 ];
 
-export default function DataPesertaPage({ currentUser, onTambahPesertaBaru }) {
+export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, initialSelectedId, onBackToDashboard }) {
   const isIbuRole = currentUser?.role === 'Ibu Balita' || currentUser?.role === 'ibu';
 
-  // Jika user adalah Ibu Balita, ambil data pribadinya (Siti Aminah / Budi Santoso)
-  const ibuSelfData = DUMMY_DATA_PESERTA[0]; // Data Siti Aminah
+  const [listPeserta, setListPeserta] = useState(() => dataStoreService.getPesertaList());
+
+  useEffect(() => {
+    const unsubscribe = dataStoreService.subscribe(() => {
+      setListPeserta(dataStoreService.getPesertaList());
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Jika user adalah Ibu Balita, ambil data pribadinya (Siti Aminah)
+  const ibuSelfData = listPeserta[0] || DUMMY_DATA_PESERTA[0];
 
   const [selectedPeserta, setSelectedPeserta] = useState(() => {
-    return isIbuRole ? ibuSelfData : null;
+    if (isIbuRole) return ibuSelfData;
+    if (initialSelectedId) {
+      return listPeserta.find((p) => p.id === initialSelectedId) || listPeserta[0];
+    }
+    return null;
   });
 
-  const [searchQuery, setSearchQuery] = useState('siti');
+  const [searchQuery, setSearchQuery] = useState('');
   const [jenisFilter, setJenisFilter] = useState('Semua');
   const [statusFilter, setStatusFilter] = useState('Aktif');
   const [wilayahFilter, setWilayahFilter] = useState('Semua');
@@ -128,7 +142,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru }) {
 
   // Filter logic
   const filteredList = useMemo(() => {
-    return DUMMY_DATA_PESERTA.filter((item) => {
+    return listPeserta.filter((item) => {
       const matchSearch =
         item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.nik.toLowerCase().includes(searchQuery.toLowerCase());
@@ -138,13 +152,28 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru }) {
 
       return matchSearch && matchJenis && matchStatus && matchWilayah;
     });
-  }, [searchQuery, jenisFilter, statusFilter, wilayahFilter]);
+  }, [listPeserta, searchQuery, jenisFilter, statusFilter, wilayahFilter]);
 
   const handleReset = () => {
     setSearchQuery('');
     setJenisFilter('Semua');
     setStatusFilter('Semua');
     setWilayahFilter('Semua');
+  };
+
+  const handleSavePeserta = (updated) => {
+    const saved = dataStoreService.updatePeserta(updated.id, updated);
+    setSelectedPeserta(saved || updated);
+    alert(`Data peserta "${updated.nama}" berhasil diperbarui dan disinkronkan ke seluruh sistem!`);
+  };
+
+  const handleDeletePeserta = (pesertaToDelete) => {
+    const yakin = window.confirm(`Apakah Anda yakin ingin menghapus data peserta "${pesertaToDelete.nama}"?\n\nCatatan: Data akan disuspend (soft delete) sehingga tidak akan muncul di daftar peserta aktif.`);
+    if (yakin) {
+      dataStoreService.suspendPeserta(pesertaToDelete.id);
+      setSelectedPeserta(null);
+      alert(`Peserta "${pesertaToDelete.nama}" berhasil dihapus (disuspend) dari sistem.`);
+    }
   };
 
   // Jika user adalah Ibu Balita, langsung kunci tampilan ke Detail Datanya sendiri
@@ -154,6 +183,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru }) {
         <DetailPeserta
           peserta={ibuSelfData}
           onBack={null} // Tidak ada tombol kembali ke tabel warga lain untuk menjaga privasi
+          isKaderOrBidan={false} // Ibu tidak bisa mengedit data medis resmi
         />
       </div>
     );
@@ -164,7 +194,15 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru }) {
     return (
       <DetailPeserta
         peserta={selectedPeserta}
-        onBack={() => setSelectedPeserta(null)}
+        isKaderOrBidan={true}
+        onSave={handleSavePeserta}
+        onDelete={handleDeletePeserta}
+        onBack={() => {
+          setSelectedPeserta(null);
+          if (initialSelectedId && onBackToDashboard) {
+            onBackToDashboard();
+          }
+        }}
       />
     );
   }

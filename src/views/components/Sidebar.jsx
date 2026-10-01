@@ -6,17 +6,23 @@ import {
   History, 
   FileText, 
   Settings,
-  X
+  X,
+  UserCheck
 } from 'lucide-react';
 
 export default function Sidebar({ 
   activeMenu = 'Dashboard', 
   onMenuClick, 
   isOpen = true, 
-  onClose 
+  onClose,
+  currentUser
 }) {
+  const roleNormalized = (currentUser?.role || '').toLowerCase();
+  const isSuperAdmin = roleNormalized.includes('admin') || roleNormalized === 'superadmin' || roleNormalized === 'super admin';
+
   const menuItems = [
     { id: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    ...(isSuperAdmin ? [{ id: 'Kelola Kader', label: 'Kelola Kader', icon: UserCheck }] : []),
     { id: 'Registrasi Kunjungan', label: 'Registrasi Kunjungan', icon: UserPlus },
     { id: 'Data Peserta', label: 'Data Peserta', icon: Users },
     { id: 'Riwayat Kunjungan', label: 'Riwayat Kunjungan', icon: History },

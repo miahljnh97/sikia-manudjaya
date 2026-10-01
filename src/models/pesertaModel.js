@@ -98,5 +98,10 @@ export const DUMMY_ACCOUNTS = {
     email: 'ibu.balita@manudjaya.id',
     role: 'Ibu Balita',
     nama: 'Ibu Aminah',
+  },
+  admin: {
+    email: 'admin.desa@manudjaya.id',
+    role: 'Super Admin',
+    nama: 'Bambang Sudarmono, S.STP',
   }
 };

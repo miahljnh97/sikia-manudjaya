@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { registrasiService } from './registrasiService';
 import { INITIAL_DUMMY_PESERTA } from '../../models/pesertaModel';
+import { getTanggalFormatStandar, getJamMenitSekarang } from '../../utils/dateUtils';
 
 export function useRegistrasiController(currentUser, onSuccessRegistrasi) {
   // Mode: 'pencarian' | 'wizard'
@@ -8,7 +9,7 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi) {
   const [currentStep, setCurrentStep] = useState(1); // 1: Data Kunjungan, 2: Jenis Pelayanan, 3: Status Kehadiran, 4: Konfirmasi
 
   // Search & Filter State di Tahap Pencarian (PBI 03A)
-  const [searchQuery, setSearchQuery] = useState('siti');
+  const [searchQuery, setSearchQuery] = useState('');
   const [jenisFilter, setJenisFilter] = useState('Semua');
   const [statusFilter, setStatusFilter] = useState('Semua');
   const [wilayahFilter, setWilayahFilter] = useState('Semua');
@@ -19,18 +20,13 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi) {
 
   // Form State Kunjungan (PBI 03B, 03C, 03D)
   const [kunjunganData, setKunjunganData] = useState({
-    tanggal: '27 September 2026',
-    jam: '08:30',
+    tanggal: getTanggalFormatStandar(),
+    jam: getJamMenitSekarang(),
     posyandu: 'Posyandu Desa Manud Jaya',
     kaderPencatat: currentUser?.nama || 'Annisa Wati',
   });
 
-  const [selectedPelayanan, setSelectedPelayanan] = useState([
-    'Penimbangan',
-    'Pengukuran Tinggi Badan',
-    'Pemberian Vitamin'
-  ]);
-
+  const [selectedPelayanan, setSelectedPelayanan] = useState([]);
   const [statusKehadiran, setStatusKehadiran] = useState('Hadir');
   const [catatan, setCatatan] = useState('');
   const [submitting, setSubmitting] = useState(false);

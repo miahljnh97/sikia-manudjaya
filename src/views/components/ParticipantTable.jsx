@@ -17,6 +17,7 @@ export default function ParticipantTable({
   filterType,
   setFilterType,
   onUpdateStatus,
+  onLihatDetail,
   loading
 }) {
   // Badge jenis peserta styling
@@ -179,7 +180,7 @@ export default function ParticipantTable({
                   <td className="py-4 px-5">{renderStatusBadge(item)}</td>
                   <td className="py-4 px-5 text-right">
                     <button
-                      onClick={() => alert(`Detail Peserta: ${item.nama} (${item.jenis_peserta})`)}
+                      onClick={() => onLihatDetail && onLihatDetail(item)}
                       className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline"
                     >
                       Lihat

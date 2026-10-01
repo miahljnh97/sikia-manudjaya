@@ -1,7 +1,10 @@
 import React from 'react';
 import { Calendar, Plus } from 'lucide-react';
+import { getTanggalFormatStandar } from '../../utils/dateUtils';
 
 export default function ScheduleBanner({ onRegistrasiClick }) {
+  const tanggalHariIni = getTanggalFormatStandar();
+
   return (
     <div className="bg-rose-50/60 border border-rose-100/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       {/* Left Schedule Info */}
@@ -14,7 +17,7 @@ export default function ScheduleBanner({ onRegistrasiClick }) {
             Jadwal Posyandu Hari Ini
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            27 September 2026 &nbsp;|&nbsp; 08.30 - 12.00 WIB &nbsp;|&nbsp; Posyandu Desa Manud Jaya
+            {tanggalHariIni} &nbsp;|&nbsp; 08.30 - 12.00 WIB &nbsp;|&nbsp; Posyandu Desa Manud Jaya
           </p>
         </div>
       </div>

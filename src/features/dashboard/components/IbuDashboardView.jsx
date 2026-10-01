@@ -1,12 +1,13 @@
 import React from 'react';
 import { Calendar, Bell, Heart, Smile, Activity, FileCheck, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { getJadwalBulanDepan } from '../../../utils/dateUtils';
 
 export default function IbuDashboardView({ user }) {
   const anak = {
     nama: 'Budi Santoso',
     usia: '8 bulan',
     statusGizi: 'Gizi Baik (Normal)',
-    jadwalBerikutnya: '28 Oktober 2026',
+    jadwalBerikutnya: getJadwalBulanDepan(),
     imunisasiTerakhir: 'DPT-HB-Hib 3 & Polio 4 (Sudah Lengkap)',
     imunisasiBerikutnya: 'Campak Rubella (Usia 9 Bulan)',
     beratBadan: '8.4 kg',

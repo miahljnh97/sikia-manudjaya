@@ -32,23 +32,27 @@ export default function Step1DataKunjungan({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h4 className="text-sm font-bold text-slate-900">{peserta?.nama || 'Siti Aminah'}</h4>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100">
-                {peserta?.jenis_peserta || 'Ibu Hamil'}
+              <h4 className="text-sm font-bold text-slate-900">{peserta?.nama || '-'}</h4>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                peserta?.jenis_peserta === 'Ibu Hamil' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                peserta?.jenis_peserta === 'Balita' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                'bg-blue-50 text-blue-600 border border-blue-100'
+              }`}>
+                {peserta?.jenis_peserta || '-'}
               </span>
             </div>
             <div className="text-xs text-slate-500 mt-1 flex flex-wrap gap-x-4 gap-y-1">
-              <span>NIK: <strong>{peserta?.nik || '3273055205940003'}</strong></span>
-              <span>Lahir: <strong>12 Mei 1994 (32 tahun)</strong></span>
-              <span>Alamat: <strong>Dusun 1, Desa Manud Jaya</strong></span>
+              <span>NIK: <strong>{peserta?.nik || '-'}</strong></span>
+              <span>Lahir: <strong>{peserta?.tanggal_lahir || '-'} ({peserta?.usia || '-'})</strong></span>
+              <span>Alamat: <strong>{peserta?.alamat || '-'}</strong></span>
             </div>
           </div>
         </div>
 
         <div className="text-xs text-slate-500 border-t md:border-t-0 md:border-l border-slate-200 pt-3 md:pt-0 md:pl-5 space-y-0.5 shrink-0">
-          <div>Nama Suami: <strong className="text-slate-800">Budi Santoso</strong></div>
-          <div>No. KK: <strong className="text-slate-800">3273 0501 0412</strong></div>
-          <div>No. HP: <strong className="text-slate-800">0812 3456 7890</strong></div>
+          <div>Nama Suami/Wali: <strong className="text-slate-800">{peserta?.nama_suami || peserta?.telepon_pj || '-'}</strong></div>
+          <div>No. KK: <strong className="text-slate-800">{peserta?.no_kk || '-'}</strong></div>
+          <div>No. HP: <strong className="text-slate-800">{peserta?.telepon || peserta?.no_hp || '-'}</strong></div>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ShieldAlert } from 'lucide-react';
 import { DUMMY_ACCOUNTS } from '../../models/pesertaModel';
+import LupaPasswordModal from '../components/LupaPasswordModal';
 
 export default function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
@@ -8,6 +9,7 @@ export default function LoginPage({ onLoginSuccess }) {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isLupaPasswordOpen, setIsLupaPasswordOpen] = useState(false);
 
   const handleQuickFill = (type) => {
     if (type === 'kader') {
@@ -19,6 +21,9 @@ export default function LoginPage({ onLoginSuccess }) {
     } else if (type === 'ibu') {
       setEmail(DUMMY_ACCOUNTS.ibu.email);
       setPassword('Ibu123!');
+    } else if (type === 'admin') {
+      setEmail(DUMMY_ACCOUNTS.admin.email);
+      setPassword('Admin123!');
     }
   };
 
@@ -107,13 +112,13 @@ export default function LoginPage({ onLoginSuccess }) {
               />
               <span>Ingat saya</span>
             </label>
-            <a 
-              href="#lupa" 
-              onClick={(e) => { e.preventDefault(); alert('Silakan hubungi Bidan Desa atau Admin Puskesmas untuk reset kata sandi.'); }}
-              className="text-slate-600 hover:text-blue-600 transition-colors"
+            <button 
+              type="button"
+              onClick={() => setIsLupaPasswordOpen(true)}
+              className="text-slate-600 hover:text-blue-600 transition-colors cursor-pointer bg-transparent border-none p-0 text-xs"
             >
               Lupa password?
-            </a>
+            </button>
           </div>
 
           {/* Tombol Masuk */}
@@ -141,33 +146,46 @@ export default function LoginPage({ onLoginSuccess }) {
         {/* Quick Fill untuk Evaluasi Dosen / Kelas (Sesuai Product Brief) */}
         <div className="mt-8 pt-5 border-t border-slate-100">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 text-center">
-            Pintasan Akun Evaluasi (Sprint 1):
+            Pintasan Masuk Peran Pengguna:
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             <button
               type="button"
               onClick={() => handleQuickFill('kader')}
-              className="py-1.5 px-2 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-lg text-[11px] font-medium text-slate-700 hover:text-blue-700 transition-all text-center"
+              className="py-1.5 px-2 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-lg text-[11px] font-medium text-slate-700 hover:text-blue-700 transition-all text-center cursor-pointer"
             >
               Kader
             </button>
             <button
               type="button"
               onClick={() => handleQuickFill('bidan')}
-              className="py-1.5 px-2 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-lg text-[11px] font-medium text-slate-700 hover:text-blue-700 transition-all text-center"
+              className="py-1.5 px-2 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-lg text-[11px] font-medium text-slate-700 hover:text-blue-700 transition-all text-center cursor-pointer"
             >
               Bidan
             </button>
             <button
               type="button"
               onClick={() => handleQuickFill('ibu')}
-              className="py-1.5 px-2 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-lg text-[11px] font-medium text-slate-700 hover:text-blue-700 transition-all text-center"
+              className="py-1.5 px-2 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-lg text-[11px] font-medium text-slate-700 hover:text-blue-700 transition-all text-center cursor-pointer"
             >
               Ibu Balita
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickFill('admin')}
+              className="py-1.5 px-2 bg-purple-50 hover:bg-purple-100 hover:border-purple-300 border border-purple-200 rounded-lg text-[11px] font-bold text-purple-700 transition-all text-center cursor-pointer"
+            >
+              Super Admin
             </button>
           </div>
         </div>
       </div>
+
+      {/* Lupa Password Modal */}
+      <LupaPasswordModal 
+        isOpen={isLupaPasswordOpen} 
+        onClose={() => setIsLupaPasswordOpen(false)} 
+      />
     </div>
   );
 }

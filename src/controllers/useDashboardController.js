@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { pesertaService } from '../services/pesertaService';
+import { dataStoreService } from '../services/dataStoreService';
 
 export function useDashboardController() {
   const [pesertaList, setPesertaList] = useState([]);
@@ -23,6 +24,12 @@ export function useDashboardController() {
 
   useEffect(() => {
     loadData();
+
+    // Subscribe to central dataStore changes (misal dari Registrasi PBI 03 atau Edit Peserta)
+    const unsubscribe = dataStoreService.subscribe(() => {
+      loadData();
+    });
+    return () => unsubscribe();
   }, []);
 
   // Ubah status kehadiran

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, Lightbulb, ExternalLink } from 'lucide-react';
+import { getTanggalFormatStandar } from '../../../utils/dateUtils';
 
 export default function RiwayatKunjunganCard({ riwayatList = [] }) {
   return (
@@ -14,7 +15,7 @@ export default function RiwayatKunjunganCard({ riwayatList = [] }) {
             <h4 className="text-xs font-bold text-rose-900 leading-tight">
               Jadwal Posyandu Hari Ini
             </h4>
-            <div className="text-[11px] text-rose-700 font-medium mt-0.5">27 September 2026</div>
+            <div className="text-[11px] text-rose-700 font-medium mt-0.5">{getTanggalFormatStandar()}</div>
             <div className="text-[11px] text-slate-500 mt-1">
               08:30 - 12:00 WIB<br />Posyandu Desa Manud Jaya
             </div>
