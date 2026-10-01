@@ -14,6 +14,13 @@ export const authService = {
 
       if (error) throw error;
 
+      // Ambil profile user dari tabel profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
       // Normalisasi role dari database Supabase
       let userRole = profile?.role || 'kader';
       if (userRole.toLowerCase() === 'superadmin' || userRole.toLowerCase() === 'admin') {
