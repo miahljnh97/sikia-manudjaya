@@ -2,12 +2,13 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search, RotateCcw, Plus, FileText, ChevronLeft, ChevronRight, User } from 'lucide-react';
 import DetailPeserta from './components/DetailPeserta';
 import { dataStoreService } from '../../services/dataStoreService';
+import { maskNik } from '../../utils/nikUtils';
 
 export const DUMMY_DATA_PESERTA = [
   {
     id: 1,
     nama: 'Siti Aminah',
-    nik: '327502152664875',
+    nik: '3275021911970001',
     jenis_peserta: 'Ibu Hamil',
     tanggal_lahir: '19/11/1997',
     usia: '29 tahun',
@@ -22,7 +23,7 @@ export const DUMMY_DATA_PESERTA = [
   {
     id: 2,
     nama: 'Siti Nurhaliza',
-    nik: '327502********',
+    nik: '3275020302230002',
     jenis_peserta: 'Balita',
     tanggal_lahir: '03 Feb 2023',
     usia: '3 tahun',
@@ -37,7 +38,7 @@ export const DUMMY_DATA_PESERTA = [
   {
     id: 3,
     nama: 'Siti Aisyah',
-    nik: '327502********',
+    nik: '3275021808250003',
     jenis_peserta: 'Bayi',
     tanggal_lahir: '18 Ags 2025',
     usia: '1 bulan',
@@ -52,7 +53,7 @@ export const DUMMY_DATA_PESERTA = [
   {
     id: 4,
     nama: 'Siti Fatimah',
-    nik: '327501********',
+    nik: '3275012101960004',
     jenis_peserta: 'Ibu Hamil',
     tanggal_lahir: '21 Jan 1996',
     usia: '30 tahun',
@@ -67,7 +68,7 @@ export const DUMMY_DATA_PESERTA = [
   {
     id: 5,
     nama: 'Siti Zhafira',
-    nik: '327502********',
+    nik: '3275021803220005',
     jenis_peserta: 'Balita',
     tanggal_lahir: '18 Mar 2022',
     usia: '4 tahun',
@@ -82,7 +83,7 @@ export const DUMMY_DATA_PESERTA = [
   {
     id: 6,
     nama: 'Siti Zulaikha',
-    nik: '327501********',
+    nik: '3275012707210006',
     jenis_peserta: 'Balita',
     tanggal_lahir: '27 Jul 2021',
     usia: '5 tahun',
@@ -97,7 +98,7 @@ export const DUMMY_DATA_PESERTA = [
   {
     id: 7,
     nama: 'Siti Shakiva',
-    nik: '327501********',
+    nik: '3275012707210007',
     jenis_peserta: 'Balita',
     tanggal_lahir: '27 Jul 2021',
     usia: '5 tahun',
@@ -138,11 +139,12 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
   const [jenisFilter, setJenisFilter] = useState('Semua');
   const [statusFilter, setStatusFilter] = useState('Aktif');
   const [wilayahFilter, setWilayahFilter] = useState('Semua');
-  const [sortOrder, setSortOrder] = useState('Nama A-Z');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 7;
 
-  // Filter logic
+  // Filter & Sorting logic (Issue #27: sorting nama A-Z dan Z-A)
   const filteredList = useMemo(() => {
-    return listPeserta.filter((item) => {
+    let result = listPeserta.filter((item) => {
       const matchSearch =
         item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.nik.toLowerCase().includes(searchQuery.toLowerCase());
@@ -152,13 +154,27 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
 
       return matchSearch && matchJenis && matchStatus && matchWilayah;
     });
-  }, [listPeserta, searchQuery, jenisFilter, statusFilter, wilayahFilter]);
+
+    if (sortOrder === 'Nama A-Z') {
+      result.sort((a, b) => a.nama.localeCompare(b.nama));
+    } else if (sortOrder === 'Nama Z-A') {
+      result.sort((a, b) => b.nama.localeCompare(a.nama));
+    }
+
+    return result;
+  }, [listPeserta, searchQuery, jenisFilter, statusFilter, wilayahFilter, sortOrder]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredList.length / itemsPerPage));
+  const currentActualPage = Math.min(currentPage, totalPages);
+  const startIndex = (currentActualPage - 1) * itemsPerPage;
+  const paginatedList = filteredList.slice(startIndex, startIndex + itemsPerPage);
 
   const handleReset = () => {
     setSearchQuery('');
     setJenisFilter('Semua');
     setStatusFilter('Semua');
     setWilayahFilter('Semua');
+    setCurrentPage(1);
   };
 
   const handleSavePeserta = (updated) => {
@@ -306,7 +322,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
           <div>
             <h3 className="text-sm font-bold text-slate-900">Hasil Pencarian</h3>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              Menampilkan 1-{filteredList.length} dari 13 hasil pencarian untuk "{searchQuery || 'semua'}"
+              Menampilkan {filteredList.length > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + itemsPerPage, filteredList.length)} dari {filteredList.length} hasil{searchQuery ? ` pencarian untuk "${searchQuery}"` : ''}
             </p>
           </div>
 
@@ -338,9 +354,9 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {filteredList.map((item, idx) => (
+              {paginatedList.map((item, idx) => (
                 <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-3.5 px-5 text-slate-400">{idx + 1}</td>
+                  <td className="py-3.5 px-5 text-slate-400">{startIndex + idx + 1}</td>
                   <td className="py-3.5 px-5 font-bold text-slate-900 flex items-center gap-2">
                     <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
                       item.jenis_peserta === 'Ibu Hamil' ? 'bg-rose-100 text-rose-600' :
@@ -350,7 +366,9 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
                     </span>
                     <span>{item.nama}</span>
                   </td>
-                  <td className="py-3.5 px-5 text-slate-500">{item.nik}</td>
+                  <td className="py-3.5 px-5 font-mono text-slate-600 font-medium">
+                    {maskNik(item.nik)}
+                  </td>
                   <td className="py-3.5 px-5">
                     <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border ${
                       item.jenis_peserta === 'Ibu Hamil' ? 'bg-rose-50 text-rose-600 border-rose-100' :
@@ -365,7 +383,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
                   <td className="py-3.5 px-5 text-right">
                     <button
                       onClick={() => setSelectedPeserta(item)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 shadow-xs transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 shadow-xs transition-colors cursor-pointer"
                     >
                       <FileText size={13} className="text-slate-400" />
                       <span>Detail</span>
@@ -379,18 +397,38 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
 
         {/* Pagination Footer */}
         <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <div>Menampilkan 1-{filteredList.length} dari 13 hasil</div>
+          <div>
+            Menampilkan {filteredList.length > 0 ? startIndex + 1 : 0}-
+            {Math.min(startIndex + itemsPerPage, filteredList.length)} dari {filteredList.length} hasil
+          </div>
           <div className="flex items-center gap-1">
-            <button className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50">
+            <button 
+              disabled={currentActualPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            >
               <ChevronLeft size={16} />
             </button>
-            <button className="w-7 h-7 rounded-lg bg-blue-600 text-white font-semibold text-xs flex items-center justify-center">
-              1
-            </button>
-            <button className="w-7 h-7 rounded-lg hover:bg-slate-100 font-medium text-xs flex items-center justify-center text-slate-600">
-              2
-            </button>
-            <button className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50">
+            {Array.from({ length: totalPages }).map((_, i) => {
+              const pageNum = i + 1;
+              const isAct = pageNum === currentActualPage;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`w-7 h-7 rounded-lg font-semibold text-xs flex items-center justify-center transition-colors cursor-pointer ${
+                    isAct ? 'bg-blue-600 text-white' : 'hover:bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            <button 
+              disabled={currentActualPage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            >
               <ChevronRight size={16} />
             </button>
           </div>

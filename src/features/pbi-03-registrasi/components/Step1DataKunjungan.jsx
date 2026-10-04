@@ -1,5 +1,5 @@
-import React from 'react';
-import { User, Edit2, Calendar, Clock, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Edit2, Calendar, Clock, Check, ChevronDown } from 'lucide-react';
 
 export default function Step1DataKunjungan({
   peserta,
@@ -17,63 +17,89 @@ export default function Step1DataKunjungan({
         <button
           type="button"
           onClick={onUbahPeserta}
-          className="text-xs font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1"
+          className="text-xs font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 cursor-pointer"
         >
           <Edit2 size={13} />
           <span>Ubah Peserta</span>
         </button>
       </div>
 
-      {/* Identitas Card Box */}
-      <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-100 flex flex-col md:flex-row gap-5 items-start md:items-center justify-between">
+      {/* Identitas Card Box Sesuai Figma (Issue #13) */}
+      <div className="p-5 rounded-2xl bg-[#F8FAFC] border border-slate-100 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-sm">
-            <User size={22} />
+          <div className="w-14 h-14 rounded-full bg-[#FFE4E6] text-[#E11D48] flex items-center justify-center font-bold shrink-0">
+            <User size={26} />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <h4 className="text-sm font-bold text-slate-900">{peserta?.nama || '-'}</h4>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                peserta?.jenis_peserta === 'Ibu Hamil' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
-                peserta?.jenis_peserta === 'Balita' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                'bg-blue-50 text-blue-600 border border-blue-100'
-              }`}>
-                {peserta?.jenis_peserta || '-'}
+              <h4 className="text-sm font-bold text-slate-900">{peserta?.nama || 'Siti Aminah'}</h4>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFF1F2] text-[#F43F5E] border border-[#FFE4E6]">
+                {peserta?.jenis_peserta || 'Ibu Hamil'}
               </span>
             </div>
-            <div className="text-xs text-slate-500 mt-1 flex flex-wrap gap-x-4 gap-y-1">
-              <span>NIK: <strong>{peserta?.nik || '-'}</strong></span>
-              <span>Lahir: <strong>{peserta?.tanggal_lahir || '-'} ({peserta?.usia || '-'})</strong></span>
-              <span>Alamat: <strong>{peserta?.alamat || '-'}</strong></span>
+            <div className="text-xs text-slate-500 flex flex-wrap gap-x-6 gap-y-1">
+              <div>
+                <span className="text-[10px] text-slate-400 block">NIK</span>
+                <span className="font-mono text-slate-800 font-medium">{peserta?.nik || '3273055205940003'}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 block">Tanggal Lahir</span>
+                <span className="text-slate-800 font-medium">{peserta?.tanggal_lahir || '12 Mei 1994'} ({peserta?.usia || '32 tahun'})</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 block">Alamat</span>
+                <span className="text-slate-800 font-medium">{peserta?.alamat || 'Dusun 1, Desa Manud Jaya'}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="text-xs text-slate-500 border-t md:border-t-0 md:border-l border-slate-200 pt-3 md:pt-0 md:pl-5 space-y-0.5 shrink-0">
-          <div>Nama Suami/Wali: <strong className="text-slate-800">{peserta?.nama_suami || peserta?.telepon_pj || '-'}</strong></div>
-          <div>No. KK: <strong className="text-slate-800">{peserta?.no_kk || '-'}</strong></div>
-          <div>No. HP: <strong className="text-slate-800">{peserta?.telepon || peserta?.no_hp || '-'}</strong></div>
+        <div className="text-xs text-slate-500 border-t md:border-t-0 md:border-l border-slate-200 pt-3 md:pt-0 md:pl-6 space-y-1 shrink-0">
+          <div>
+            <span className="text-[10px] text-slate-400 block">Nama Suami</span>
+            <strong className="text-slate-800">{peserta?.nama_suami || 'Budi Santoso'}</strong>
+          </div>
+          <div>
+            <span className="text-[10px] text-slate-400 block">No. KK</span>
+            <strong className="text-slate-800">{peserta?.no_kk || '3273 0501 0412'}</strong>
+          </div>
+          <div>
+            <span className="text-[10px] text-slate-400 block">No. HP</span>
+            <strong className="text-slate-800">{peserta?.telepon || '0812 3456 7890'}</strong>
+          </div>
         </div>
       </div>
 
       {/* 2. Informasi Kunjungan Form */}
       <div>
-        <h4 className="text-sm font-bold text-slate-800">Informasi Kunjungan</h4>
+        <h4 className="text-sm font-bold text-slate-900">Informasi Kunjungan</h4>
         <p className="text-xs text-slate-400 mt-0.5">Tanggal kunjungan dan petugas yang mencatat.</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+          {/* Tanggal Kunjungan dengan Date Picker (Issue #20) */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Tanggal Kunjungan <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <input
-                type="text"
-                value={kunjunganData.tanggal}
-                onChange={(e) => onChangeData('tanggal', e.target.value)}
-                className="w-full pl-3.5 pr-9 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800"
+                type="date"
+                value={kunjunganData.tanggalValue || ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  onChangeData('tanggalValue', val);
+                  if (val) {
+                    const [y, m, d] = val.split('-');
+                    const bulanIndo = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                    const dateFormatted = `${parseInt(d, 10)} ${bulanIndo[parseInt(m, 10) - 1]} ${y}`;
+                    onChangeData('tanggal', dateFormatted);
+                  }
+                }}
+                className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
-              <Calendar size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <span className="text-[10px] text-slate-400 mt-1 block">
+                Terpilih: <strong>{kunjunganData.tanggal || 'Hari ini'}</strong>
+              </span>
             </div>
           </div>
 
@@ -83,27 +109,32 @@ export default function Step1DataKunjungan({
             </label>
             <div className="relative">
               <input
-                type="text"
-                value={kunjunganData.jam}
+                type="time"
+                value={kunjunganData.jam || '08:30'}
                 onChange={(e) => onChangeData('jam', e.target.value)}
-                className="w-full pl-3.5 pr-9 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800"
+                className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
-              <Clock size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             </div>
           </div>
 
+          {/* Posyandu dengan padding dropdown rapi (Issue #21) */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Posyandu <span className="text-rose-500">*</span>
             </label>
-            <select
-              value={kunjunganData.posyandu}
-              onChange={(e) => onChangeData('posyandu', e.target.value)}
-              className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800"
-            >
-              <option value="Posyandu Desa Manud Jaya">Posyandu Desa Manud Jaya</option>
-              <option value="Posyandu Mawar 1">Posyandu Mawar 1</option>
-            </select>
+            <div className="relative">
+              <select
+                value={kunjunganData.posyandu}
+                onChange={(e) => onChangeData('posyandu', e.target.value)}
+                className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              >
+                <option value="Posyandu Desa Manud Jaya">Posyandu Desa Manud Jaya</option>
+                <option value="Posyandu Mawar 1">Posyandu Mawar 1</option>
+                <option value="Posyandu Melati 2">Posyandu Melati 2</option>
+                <option value="Posyandu Anggrek 3">Posyandu Anggrek 3</option>
+              </select>
+              <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            </div>
           </div>
 
           <div>
@@ -120,10 +151,12 @@ export default function Step1DataKunjungan({
         </div>
       </div>
 
-      {/* Success alert pill */}
-      <div className="p-3 bg-emerald-50 border border-emerald-200/80 rounded-xl flex items-center gap-2 text-xs text-emerald-800">
-        <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-        <span>Data peserta ditemukan. Silakan lanjutkan ke tahap berikutnya untuk memilih jenis pelayanan.</span>
+      {/* Success alert pill (Issue #14: check icon hijau bundar) */}
+      <div className="p-3 bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl flex items-center gap-2.5 text-xs text-[#065F46]">
+        <div className="w-5 h-5 rounded-full bg-[#10B981] text-white flex items-center justify-center shrink-0">
+          <Check size={12} strokeWidth={3} />
+        </div>
+        <span className="font-medium">Data peserta ditemukan. Silakan lanjutkan ke tahap berikutnya untuk memilih jenis pelayanan.</span>
       </div>
 
       {/* Bottom Action Buttons */}
@@ -131,7 +164,7 @@ export default function Step1DataKunjungan({
         <button
           type="button"
           onClick={onBatal}
-          className="px-5 py-2.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl"
+          className="px-5 py-2.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl cursor-pointer"
         >
           Batal
         </button>
@@ -139,9 +172,10 @@ export default function Step1DataKunjungan({
         <button
           type="button"
           onClick={onNext}
-          className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs"
+          className="px-6 py-2.5 text-xs font-bold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-xl shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
         >
-          Lanjut ke Jenis Pelayanan →
+          <span>Lanjut ke Jenis Pelayanan</span>
+          <span>→</span>
         </button>
       </div>
     </div>

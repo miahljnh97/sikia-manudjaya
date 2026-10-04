@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, Bell, User, Check, Calendar, AlertCircle, Baby } from 'lucide-react';
+import { Menu, Bell, User, Check, Calendar, AlertCircle, Baby, LogOut, ChevronDown } from 'lucide-react';
 
 export default function Navbar({ user, onLogout, onToggleSidebar }) {
   const displayName = user?.nama || 'Annisa Wati';
@@ -7,6 +7,7 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
 
   // State Notifikasi dengan LocalStorage Persistence
   const [isOpenNotif, setIsOpenNotif] = useState(false);
+  const [isOpenProfile, setIsOpenProfile] = useState(false);
   const [notifList, setNotifList] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -45,6 +46,7 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
   });
 
   const dropdownRef = useRef(null);
+  const profileRef = useRef(null);
 
   // Hitung jumlah notif belum dibaca
   const unreadCount = notifList.filter((n) => n.unread).length;
@@ -55,67 +57,67 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setIsOpenNotif(false);
       }
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setIsOpenProfile(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleMarkAllRead = () => {
-    setNotifList((prev) => {
-      const updated = prev.map((item) => ({ ...item, unread: false }));
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('sikia_notifications', JSON.stringify(updated));
-      }
-      return updated;
-    });
-  };
-
   const getNotifIcon = (type) => {
     switch (type) {
       case 'jadwal':
-        return <Calendar size={15} className="text-blue-600" />;
+        return <Calendar size={16} className="text-blue-500" />;
       case 'imunisasi':
-        return <Baby size={15} className="text-emerald-600" />;
+        return <Baby size={16} className="text-emerald-500" />;
+      case 'alert':
+        return <AlertCircle size={16} className="text-rose-500" />;
       default:
-        return <AlertCircle size={15} className="text-amber-600" />;
+        return <Bell size={16} className="text-slate-500" />;
     }
   };
 
-  return (
-    <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-30">
-      {/* Left Menu Toggle */}
-      <button 
-        onClick={onToggleSidebar}
-        title="Toggle Menu"
-        className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 active:scale-95 transition-all"
-      >
-        <Menu size={22} />
-      </button>
+  const handleMarkAllRead = () => {
+    setNotifList((prev) => prev.map((item) => ({ ...item, unread: false })));
+  };
 
-      {/* Right User & Notification Controls */}
-      <div className="flex items-center gap-3 sm:gap-4 relative">
-        {/* Notification Bell Dropdown Container */}
+  return (
+    <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 sm:px-6 z-20 shrink-0">
+      {/* Tombol Hamburger Menu (HP & Toggle Desktop) */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onToggleSidebar}
+          className="p-2 -ml-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer"
+          aria-label="Toggle Sidebar Menu"
+        >
+          <Menu size={20} />
+        </button>
+      </div>
+
+      {/* Header Right: Notifikasi & Profil Akun */}
+      <div className="flex items-center gap-2 sm:gap-4">
+        {/* Notifikasi Dropdown */}
         <div className="relative" ref={dropdownRef}>
-          <button 
+          <button
             onClick={() => setIsOpenNotif((prev) => !prev)}
-            title="Notifikasi"
-            className="relative p-2 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+            className="w-10 h-10 rounded-full border border-slate-200/80 flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-slate-50 relative transition-colors cursor-pointer"
+            aria-label="Notifikasi"
           >
             <Bell size={18} />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" />
             )}
           </button>
 
-          {/* Popover Dropdown Notifikasi */}
+          {/* Panel Notifikasi */}
           {isOpenNotif && (
-            <div className="absolute right-0 mt-2.5 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
-              {/* Header Dropdown */}
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-100 py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="flex items-center justify-between px-4 pb-3 border-b border-slate-100">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-xs font-bold text-slate-900">Notifikasi</h4>
+                  <h4 className="text-sm font-bold text-slate-800">Notifikasi</h4>
                   {unreadCount > 0 && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600">
                       {unreadCount} Baru
                     </span>
                   )}
@@ -123,18 +125,17 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllRead}
-                    className="text-[11px] font-semibold text-blue-600 hover:underline inline-flex items-center gap-1"
+                    className="text-xs text-blue-600 hover:underline font-medium cursor-pointer"
                   >
-                    <Check size={12} /> Tandai sudah dibaca
+                    Tandai dibaca
                   </button>
                 )}
               </div>
 
-              {/* Notification List */}
-              <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+              <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
                 {notifList.length === 0 ? (
-                  <div className="p-6 text-center text-xs text-slate-400">
-                    Tidak ada notifikasi baru.
+                  <div className="py-8 text-center text-xs text-slate-400">
+                    Tidak ada notifikasi
                   </div>
                 ) : (
                   notifList.map((item) => (
@@ -170,35 +171,51 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
                   ))
                 )}
               </div>
-
-              {/* Footer Dropdown */}
-              <div className="p-3 border-t border-slate-100 text-center bg-slate-50/50">
-                <span className="text-[11px] font-medium text-slate-400">
-                  Pengingat Otomatis via WhatsApp (PBI-01)
-                </span>
-              </div>
             </div>
           )}
         </div>
 
-        {/* Profile Card */}
-        <div className="flex items-center gap-2.5 sm:gap-3 pl-1 sm:pl-2">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-500 font-semibold shrink-0">
-            <User size={18} />
-          </div>
-          <div className="text-left hidden sm:block">
-            <h4 className="text-xs sm:text-sm font-semibold text-slate-800 leading-tight">{displayName}</h4>
-            <p className="text-[11px] text-slate-400 font-medium">{roleName}</p>
-          </div>
+        {/* Profile Card & Dropdown Menu (Poin 7: Tombol Keluar hanya muncul saat profil diklik) */}
+        <div className="relative" ref={profileRef}>
+          <button
+            type="button"
+            onClick={() => setIsOpenProfile((prev) => !prev)}
+            className="flex items-center gap-2.5 sm:gap-3 pl-1 sm:pl-2 p-1.5 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer text-left border border-transparent hover:border-slate-100"
+          >
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-500 font-semibold shrink-0">
+              <User size={18} />
+            </div>
+            <div className="text-left hidden sm:block">
+              <h4 className="text-xs sm:text-sm font-semibold text-slate-800 leading-tight flex items-center gap-1">
+                {displayName}
+                <ChevronDown size={14} className="text-slate-400" />
+              </h4>
+              <p className="text-[11px] text-slate-400 font-medium">{roleName}</p>
+            </div>
+          </button>
 
-          {onLogout && (
-            <button
-              onClick={onLogout}
-              title="Keluar / Logout"
-              className="text-xs font-medium text-slate-400 hover:text-red-500 hover:underline pl-2 border-l border-slate-200"
-            >
-              Keluar
-            </button>
+          {/* Dropdown Menu Profil Pengguna */}
+          {isOpenProfile && (
+            <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="px-4 py-2 border-b border-slate-100 sm:hidden">
+                <p className="text-xs font-bold text-slate-800">{displayName}</p>
+                <p className="text-[10px] text-slate-400">{roleName}</p>
+              </div>
+
+              <div className="px-1 py-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpenProfile(false);
+                    if (onLogout) onLogout();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer text-left"
+                >
+                  <LogOut size={15} />
+                  <span>Keluar dari Akun</span>
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>

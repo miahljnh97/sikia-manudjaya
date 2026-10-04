@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Search, 
   Filter, 
@@ -7,11 +7,13 @@ import {
   Clock, 
   X, 
   ChevronLeft, 
-  ChevronRight 
+  ChevronRight,
+  ChevronDown
 } from 'lucide-react';
+import { maskNik } from '../../utils/nikUtils';
 
 export default function ParticipantTable({
-  pesertaList,
+  pesertaList = [],
   searchQuery,
   setSearchQuery,
   filterType,
@@ -20,24 +22,33 @@ export default function ParticipantTable({
   onLihatDetail,
   loading
 }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 7;
+
+  // Pagination kalkulasi (Issue #26)
+  const totalPages = Math.max(1, Math.ceil(pesertaList.length / itemsPerPage));
+  const currentActualPage = Math.min(currentPage, totalPages);
+  const startIndex = (currentActualPage - 1) * itemsPerPage;
+  const paginatedList = pesertaList.slice(startIndex, startIndex + itemsPerPage);
+
   // Badge jenis peserta styling
   const renderJenisBadge = (jenis) => {
     switch (jenis) {
       case 'Ibu Hamil':
         return (
-          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-100">
+          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#FFF1F2] text-[#F43F5E] border border-[#FFE4E6]">
             Ibu Hamil
           </span>
         );
       case 'Balita':
         return (
-          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
+          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#ECFDF5] text-[#10B981] border border-[#D1FAE5]">
             Balita
           </span>
         );
       case 'Bayi':
         return (
-          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">
+          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#EEF2FF] text-[#6366F1] border border-[#E0E7FF]">
             Bayi
           </span>
         );
@@ -58,11 +69,18 @@ export default function ParticipantTable({
       return (
         <button
           onClick={() => onUpdateStatus(item.id, 'Belum Hadir')}
-          title="Klik untuk ubah jadi Belum Hadir"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 hover:bg-emerald-100 transition-colors"
+          title="Klik untuk ubah menjadi Belum Hadir"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
         >
-          <Check size={14} className="text-emerald-600 stroke-[3]" />
-          <span>Sudah Hadir {item.waktu_hadir ? item.waktu_hadir : '08.45'}</span>
+          <span className="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">
+            <Check size={10} strokeWidth={3} />
+          </span>
+          <span>Sudah Hadir</span>
+          {item.waktu_hadir && (
+            <span className="text-[10px] text-emerald-600 font-normal">
+              {item.waktu_hadir}
+            </span>
+          )}
         </button>
       );
     }
@@ -71,81 +89,87 @@ export default function ParticipantTable({
       return (
         <button
           onClick={() => onUpdateStatus(item.id, 'Sudah Hadir')}
-          title="Klik untuk tandai Sudah Hadir"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100 transition-colors"
+          title="Klik untuk ubah menjadi Sudah Hadir"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors cursor-pointer"
         >
-          <Clock size={14} className="text-amber-600" />
+          <Clock size={12} className="text-amber-500" />
           <span>Belum Hadir</span>
         </button>
       );
     }
 
-    // Tidak Hadir
     return (
       <button
         onClick={() => onUpdateStatus(item.id, 'Sudah Hadir')}
-        title="Klik untuk tandai Sudah Hadir"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200/80 hover:bg-rose-100 transition-colors"
+        title="Klik untuk ubah menjadi Sudah Hadir"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer"
       >
-        <X size={14} className="text-rose-600" />
+        <X size={12} className="text-rose-500" />
         <span>Tidak Hadir</span>
       </button>
     );
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-      {/* Table Header: Search, Filter, Export */}
-      <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h3 className="text-base font-bold text-slate-800">
-          Daftar Peserta Hari Ini
-        </h3>
+    <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden">
+      {/* Table Header Action Bar */}
+      <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h3 className="text-base font-bold text-slate-900">
+            Daftar Peserta Hari Ini
+          </h3>
+        </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* Search Box */}
-          <div className="relative min-w-[260px]">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div className="relative min-w-[220px] flex-1 sm:flex-initial">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder="Cari nama, NIK, atau nomor KK..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700"
+              className="w-full pl-9 pr-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800"
             />
           </div>
 
-          {/* Filter Dropdown */}
+          {/* Filter Dropdown (Issue #9: default text "Filter", tanpa terpilih otomatis) */}
           <div className="relative">
             <select
               value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
+              onChange={(e) => {
+                setFilterType(e.target.value);
+                setCurrentPage(1);
+              }}
               className="appearance-none pl-8 pr-8 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 focus:outline-none cursor-pointer"
             >
-              <option value="Semua">Semua Kategori</option>
+              <option value="Semua">Filter</option>
               <option value="Ibu Hamil">Ibu Hamil</option>
               <option value="Balita">Balita</option>
               <option value="Bayi">Bayi</option>
             </select>
-            <Filter size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+            <Filter size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+            <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
 
           {/* Export Button */}
           <button 
-            onClick={() => alert('Fitur ekspor CSV/Excel siap dihubungkan!')}
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+            type="button"
+            onClick={() => alert('Data peserta berhasil disiapkan untuk diunduh.')}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
           >
-            <Download size={14} className="text-slate-500" />
+            <Download size={13} className="text-slate-500" />
             <span>Export</span>
           </button>
         </div>
       </div>
 
-      {/* Main Table */}
+      {/* Main Table (Issue #10: Header font lebih gelap & tegas) */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              <th className="py-3.5 px-5">No</th>
+            <tr className="border-b border-slate-100 bg-slate-50/50 text-xs font-bold text-slate-700">
+              <th className="py-3.5 px-5 w-12">No</th>
               <th className="py-3.5 px-5">Nama Peserta</th>
               <th className="py-3.5 px-5">NIK</th>
               <th className="py-3.5 px-5">Jenis Peserta</th>
@@ -155,25 +179,29 @@ export default function ParticipantTable({
               <th className="py-3.5 px-5 text-right">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+          <tbody className="divide-y divide-slate-100 text-xs text-slate-800">
             {loading ? (
               <tr>
                 <td colSpan="8" className="py-10 text-center text-slate-400">
                   Memuat data peserta...
                 </td>
               </tr>
-            ) : pesertaList.length === 0 ? (
+            ) : paginatedList.length === 0 ? (
               <tr>
                 <td colSpan="8" className="py-10 text-center text-slate-400">
                   Tidak ada peserta yang cocok dengan pencarian.
                 </td>
               </tr>
             ) : (
-              pesertaList.map((item, index) => (
+              paginatedList.map((item, index) => (
                 <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                  <td className="py-4 px-5 text-slate-400 font-medium">{index + 1}</td>
+                  <td className="py-4 px-5 text-slate-500 font-medium">
+                    {startIndex + index + 1}
+                  </td>
                   <td className="py-4 px-5 font-bold text-slate-900">{item.nama}</td>
-                  <td className="py-4 px-5 text-slate-500">{item.nik}</td>
+                  <td className="py-4 px-5 font-mono text-slate-600 font-medium">
+                    {maskNik(item.nik)}
+                  </td>
                   <td className="py-4 px-5">{renderJenisBadge(item.jenis_peserta)}</td>
                   <td className="py-4 px-5 text-slate-600">{item.usia}</td>
                   <td className="py-4 px-5 text-slate-600">{item.alamat}</td>
@@ -181,7 +209,7 @@ export default function ParticipantTable({
                   <td className="py-4 px-5 text-right">
                     <button
                       onClick={() => onLihatDetail && onLihatDetail(item)}
-                      className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline"
+                      className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
                     >
                       Lihat
                     </button>
@@ -193,32 +221,45 @@ export default function ParticipantTable({
         </table>
       </div>
 
-      {/* Table Pagination Footer */}
+      {/* Table Pagination Footer (Issue #26: pagination responsif terhadap jumlah data) */}
       <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
         <div>
-          Menampilkan 1-{pesertaList.length} dari {pesertaList.length} peserta
+          Menampilkan {pesertaList.length > 0 ? startIndex + 1 : 0}-
+          {Math.min(startIndex + itemsPerPage, pesertaList.length)} dari {pesertaList.length} peserta
         </div>
 
         <div className="flex items-center gap-1 self-center">
-          <button className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-40">
+          <button 
+            disabled={currentActualPage === 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+          >
             <ChevronLeft size={16} />
           </button>
-          <button className="w-7 h-7 rounded-lg bg-rose-700 text-white font-semibold text-xs flex items-center justify-center">
-            1
-          </button>
-          <button className="w-7 h-7 rounded-lg hover:bg-slate-100 font-medium text-xs flex items-center justify-center text-slate-600">
-            2
-          </button>
-          <button className="w-7 h-7 rounded-lg hover:bg-slate-100 font-medium text-xs flex items-center justify-center text-slate-600">
-            3
-          </button>
-          <button className="w-7 h-7 rounded-lg hover:bg-slate-100 font-medium text-xs flex items-center justify-center text-slate-600">
-            4
-          </button>
-          <button className="w-7 h-7 rounded-lg hover:bg-slate-100 font-medium text-xs flex items-center justify-center text-slate-600">
-            5
-          </button>
-          <button className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50">
+          
+          {Array.from({ length: totalPages }).map((_, i) => {
+            const pageNum = i + 1;
+            const isAct = pageNum === currentActualPage;
+            return (
+              <button
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
+                className={`w-7 h-7 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors cursor-pointer ${
+                  isAct 
+                    ? 'bg-[#881337] text-white shadow-xs' 
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+
+          <button 
+            disabled={currentActualPage >= totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+          >
             <ChevronRight size={16} />
           </button>
         </div>

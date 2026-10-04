@@ -14,7 +14,7 @@ export const INITIAL_DUMMY_PESERTA = [
   {
     id: 1,
     nama: 'Siti Aminah',
-    nik: '327502*********',
+    nik: '3275021911970001',
     jenis_peserta: 'Ibu Hamil',
     usia: '28 tahun',
     alamat: 'Manud Jaya',
@@ -24,7 +24,7 @@ export const INITIAL_DUMMY_PESERTA = [
   {
     id: 2,
     nama: 'Aisyah Putri',
-    nik: '327502*********',
+    nik: '3275021404220002',
     jenis_peserta: 'Balita',
     usia: '3 tahun',
     alamat: 'Manud Jaya',
@@ -34,7 +34,7 @@ export const INITIAL_DUMMY_PESERTA = [
   {
     id: 3,
     nama: 'Budi Santoso',
-    nik: '327502*********',
+    nik: '3275022108250003',
     jenis_peserta: 'Bayi',
     usia: '8 bulan',
     alamat: 'Manud Jaya',
@@ -44,7 +44,7 @@ export const INITIAL_DUMMY_PESERTA = [
   {
     id: 4,
     nama: 'Nur Halimah',
-    nik: '327502*********',
+    nik: '3275021205940004',
     jenis_peserta: 'Ibu Hamil',
     usia: '31 tahun',
     alamat: 'Manud Jaya',
@@ -54,7 +54,7 @@ export const INITIAL_DUMMY_PESERTA = [
   {
     id: 5,
     nama: 'Dimas Setiawan',
-    nik: '327502*********',
+    nik: '3275020909230005',
     jenis_peserta: 'Balita',
     usia: '2 tahun',
     alamat: 'Manud Jaya',
@@ -64,7 +64,7 @@ export const INITIAL_DUMMY_PESERTA = [
   {
     id: 6,
     nama: 'Lina Marlina',
-    nik: '327502*********',
+    nik: '3275021607210006',
     jenis_peserta: 'Balita',
     usia: '4 tahun',
     alamat: 'Manud Jaya',
@@ -74,7 +74,7 @@ export const INITIAL_DUMMY_PESERTA = [
   {
     id: 7,
     nama: 'Rani Septiani',
-    nik: '327502*********',
+    nik: '3275022802990007',
     jenis_peserta: 'Ibu Hamil',
     usia: '26 tahun',
     alamat: 'Manud Jaya',

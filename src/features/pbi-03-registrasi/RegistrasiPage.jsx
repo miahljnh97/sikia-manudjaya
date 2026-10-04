@@ -156,6 +156,7 @@ export default function RegistrasiPage({ currentUser, onBackToDashboard }) {
 
             {currentStep === 2 && (
               <Step2JenisPelayanan
+                peserta={selectedPeserta}
                 selectedPelayanan={selectedPelayanan}
                 onTogglePelayanan={handleTogglePelayanan}
                 onBack={() => setCurrentStep(1)}

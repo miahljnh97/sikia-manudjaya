@@ -1,10 +1,10 @@
 import React from 'react';
 import { 
-  LayoutDashboard, 
-  UserPlus, 
+  Home, 
+  PlusCircle, 
   Users, 
-  History, 
-  FileText, 
+  ClipboardList, 
+  TrendingUp, 
   Settings,
   X,
   UserCheck
@@ -20,18 +20,18 @@ export default function Sidebar({
   const roleNormalized = (currentUser?.role || '').toLowerCase();
   const isSuperAdmin = roleNormalized.includes('admin') || roleNormalized === 'superadmin' || roleNormalized === 'super admin';
 
+  // Sesuai persis dengan Sidebar.png di Figma
   const menuItems = [
-    { id: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'Dashboard', label: 'Dashboard', icon: Home },
     ...(isSuperAdmin ? [{ id: 'Kelola Kader', label: 'Kelola Kader', icon: UserCheck }] : []),
-    { id: 'Registrasi Kunjungan', label: 'Registrasi Kunjungan', icon: UserPlus },
+    { id: 'Registrasi Kunjungan', label: 'Registrasi Kunjungan', icon: PlusCircle },
     { id: 'Data Peserta', label: 'Data Peserta', icon: Users },
-    { id: 'Riwayat Kunjungan', label: 'Riwayat Kunjungan', icon: History },
-    { id: 'Laporan', label: 'Laporan', icon: FileText },
+    { id: 'Riwayat Kunjungan', label: 'Riwayat Kunjungan', icon: ClipboardList },
+    { id: 'Laporan', label: 'Laporan', icon: TrendingUp },
   ];
 
   const handleSelect = (id) => {
     if (onMenuClick) onMenuClick(id);
-    // Di layar HP tutup otomatis saat item diklik
     if (window.innerWidth < 1024 && onClose) {
       onClose();
     }
@@ -66,7 +66,7 @@ export default function Sidebar({
             {/* Tombol Tutup (X) hanya di HP */}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 lg:hidden"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 lg:hidden cursor-pointer"
             >
               <X size={20} />
             </button>
@@ -81,13 +81,13 @@ export default function Sidebar({
                 <button
                   key={item.id}
                   onClick={() => handleSelect(item.id)}
-                  className={`w-full flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-medium transition-all ${
+                  className={`w-full flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-blue-50 text-blue-600 font-semibold'
+                      ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
-                  <Icon size={18} className={isActive ? 'text-blue-600' : 'text-slate-400'} />
+                  <Icon size={19} className={isActive ? 'text-[#2563EB]' : 'text-slate-400'} />
                   <span>{item.label}</span>
                 </button>
               );
@@ -98,14 +98,11 @@ export default function Sidebar({
         {/* Bottom Settings */}
         <div className="w-64 p-4 border-t border-slate-100">
           <button 
-            onClick={() => handleSelect('Pengaturan')}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-              activeMenu === 'Pengaturan' 
-                ? 'bg-blue-50 text-blue-600 font-semibold' 
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
+            type="button"
+            onClick={() => handleSelect('Laporan')}
+            className="w-full flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all cursor-pointer"
           >
-            <Settings size={18} className={activeMenu === 'Pengaturan' ? 'text-blue-600' : 'text-slate-400'} />
+            <Settings size={19} className="text-slate-400" />
             <span>Pengaturan</span>
           </button>
         </div>

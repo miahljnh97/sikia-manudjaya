@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Edit3, Save, X, User, Phone, Mail, MapPin, Calendar, Heart, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit3, Save, X, User, Phone, Mail, MapPin, Calendar, Heart, Trash2, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { maskNik } from '../../../utils/nikUtils';
 
 export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKaderOrBidan = true }) {
   if (!peserta) return null;
 
   const [isEditing, setIsEditing] = useState(false);
+  const [showNik, setShowNik] = useState(true);
   const [formData, setFormData] = useState({
     nama: peserta.nama || '',
     nik: peserta.nik || '',
@@ -150,20 +152,46 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
 
           {/* NIK */}
           <div>
-            <label className="block text-slate-500 font-semibold mb-1.5">
-              NIK <span className="text-rose-500">*</span>
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-slate-500 font-semibold">
+                NIK <span className="text-rose-500">*</span>
+              </label>
+              {!isEditing && (
+                <button
+                  type="button"
+                  onClick={() => setShowNik(!showNik)}
+                  className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  {showNik ? (
+                    <>
+                      <EyeOff size={13} />
+                      <span>Sembunyikan NIK</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye size={13} />
+                      <span>Lihat NIK Lengkap</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
             {isEditing ? (
               <input
                 type="text"
                 required
+                maxLength={16}
                 value={formData.nik}
                 onChange={(e) => handleChange('nik', e.target.value)}
-                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                placeholder="16 digit NIK"
+                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl font-mono font-medium text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
               />
             ) : (
-              <div className="w-full px-4 py-3 bg-slate-50/70 border border-slate-200/80 rounded-xl font-medium text-slate-800">
-                {formData.nik}
+              <div className="w-full px-4 py-3 bg-slate-50/70 border border-slate-200/80 rounded-xl font-mono font-medium text-slate-800 flex items-center justify-between">
+                <span>{showNik ? formData.nik : maskNik(formData.nik)}</span>
+                <span className="text-[10px] text-slate-400 font-sans font-normal">
+                  {showNik ? '16 Digit Lengkap' : 'Masked (Privasi)'}
+                </span>
               </div>
             )}
           </div>
@@ -190,16 +218,19 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
           <div>
             <label className="block text-slate-500 font-semibold mb-1.5">Alamat / Wilayah</label>
             {isEditing ? (
-              <select
-                value={formData.alamat}
-                onChange={(e) => handleChange('alamat', e.target.value)}
-                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-              >
-                <option value="Dusun 1">Dusun 1</option>
-                <option value="Dusun 2">Dusun 2</option>
-                <option value="Dusun 3">Dusun 3</option>
-                <option value="Manud Jaya">Manud Jaya</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={formData.alamat}
+                  onChange={(e) => handleChange('alamat', e.target.value)}
+                  className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 appearance-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer"
+                >
+                  <option value="Dusun 1">Dusun 1</option>
+                  <option value="Dusun 2">Dusun 2</option>
+                  <option value="Dusun 3">Dusun 3</option>
+                  <option value="Manud Jaya">Manud Jaya</option>
+                </select>
+                <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
             ) : (
               <div className="w-full px-4 py-3 bg-slate-50/70 border border-slate-200/80 rounded-xl font-medium text-slate-800">
                 {formData.alamat}
@@ -245,14 +276,17 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
           <div>
             <label className="block text-slate-500 font-semibold mb-1.5">Jenis Kelamin</label>
             {isEditing ? (
-              <select
-                value={formData.jenis_kelamin}
-                onChange={(e) => handleChange('jenis_kelamin', e.target.value)}
-                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-              >
-                <option value="Perempuan">Perempuan</option>
-                <option value="Laki-laki">Laki-laki</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={formData.jenis_kelamin}
+                  onChange={(e) => handleChange('jenis_kelamin', e.target.value)}
+                  className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 appearance-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer"
+                >
+                  <option value="Perempuan">Perempuan</option>
+                  <option value="Laki-laki">Laki-laki</option>
+                </select>
+                <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
             ) : (
               <div className="w-full px-4 py-3 bg-slate-50/70 border border-slate-200/80 rounded-xl font-medium text-slate-800">
                 {formData.jenis_kelamin}
@@ -264,15 +298,18 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
           <div>
             <label className="block text-slate-500 font-semibold mb-1.5">Jenis Peserta</label>
             {isEditing ? (
-              <select
-                value={formData.jenis_peserta}
-                onChange={(e) => handleChange('jenis_peserta', e.target.value)}
-                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-              >
-                <option value="Ibu Hamil">Ibu Hamil</option>
-                <option value="Balita">Balita</option>
-                <option value="Bayi">Bayi</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={formData.jenis_peserta}
+                  onChange={(e) => handleChange('jenis_peserta', e.target.value)}
+                  className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 appearance-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer"
+                >
+                  <option value="Ibu Hamil">Ibu Hamil</option>
+                  <option value="Balita">Balita</option>
+                  <option value="Bayi">Bayi</option>
+                </select>
+                <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
             ) : (
               <div className="w-full px-4 py-3 bg-slate-50/70 border border-slate-200/80 rounded-xl font-medium text-slate-800">
                 {formData.jenis_peserta}

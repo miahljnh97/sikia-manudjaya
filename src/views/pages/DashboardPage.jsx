@@ -16,8 +16,43 @@ import Toast from '../../shared/components/Toast';
 import { getTanggalHariIniLengkap } from '../../utils/dateUtils';
 import { useDashboardController } from '../../controllers/useDashboardController';
 
-export default function DashboardPage({ currentUser, onLogout }) {
-  const [activeMenu, setActiveMenu] = useState('Dashboard');
+export default function DashboardPage({ currentUser, onLogout, currentPath = '/dashboard', onNavigate }) {
+  // Mapping URL path ke menu id
+  const pathToMenu = {
+    '/dashboard': 'Dashboard',
+    '/registrasi-kunjungan': 'Registrasi Kunjungan',
+    '/data-peserta': 'Data Peserta',
+    '/riwayat-kunjungan': 'Riwayat Kunjungan',
+    '/kelola-kader': 'Kelola Kader',
+    '/laporan': 'Laporan',
+  };
+
+  const menuToPath = {
+    'Dashboard': '/dashboard',
+    'Registrasi Kunjungan': '/registrasi-kunjungan',
+    'Data Peserta': '/data-peserta',
+    'Riwayat Kunjungan': '/riwayat-kunjungan',
+    'Kelola Kader': '/kelola-kader',
+    'Laporan': '/laporan',
+  };
+
+  const initialMenu = pathToMenu[currentPath] || 'Dashboard';
+  const [activeMenu, setActiveMenu] = useState(initialMenu);
+
+  // Sinkronkan saat URL browser berubah (misal tombol Back/Forward)
+  useEffect(() => {
+    if (pathToMenu[currentPath] && pathToMenu[currentPath] !== activeMenu) {
+      setActiveMenu(pathToMenu[currentPath]);
+    }
+  }, [currentPath]);
+
+  const handleMenuChange = (menu) => {
+    setActiveMenu(menu);
+    if (onNavigate && menuToPath[menu]) {
+      onNavigate(menuToPath[menu]);
+    }
+  };
+
   const [selectedPesertaIdForDetail, setSelectedPesertaIdForDetail] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const isIbuRole = currentUser?.role === 'Ibu Balita' || currentUser?.role === 'ibu';
@@ -84,7 +119,7 @@ export default function DashboardPage({ currentUser, onLogout }) {
         activeMenu={activeMenu} 
         onMenuClick={(menu) => {
           setSelectedPesertaIdForDetail(null);
-          setActiveMenu(menu);
+          handleMenuChange(menu);
         }} 
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
@@ -135,7 +170,7 @@ export default function DashboardPage({ currentUser, onLogout }) {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                    Selamat pagi, {currentUser?.nama?.split(' ')[0] || 'Annisa'} <span>👋</span>
+                    Selamat pagi, {currentUser?.nama || 'Annisa Wati'} <span>👋</span>
                   </h1>
                   <p className="text-xs text-slate-500 font-medium mt-1">
                     Berikut ringkasan kegiatan Posyandu hari ini.

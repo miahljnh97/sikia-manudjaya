@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { ShieldAlert } from 'lucide-react';
 import { DUMMY_ACCOUNTS } from '../../models/pesertaModel';
-import LupaPasswordModal from '../components/LupaPasswordModal';
 
-export default function LoginPage({ onLoginSuccess }) {
+export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [isLupaPasswordOpen, setIsLupaPasswordOpen] = useState(false);
+  const [showQuickFill, setShowQuickFill] = useState(false);
 
   const handleQuickFill = (type) => {
     if (type === 'kader') {
@@ -48,11 +47,8 @@ export default function LoginPage({ onLoginSuccess }) {
         backgroundImage: "url('/background.svg'), linear-gradient(135deg, #e0f2fe 0%, #fef3c7 50%, #fce7f3 100%)",
       }}
     >
-      {/* Overlay tipis agar form lebih pop-up dan kontras */}
-      <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px] pointer-events-none" />
-
-      {/* Main Login Card - Sesuai Figma */}
-      <div className="relative z-10 w-full max-w-[480px] bg-white rounded-[32px] shadow-2xl p-8 sm:p-12 border border-white/60">
+      {/* Main Login Card - Persis Figma media_1791133015258.jpg */}
+      <div className="relative z-10 w-full max-w-[480px] sm:max-w-[500px] bg-white rounded-[28px] shadow-2xl p-8 sm:p-12 border border-white/60">
         <div className="text-center mb-8">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             Masuk ke Akun Anda
@@ -82,7 +78,7 @@ export default function LoginPage({ onLoginSuccess }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="nama@email.com"
-              className="w-full px-4 py-3 text-sm text-slate-800 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 transition-all placeholder:text-slate-400"
+              className="w-full px-4 py-3 text-sm text-slate-800 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6782]/30 focus:border-[#FF6782] transition-all placeholder:text-slate-400"
             />
           </div>
 
@@ -96,8 +92,8 @@ export default function LoginPage({ onLoginSuccess }) {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••••••"
-              className="w-full px-4 py-3 text-sm text-slate-800 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 transition-all placeholder:text-slate-400"
+              placeholder="************"
+              className="w-full px-4 py-3 text-sm text-slate-800 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6782]/30 focus:border-[#FF6782] transition-all placeholder:text-slate-400"
             />
           </div>
 
@@ -108,84 +104,85 @@ export default function LoginPage({ onLoginSuccess }) {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                className="w-4 h-4 rounded border-slate-300 text-[#FF6782] focus:ring-[#FF6782]"
               />
               <span>Ingat saya</span>
             </label>
             <button 
               type="button"
-              onClick={() => setIsLupaPasswordOpen(true)}
-              className="text-slate-600 hover:text-blue-600 transition-colors cursor-pointer bg-transparent border-none p-0 text-xs"
+              onClick={onGoToLupaPassword}
+              className="text-slate-600 hover:text-[#FF6782] transition-colors cursor-pointer bg-transparent border-none p-0 text-xs"
             >
               Lupa password?
             </button>
           </div>
 
-          {/* Tombol Masuk */}
+          {/* Tombol Masuk - Pink / Coral Sesuai Figma */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 px-4 bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-[0.99] cursor-pointer"
+            className="w-full py-3.5 px-4 bg-[#FF6782] hover:bg-[#ff5270] active:bg-[#e43f63] disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-rose-500/20 transition-all active:scale-[0.99] cursor-pointer"
           >
             {loading ? 'Memproses...' : 'Masuk'}
           </button>
-
-          {/* Belum punya akun */}
-          <div className="text-center text-xs text-slate-600 pt-2">
-            Belum punya akun?{' '}
-            <a 
-              href="#daftar" 
-              onClick={(e) => { e.preventDefault(); handleQuickFill('kader'); }}
-              className="font-semibold text-[#2563EB] hover:underline"
-            >
-              Daftar di sini
-            </a>
-          </div>
         </form>
-
-        {/* Quick Fill untuk Evaluasi Dosen / Kelas (Sesuai Product Brief) */}
-        <div className="mt-8 pt-5 border-t border-slate-100">
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 text-center">
-            Pintasan Masuk Peran Pengguna:
-          </p>
-          <div className="grid grid-cols-4 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickFill('kader')}
-              className="py-1.5 px-2 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-lg text-[11px] font-medium text-slate-700 hover:text-blue-700 transition-all text-center cursor-pointer"
-            >
-              Kader
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('bidan')}
-              className="py-1.5 px-2 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-lg text-[11px] font-medium text-slate-700 hover:text-blue-700 transition-all text-center cursor-pointer"
-            >
-              Bidan
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('ibu')}
-              className="py-1.5 px-2 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-lg text-[11px] font-medium text-slate-700 hover:text-blue-700 transition-all text-center cursor-pointer"
-            >
-              Ibu Balita
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('admin')}
-              className="py-1.5 px-2 bg-purple-50 hover:bg-purple-100 hover:border-purple-300 border border-purple-200 rounded-lg text-[11px] font-bold text-purple-700 transition-all text-center cursor-pointer"
-            >
-              Super Admin
-            </button>
-          </div>
-        </div>
       </div>
 
-      {/* Lupa Password Modal */}
-      <LupaPasswordModal 
-        isOpen={isLupaPasswordOpen} 
-        onClose={() => setIsLupaPasswordOpen(false)} 
-      />
+      {/* Floating Helper Penguji / Dosen (Di pojok kanan bawah, tidak merusak card figma) */}
+      <div className="fixed bottom-3 right-3 z-30">
+        {!showQuickFill ? (
+          <button
+            type="button"
+            onClick={() => setShowQuickFill(true)}
+            className="px-3 py-1.5 bg-slate-900/80 hover:bg-slate-900 text-white text-[11px] font-medium rounded-full shadow-lg backdrop-blur-xs transition-all cursor-pointer opacity-80 hover:opacity-100"
+          >
+            ⚡ Pintasan Akun Evaluasi
+          </button>
+        ) : (
+          <div className="bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl p-3 shadow-2xl text-xs space-y-2 w-64 animate-in fade-in duration-150">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-[11px] text-slate-700">Pilih Akun Demo:</span>
+              <button
+                type="button"
+                onClick={() => setShowQuickFill(false)}
+                className="text-[10px] text-slate-400 hover:text-slate-700 font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleQuickFill('kader')}
+                className="py-1 px-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[11px] font-medium text-left truncate"
+              >
+                Kader Posyandu
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill('bidan')}
+                className="py-1 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-[11px] font-medium text-left truncate"
+              >
+                Bidan Desa
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill('ibu')}
+                className="py-1 px-2 bg-pink-50 hover:bg-pink-100 text-pink-700 rounded text-[11px] font-medium text-left truncate"
+              >
+                Ibu Balita
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill('admin')}
+                className="py-1 px-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded text-[11px] font-bold text-left truncate"
+              >
+                Super Admin
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

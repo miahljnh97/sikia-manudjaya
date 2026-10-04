@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { dataStoreService } from '../../services/dataStoreService';
 import DetailKunjunganModal from './components/DetailKunjunganModal';
+import { maskNik } from '../../utils/nikUtils';
 
 export default function RiwayatKunjunganPage({ currentUser }) {
   const [riwayatList, setRiwayatList] = useState(() => dataStoreService.getRiwayatList());
@@ -294,8 +295,8 @@ export default function RiwayatKunjunganPage({ currentUser }) {
                       <td className="py-3.5 px-4 text-slate-600 font-medium whitespace-nowrap">
                         {item.tanggal_kunjungan}
                       </td>
-                      <td className="py-3.5 px-4 font-mono text-slate-600 whitespace-nowrap">
-                        {item.nik}
+                      <td className="py-3.5 px-4 font-mono text-slate-600 font-medium whitespace-nowrap">
+                        {maskNik(item.nik_lengkap || item.nik)}
                       </td>
                       <td className="py-3.5 px-4">
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold inline-block ${

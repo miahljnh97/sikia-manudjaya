@@ -1,55 +1,59 @@
 import React from 'react';
-import { Users, CheckCircle2, Clock, Heart, Smile, Activity } from 'lucide-react';
+import { Users, Check, Clock, Heart, Smile } from 'lucide-react';
 
 export default function StatCards({ stats }) {
   const cards = [
     {
-      title: 'Total Peserta',
-      subtitle: 'Terdaftar',
+      title: 'Total Peserta Terdaftar',
+      isTwoLine: true,
+      line1: 'Total Peserta',
+      line2: 'Terdaftar',
       value: stats.total,
       icon: Users,
-      iconColor: 'text-blue-500',
-      bgColor: 'bg-blue-50',
+      iconColor: 'text-[#3B82F6]',
+      bgColor: 'bg-[#EFF6FF]',
     },
     {
       title: 'Sudah Hadir',
-      subtitle: '',
+      isTwoLine: false,
       value: stats.sudahHadir,
-      icon: CheckCircle2,
-      iconColor: 'text-emerald-500',
-      bgColor: 'bg-emerald-50',
+      icon: Check,
+      iconColor: 'text-[#10B981]',
+      bgColor: 'bg-[#ECFDF5]',
     },
     {
       title: 'Belum Hadir',
-      subtitle: '',
+      isTwoLine: false,
       value: stats.belumHadir,
       icon: Clock,
-      iconColor: 'text-amber-500',
-      bgColor: 'bg-amber-50',
+      iconColor: 'text-[#F59E0B]',
+      bgColor: 'bg-[#FFFBEB]',
     },
     {
       title: 'Ibu Hamil',
-      subtitle: '',
+      isTwoLine: false,
       value: stats.ibuHamil,
       icon: Heart,
-      iconColor: 'text-rose-500',
-      bgColor: 'bg-rose-50',
+      iconColor: 'text-[#F43F5E]',
+      bgColor: 'bg-[#FFF1F2]',
     },
     {
-      title: 'Bayi',
-      subtitle: '(0-11 bln)',
+      title: 'Bayi (0-11 bln)',
+      isTwoLine: true,
+      line1: 'Bayi (0-11 bln)',
       value: stats.bayi,
       icon: Smile,
-      iconColor: 'text-indigo-500',
-      bgColor: 'bg-indigo-50',
+      iconColor: 'text-[#6366F1]',
+      bgColor: 'bg-[#EEF2FF]',
     },
     {
-      title: 'Balita',
-      subtitle: '(1-5 thn)',
+      title: 'Balita (1-5 thn)',
+      isTwoLine: true,
+      line1: 'Balita (1-5 thn)',
       value: stats.balita,
-      icon: Activity,
-      iconColor: 'text-teal-500',
-      bgColor: 'bg-teal-50',
+      icon: Smile,
+      iconColor: 'text-[#10B981]',
+      bgColor: 'bg-[#ECFDF5]',
     },
   ];
 
@@ -60,21 +64,23 @@ export default function StatCards({ stats }) {
         return (
           <div
             key={index}
-            className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3.5 hover:shadow-md transition-shadow"
+            className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs flex items-center gap-3.5 hover:shadow-sm transition-shadow"
           >
-            <div className={`w-11 h-11 rounded-xl ${item.bgColor} flex items-center justify-center shrink-0`}>
-              <Icon size={22} className={item.iconColor} />
+            <div className={`w-11 h-11 rounded-2xl ${item.bgColor} flex items-center justify-center shrink-0`}>
+              <Icon size={22} strokeWidth={2.5} className={item.iconColor} />
             </div>
             <div>
-              <div className="text-2xl font-bold text-slate-800 leading-none">
+              <div className="text-2xl font-bold text-slate-900 leading-none">
                 {item.value}
               </div>
-              <div className="text-xs text-slate-500 mt-1 font-medium leading-tight">
-                {item.title}
-                {item.subtitle && (
-                  <span className="block text-[11px] text-slate-400 font-normal">
-                    {item.subtitle}
-                  </span>
+              <div className="text-[11px] text-slate-500 mt-1 font-medium leading-tight">
+                {item.line1 ? (
+                  <>
+                    <span>{item.line1}</span>
+                    {item.line2 && <span className="block">{item.line2}</span>}
+                  </>
+                ) : (
+                  <span>{item.title}</span>
                 )}
               </div>
             </div>
