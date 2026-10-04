@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search, RotateCcw, Plus, FileText, ChevronLeft, ChevronRight, User } from 'lucide-react';
 import DetailPeserta from './components/DetailPeserta';
 import { dataStoreService } from '../../services/dataStoreService';
+import { pesertaService } from '../../services/pesertaService';
 import { maskNik } from '../../utils/nikUtils';
 
 export const DUMMY_DATA_PESERTA = [
@@ -118,10 +119,22 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
   const [listPeserta, setListPeserta] = useState(() => dataStoreService.getPesertaList());
 
   useEffect(() => {
+    let isMounted = true;
+    const fetchPeserta = async () => {
+      const data = await pesertaService.getDaftarPeserta();
+      if (isMounted && data && data.length > 0) {
+        setListPeserta(data);
+      }
+    };
+    fetchPeserta();
+
     const unsubscribe = dataStoreService.subscribe(() => {
-      setListPeserta(dataStoreService.getPesertaList());
+      fetchPeserta();
     });
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   // Jika user adalah Ibu Balita, ambil data pribadinya (Siti Aminah)

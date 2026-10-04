@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../config/supabaseClient';
 import { INITIAL_DUMMY_PESERTA } from '../models/pesertaModel';
 import { dataStoreService } from './dataStoreService';
+import { normalizePeserta } from '../utils/pesertaAdapter';
 
 export const pesertaService = {
   /**
@@ -8,17 +9,21 @@ export const pesertaService = {
    */
   async getDaftarPeserta() {
     if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase
-        .from('peserta')
-        .select('*')
-        .order('id', { ascending: true });
+      try {
+        const { data, error } = await supabase
+          .from('peserta')
+          .select('*')
+          .order('id', { ascending: true });
 
-      if (!error && data && data.length > 0) {
-        return data;
+        if (!error && data && data.length > 0) {
+          return data.map(normalizePeserta);
+        }
+      } catch (err) {
+        console.warn('Gagal fetch data peserta dari Supabase:', err);
       }
     }
     // Fallback: Mengembalikan data dari Central Store (LocalStorage + State)
-    return dataStoreService.getPesertaList();
+    return dataStoreService.getPesertaList().map(normalizePeserta);
   },
 
   /**

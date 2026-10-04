@@ -62,7 +62,7 @@ export function useDashboardController() {
     });
   }, [pesertaList, searchQuery, filterType]);
 
-  // Statistik Ringkasan Kartu Dashboard (Dihitung otomatis)
+  // Statistik Ringkasan Kartu Dashboard (Dihitung otomatis dari data riil)
   const stats = useMemo(() => {
     const total = pesertaList.length;
     const sudahHadir = pesertaList.filter((p) => p.status_kehadiran === 'Sudah Hadir').length;
@@ -71,13 +71,26 @@ export function useDashboardController() {
     const bayi = pesertaList.filter((p) => p.jenis_peserta === 'Bayi').length;
     const balita = pesertaList.filter((p) => p.jenis_peserta === 'Balita').length;
 
+    // Jika data peserta tersedia dari database/store, tampilkan angka sebenarnya (termasuk jika 0)
+    if (total > 0) {
+      return {
+        total,
+        sudahHadir,
+        belumHadir: belumHadir > 0 ? belumHadir : (total - sudahHadir),
+        ibuHamil,
+        bayi,
+        balita,
+      };
+    }
+
+    // Default fallback jika data sama sekali belum termuat
     return {
-      total: total || 45, // default fallback angka dashboard
-      sudahHadir: sudahHadir || 32,
-      belumHadir: belumHadir || 13,
-      ibuHamil: ibuHamil || 8,
-      bayi: bayi || 10,
-      balita: balita || 27,
+      total: 45,
+      sudahHadir: 32,
+      belumHadir: 13,
+      ibuHamil: 8,
+      bayi: 10,
+      balita: 27,
     };
   }, [pesertaList]);
 

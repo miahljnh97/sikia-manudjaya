@@ -1,12 +1,32 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { registrasiService } from './registrasiService';
-import { INITIAL_DUMMY_PESERTA } from '../../models/pesertaModel';
+import { pesertaService } from '../../services/pesertaService';
+import { dataStoreService } from '../../services/dataStoreService';
 import { getTanggalFormatStandar, getJamMenitSekarang } from '../../utils/dateUtils';
 
 export function useRegistrasiController(currentUser, onSuccessRegistrasi) {
   // Mode: 'pencarian' | 'wizard'
   const [mode, setMode] = useState('pencarian');
   const [currentStep, setCurrentStep] = useState(1); // 1: Data Kunjungan, 2: Jenis Pelayanan, 3: Status Kehadiran, 4: Konfirmasi
+  const [rawPesertaList, setRawPesertaList] = useState([]);
+
+  // Load peserta dari pesertaService (Supabase / local fallback)
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPeserta = async () => {
+      const data = await pesertaService.getDaftarPeserta();
+      if (isMounted) setRawPesertaList(data);
+    };
+    fetchPeserta();
+
+    const unsubscribe = dataStoreService.subscribe(() => {
+      fetchPeserta();
+    });
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   // Search & Filter State di Tahap Pencarian (PBI 03A)
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,14 +53,16 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi) {
 
   // Filter daftar peserta di pencarian
   const filteredPeserta = useMemo(() => {
-    return INITIAL_DUMMY_PESERTA.filter((item) => {
+    return rawPesertaList.filter((item) => {
       const matchSearch =
-        item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.nik.includes(searchQuery);
+        (item.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.nik || '').includes(searchQuery) ||
+        (item.no_kk || '').includes(searchQuery);
       const matchJenis = jenisFilter === 'Semua' || item.jenis_peserta === jenisFilter;
-      return matchSearch && matchJenis;
+      const matchWilayah = wilayahFilter === 'Semua' || item.dusun === wilayahFilter || item.alamat?.includes(wilayahFilter);
+      return matchSearch && matchJenis && matchWilayah;
     });
-  }, [searchQuery, jenisFilter]);
+  }, [rawPesertaList, searchQuery, jenisFilter, wilayahFilter]);
 
   // Aksi memilih peserta dari hasil pencarian
   const handleSelectPeserta = async (peserta) => {
