@@ -5,7 +5,7 @@ export default function LupaPasswordPage({ onBack }) {
     <div 
       className="min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat relative"
       style={{
-        backgroundImage: "url('/bg-pwd.svg'), linear-gradient(135deg, #e0f2fe 0%, #fef3c7 50%, #fce7f3 100%)",
+        backgroundImage: "url('/bg-pwd.png'), linear-gradient(135deg, #e0f2fe 0%, #fef3c7 50%, #fce7f3 100%)",
       }}
     >
       {/* Kartu Lupa Password - Persis Gambar Figma media_1791133015318.jpg */}

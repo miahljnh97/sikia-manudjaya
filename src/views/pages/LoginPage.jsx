@@ -44,7 +44,7 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
     <div 
       className="min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat relative"
       style={{
-        backgroundImage: "url('/background.svg'), linear-gradient(135deg, #e0f2fe 0%, #fef3c7 50%, #fce7f3 100%)",
+        backgroundImage: "url('/background.png'), linear-gradient(135deg, #e0f2fe 0%, #fef3c7 50%, #fce7f3 100%)",
       }}
     >
       {/* Main Login Card - Persis Figma media_1791133015258.jpg */}

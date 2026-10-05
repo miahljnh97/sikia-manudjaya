@@ -94,19 +94,24 @@ export default function PencarianPasien({
           </div>
         </div>
 
-        {/* Right CTA Box: Tidak menemukan peserta? */}
-        <div className="w-full lg:w-72 bg-rose-50/60 border border-rose-100 rounded-2xl p-5 flex flex-col justify-between">
-          <div>
-            <h4 className="text-xs font-bold text-slate-800">Tidak menemukan peserta?</h4>
-            <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-              Daftarkan sebagai peserta baru terlebih dahulu di sistem.
-            </p>
+        {/* Right CTA Box: Tidak menemukan peserta? - Pink pastel #FDA4AF border and #991B1B text */}
+        <div className="w-full lg:w-80 bg-[#FFF1F2] border border-[#FDA4AF] rounded-2xl p-5 flex flex-col justify-between">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-full bg-[#FFE4E6] flex items-center justify-center shrink-0">
+              <Plus size={20} className="text-[#991B1B]" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-[#991B1B]">Tidak menemukan peserta?</h4>
+              <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                Daftarkan sebagai peserta baru terlebih dahulu di sistem.
+              </p>
+            </div>
           </div>
           <button
             onClick={onTambahPesertaBaru}
-            className="mt-4 w-full py-2.5 px-3 bg-rose-800 hover:bg-rose-900 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5"
+            className="mt-4 w-full py-2.5 px-4 bg-[#881337] hover:bg-[#70102d] active:bg-[#4c0519] text-[#FFFFFF] rounded-xl text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
           >
-            <Plus size={15} />
+            <Plus size={15} strokeWidth={2.5} />
             <span>Tambah Peserta Baru</span>
           </button>
         </div>
@@ -114,20 +119,32 @@ export default function PencarianPasien({
 
       {/* Tabel Hasil Pencarian */}
       <div className="bg-white border border-slate-100 rounded-2xl shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h4 className="text-xs font-bold text-slate-800">
-            Hasil Pencarian
-          </h4>
-          <span className="text-[11px] text-slate-400">
-            Menampilkan 1-{pesertaList.length} dari {pesertaList.length} hasil pencarian
-          </span>
+        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h4 className="text-xs font-bold text-slate-800">
+              Hasil Pencarian
+            </h4>
+            <span className="text-[11px] text-slate-400 mt-0.5 block">
+              Menampilkan 1-{pesertaList.length} dari {pesertaList.length} hasil pencarian
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <span className="text-[11px] text-slate-400">Urutan</span>
+            <select
+              className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 outline-none cursor-pointer"
+            >
+              <option value="A-Z">Nama A-Z ∨</option>
+              <option value="Z-A">Nama Z-A ∨</option>
+            </select>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50/60 text-slate-400 text-[11px] uppercase font-semibold border-b border-slate-100">
-                <th className="py-3 px-4">No</th>
+              <tr className="bg-slate-50/60 text-slate-500 text-[11px] font-bold border-b border-slate-100">
+                <th className="py-3 px-4 w-12">No</th>
                 <th className="py-3 px-4">Nama Peserta</th>
                 <th className="py-3 px-4">NIK</th>
                 <th className="py-3 px-4">Jenis Peserta</th>
@@ -139,40 +156,107 @@ export default function PencarianPasien({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {pesertaList.map((item, idx) => (
-                <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-3.5 px-4 text-slate-400">{idx + 1}</td>
-                  <td className="py-3.5 px-4 font-bold text-slate-900">{item.nama}</td>
-                  <td className="py-3.5 px-4 font-mono text-slate-600 font-medium">{maskNik(item.nik)}</td>
-                  <td className="py-3.5 px-4">
-                    <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                      item.jenis_peserta === 'Ibu Hamil' ? 'bg-rose-50 text-rose-600' :
-                      item.jenis_peserta === 'Balita' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
-                    }`}>
-                      {item.jenis_peserta}
+              {pesertaList.map((item, idx) => {
+                // Tentukan status badge dengan bullet sesuai Figma
+                const statusStr = (item.status_kehadiran || 'Belum Hadir').toLowerCase();
+                let statusBadge = (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                    Menunggu
+                  </span>
+                );
+
+                if (statusStr.includes('hadir') && !statusStr.includes('tidak') && !statusStr.includes('belum')) {
+                  statusBadge = (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-[#DCFCE7] text-[#166534]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#15803D]" />
+                      Hadir
                     </span>
-                  </td>
-                  <td className="py-3.5 px-4 text-slate-500">{item.tanggal_lahir || '12 Mei 1996'}</td>
-                  <td className="py-3.5 px-4">{item.usia}</td>
-                  <td className="py-3.5 px-4">{item.alamat}</td>
-                  <td className="py-3.5 px-4">
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      {item.status_kehadiran}
+                  );
+                } else if (statusStr.includes('tidak')) {
+                  statusBadge = (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-[#FEE2E2] text-[#991B1B]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626]" />
+                      Tidak Hadir
                     </span>
-                  </td>
-                  <td className="py-3.5 px-4 text-right">
-                    <button
-                      onClick={() => onSelectPeserta(item)}
-                      className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs"
-                    >
-                      Pilih
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                  );
+                } else if (statusStr.includes('selesai') || statusStr.includes('dilayani')) {
+                  statusBadge = (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-[#DBEAFE] text-[#1D4ED8]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB]" />
+                      Sudah dilayani
+                    </span>
+                  );
+                }
+
+                // Badge kategori peserta
+                let jenisBadge = (
+                  <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600">
+                    {item.jenis_peserta}
+                  </span>
+                );
+                if (item.jenis_peserta === 'Ibu Hamil') {
+                  jenisBadge = (
+                    <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-[#FEE2E2] text-[#991B1B]">
+                      Ibu Hamil
+                    </span>
+                  );
+                } else if (item.jenis_peserta === 'Balita') {
+                  jenisBadge = (
+                    <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-[#DCFCE7] text-[#166534]">
+                      Balita
+                    </span>
+                  );
+                } else if (item.jenis_peserta === 'Bayi') {
+                  jenisBadge = (
+                    <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-[#DBEAFE] text-[#1D4ED8]">
+                      Bayi
+                    </span>
+                  );
+                }
+
+                return (
+                  <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-3.5 px-4 text-slate-500 font-medium">{idx + 1}</td>
+                    <td className="py-3.5 px-4 font-bold text-slate-900">{item.nama}</td>
+                    <td className="py-3.5 px-4 font-mono text-slate-600 font-medium">{maskNik(item.nik)}</td>
+                    <td className="py-3.5 px-4">{jenisBadge}</td>
+                    <td className="py-3.5 px-4 text-slate-500">{item.tanggal_lahir || '12 Mei 1996'}</td>
+                    <td className="py-3.5 px-4">{item.usia}</td>
+                    <td className="py-3.5 px-4">{item.alamat}</td>
+                    <td className="py-3.5 px-4">{statusBadge}</td>
+                    <td className="py-3.5 px-4 text-right">
+                      <button
+                        onClick={() => onSelectPeserta(item)}
+                        className="px-4 py-1.5 bg-[#3B82F6] hover:bg-[#2563EB] active:bg-[#1D4ED8] text-[#FFFFFF] rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                      >
+                        Pilih
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Footer */}
+        <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <div>Menampilkan 1-{pesertaList.length} dari {pesertaList.length} hasil</div>
+          <div className="flex items-center gap-1">
+            <button className="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-400 cursor-not-allowed">
+              &lt;
+            </button>
+            <button className="w-7 h-7 rounded-lg text-xs font-bold bg-[#3B82F6] text-white flex items-center justify-center">
+              1
+            </button>
+            <button className="w-7 h-7 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 flex items-center justify-center">
+              2
+            </button>
+            <button className="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">
+              &gt;
+            </button>
+          </div>
         </div>
       </div>
     </div>
