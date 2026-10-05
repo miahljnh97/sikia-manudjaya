@@ -61,6 +61,13 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
     return null;
   });
 
+  useEffect(() => {
+    if (!isIbuRole && initialSelectedId && listPeserta.length > 0) {
+      const found = listPeserta.find((p) => p.id === initialSelectedId);
+      if (found) setSelectedPeserta(found);
+    }
+  }, [initialSelectedId, listPeserta, isIbuRole]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [jenisFilter, setJenisFilter] = useState('Semua');
   const [statusFilter, setStatusFilter] = useState('Semua');
@@ -107,13 +114,29 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
   const handleSavePeserta = async (updated) => {
     try {
       const saved = await pesertaService.updatePeserta(updated.id, updated);
-      setSelectedPeserta(saved || updated);
-      notify(`Data peserta "${updated.nama}" berhasil diperbarui!`, 'success');
+      const finalData = saved || updated;
+
+      // 1. Update state listPeserta agar tabel langsung menampilkan data terbaru
+      setListPeserta((prev) => prev.map((p) => (p.id === updated.id ? finalData : p)));
+
+      // 2. Tampilkan notifikasi toast sukses
+      notify(`Data peserta "${finalData.nama}" berhasil diperbarui!`, 'success');
+
+      // 3. Otomatis kembali ke tampilan daftar peserta (tabel)
+      setSelectedPeserta(null);
+      if (onBackToDashboard && initialSelectedId) {
+        onBackToDashboard();
+      }
     } catch (e) {
       console.warn('Error update peserta:', e);
       const saved = dataStoreService.updatePeserta(updated.id, updated);
-      setSelectedPeserta(saved || updated);
-      notify(`Data peserta "${updated.nama}" berhasil diperbarui!`, 'success');
+      const finalData = saved || updated;
+      setListPeserta((prev) => prev.map((p) => (p.id === updated.id ? finalData : p)));
+      notify(`Data peserta "${finalData.nama}" berhasil diperbarui!`, 'success');
+      setSelectedPeserta(null);
+      if (onBackToDashboard && initialSelectedId) {
+        onBackToDashboard();
+      }
     }
   };
 
