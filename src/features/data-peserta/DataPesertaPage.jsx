@@ -5,6 +5,8 @@ import { dataStoreService } from '../../services/dataStoreService';
 import { pesertaService } from '../../services/pesertaService';
 import { masterService } from '../../services/masterService';
 import { maskNik } from '../../utils/nikUtils';
+import { resolveDusunId, resolveTipeId } from '../../utils/pesertaAdapter';
+import { toISODateString } from '../../utils/dateUtils';
 
 // Master data peserta diambil 100% dari tabel `peserta` Supabase
 export const DUMMY_DATA_PESERTA = [];
@@ -97,9 +99,9 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
       const payloadUpdate = {
         nama: updated.nama,
         nik: updated.nik,
-        dusun_id: updated.dusun_id || undefined,
-        tipe_id: updated.tipe_id || undefined,
-        tgl_lahir: updated.tanggal_lahir || updated.tgl_lahir || undefined,
+        dusun_id: resolveDusunId(updated.dusun_id) || undefined,
+        tipe_id: resolveTipeId(updated.tipe_id || updated.jenis_peserta) || undefined,
+        tgl_lahir: toISODateString(updated.tanggal_lahir || updated.tgl_lahir) || undefined,
         no_wa: updated.telepon || updated.no_wa || undefined,
         alamat: updated.alamat || undefined,
         jenis_kelamin: updated.jenis_kelamin === 'Perempuan' ? 'P' : (updated.jenis_kelamin === 'Laki-laki' ? 'L' : updated.jenis_kelamin),

@@ -129,3 +129,44 @@ export function normalizePeserta(row) {
     waktu_hadir: row.waktu_hadir || null,
   };
 }
+
+export const DUSUN_MAP = {
+  'dusun 1': 'fbe91bbd-c11a-4a19-90ba-ca78f929d791',
+  'dusun 2': '200a7c92-6671-4b31-a39f-0a03e1fb4a9f',
+  'dusun 3': '3250c081-51e4-44af-b2b6-5535c73f2c41'
+};
+
+export const TIPE_MAP = {
+  'ibu': 'b5e84397-0be0-4515-9fe1-6222b6792bc3',
+  'ibu hamil': 'b5e84397-0be0-4515-9fe1-6222b6792bc3',
+  'anak': '29bad3a5-2808-4ebd-be57-391ff0126b80',
+  'balita': '29bad3a5-2808-4ebd-be57-391ff0126b80',
+  'bayi': '29bad3a5-2808-4ebd-be57-391ff0126b80'
+};
+
+export function isValidUUID(str) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(str || '').trim());
+}
+
+export function resolveDusunId(val) {
+  if (!val) return null;
+  const s = String(val).trim();
+  if (isValidUUID(s)) return s;
+  const lower = s.toLowerCase();
+  for (const [key, uuid] of Object.entries(DUSUN_MAP)) {
+    if (lower.includes(key)) return uuid;
+  }
+  return null;
+}
+
+export function resolveTipeId(val) {
+  if (!val) return null;
+  const s = String(val).trim();
+  if (isValidUUID(s)) return s;
+  const lower = s.toLowerCase();
+  for (const [key, uuid] of Object.entries(TIPE_MAP)) {
+    if (lower.includes(key)) return uuid;
+  }
+  return null;
+}
+

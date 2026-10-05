@@ -186,10 +186,9 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
                     ))
                   ) : (
                     <>
-                      <option value="Dusun 1">Dusun 1</option>
-                      <option value="Dusun 2">Dusun 2</option>
-                      <option value="Dusun 3">Dusun 3</option>
-                      <option value="Manud Jaya">Manud Jaya</option>
+                      <option value="fbe91bbd-c11a-4a19-90ba-ca78f929d791">Dusun 1</option>
+                      <option value="200a7c92-6671-4b31-a39f-0a03e1fb4a9f">Dusun 2</option>
+                      <option value="3250c081-51e4-44af-b2b6-5535c73f2c41">Dusun 3</option>
                     </>
                   )}
                 </select>

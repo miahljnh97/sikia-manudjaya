@@ -1,7 +1,8 @@
 import { supabase, isSupabaseConfigured } from '../config/supabaseClient';
 import { INITIAL_DUMMY_PESERTA } from '../models/pesertaModel';
 import { dataStoreService } from './dataStoreService';
-import { normalizePeserta } from '../utils/pesertaAdapter';
+import { normalizePeserta, resolveDusunId, resolveTipeId } from '../utils/pesertaAdapter';
+import { toISODateString } from '../utils/dateUtils';
 
 export const pesertaService = {
   /**
@@ -141,9 +142,32 @@ export const pesertaService = {
   async updatePeserta(id, updatedFields) {
     if (isSupabaseConfigured && supabase) {
       try {
+        const cleanPayload = { ...updatedFields };
+        if (cleanPayload.dusun_id) {
+          cleanPayload.dusun_id = resolveDusunId(cleanPayload.dusun_id);
+        }
+        if (cleanPayload.tipe_id) {
+          cleanPayload.tipe_id = resolveTipeId(cleanPayload.tipe_id);
+        }
+        if (cleanPayload.tgl_lahir) {
+          cleanPayload.tgl_lahir = toISODateString(cleanPayload.tgl_lahir);
+        }
+        // Buang properti virtual yang bukan kolom database
+        delete cleanPayload.jenis_peserta;
+        delete cleanPayload.dusun;
+        delete cleanPayload.tipe_peserta;
+        delete cleanPayload.usia;
+        delete cleanPayload.status;
+        delete cleanPayload.status_kehadiran;
+        delete cleanPayload.waktu_hadir;
+        delete cleanPayload.nik_lengkap;
+        delete cleanPayload.telepon;
+        delete cleanPayload.telepon_pj;
+        delete cleanPayload.catatan_observasi;
+
         const { data, error } = await supabase
           .from('peserta')
-          .update(updatedFields)
+          .update(cleanPayload)
           .eq('id', id)
           .select(`
             *,
