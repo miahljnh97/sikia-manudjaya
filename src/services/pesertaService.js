@@ -90,10 +90,8 @@ export const pesertaService = {
 
     let statusDb = 'hadir';
     const s = (statusKehadiran || '').toLowerCase();
-    if (s.includes('dilayani') || s.includes('selesai')) {
-      statusDb = 'sudah dilayani';
-    } else if (s.includes('tidak')) {
-      statusDb = 'tidak hadir';
+    if (s.includes('tidak')) {
+      statusDb = 'tidak_hadir';
     } else if (s.includes('tunggu')) {
       statusDb = 'menunggu';
     } else {

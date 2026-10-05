@@ -163,9 +163,8 @@ export const kunjunganService = {
     try {
       let statusDb = 'hadir';
       const s = (status_kehadiran || '').toLowerCase();
-      if (s.includes('tidak')) statusDb = 'tidak hadir';
+      if (s.includes('tidak')) statusDb = 'tidak_hadir';
       else if (s.includes('tunggu')) statusDb = 'menunggu';
-      else if (s.includes('dilayani') || s.includes('selesai')) statusDb = 'sudah dilayani';
       else statusDb = 'hadir';
 
       const payloadKunjungan = {
