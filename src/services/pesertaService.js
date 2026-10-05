@@ -39,8 +39,20 @@ export const pesertaService = {
               const kunj = kunjunganMap.get(row.id);
               if (kunj) {
                 const s = (kunj.status_kehadiran || '').toLowerCase();
-                norm.status_kehadiran = s === 'hadir' ? 'Sudah Hadir' : (s.includes('tidak') ? 'Tidak Hadir' : 'Belum Hadir');
+                if (s.includes('dilayani') || s.includes('selesai')) {
+                  norm.status_kehadiran = 'Sudah dilayani';
+                } else if (s.includes('tidak')) {
+                  norm.status_kehadiran = 'Tidak Hadir';
+                } else if (s.includes('tunggu')) {
+                  norm.status_kehadiran = 'Menunggu';
+                } else if (s.includes('hadir')) {
+                  norm.status_kehadiran = 'Hadir';
+                } else {
+                  norm.status_kehadiran = 'Menunggu';
+                }
                 norm.waktu_hadir = kunj.jam_kedatangan ? kunj.jam_kedatangan.slice(0, 5).replace(':', '.') : '08.45';
+              } else {
+                norm.status_kehadiran = 'Menunggu';
               }
               return norm;
             });
@@ -58,15 +70,26 @@ export const pesertaService = {
   },
 
   /**
-   * Update status kehadiran peserta - Disimpan ke tabel `kunjungan` hari ini (bukan ke tabel `peserta`)
+   * Update status kehadiran peserta - Mendukung 4 status: Hadir, Menunggu, Sudah dilayani, Tidak Hadir
    */
   async updateStatusKehadiran(id, statusKehadiran) {
-    const waktuSekarang = statusKehadiran === 'Sudah Hadir' 
+    const waktuSekarang = (statusKehadiran === 'Hadir' || statusKehadiran === 'Sudah Hadir' || statusKehadiran === 'Sudah dilayani')
       ? new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':')
       : null;
     const jamDb = waktuSekarang ? `${waktuSekarang}:00` : '08:30:00';
     const tglHariIni = new Date().toISOString().split('T')[0];
-    const statusDb = statusKehadiran === 'Sudah Hadir' ? 'hadir' : (statusKehadiran === 'Tidak Hadir' ? 'tidak hadir' : 'belum hadir');
+
+    let statusDb = 'hadir';
+    const s = (statusKehadiran || '').toLowerCase();
+    if (s.includes('dilayani') || s.includes('selesai')) {
+      statusDb = 'sudah dilayani';
+    } else if (s.includes('tidak')) {
+      statusDb = 'tidak hadir';
+    } else if (s.includes('tunggu')) {
+      statusDb = 'menunggu';
+    } else {
+      statusDb = 'hadir';
+    }
 
     if (isSupabaseConfigured && supabase) {
       try {

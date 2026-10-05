@@ -65,8 +65,11 @@ export function useDashboardController() {
   // Statistik Ringkasan Kartu Dashboard (Dihitung otomatis dari data riil)
   const stats = useMemo(() => {
     const total = pesertaList.length;
-    const sudahHadir = pesertaList.filter((p) => p.status_kehadiran === 'Sudah Hadir').length;
-    const belumHadir = pesertaList.filter((p) => p.status_kehadiran === 'Belum Hadir').length;
+    const sudahHadir = pesertaList.filter((p) => {
+      const s = (p.status_kehadiran || '').toLowerCase();
+      return s.includes('hadir') || s.includes('dilayani') || s.includes('selesai');
+    }).length;
+    const belumHadir = total - sudahHadir;
     const ibuHamil = pesertaList.filter((p) => p.jenis_peserta === 'Ibu Hamil').length;
     const bayi = pesertaList.filter((p) => p.jenis_peserta === 'Bayi').length;
     const balita = pesertaList.filter((p) => p.jenis_peserta === 'Balita').length;
@@ -76,7 +79,7 @@ export function useDashboardController() {
       return {
         total,
         sudahHadir,
-        belumHadir: belumHadir > 0 ? belumHadir : (total - sudahHadir),
+        belumHadir: belumHadir >= 0 ? belumHadir : 0,
         ibuHamil,
         bayi,
         balita,
