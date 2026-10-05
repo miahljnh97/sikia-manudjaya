@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   UserPlus, 
@@ -10,14 +10,16 @@ import {
   CheckCircle2, 
   XCircle, 
   Plus, 
-  X,
+  X, 
   Filter,
   Trash2
 } from 'lucide-react';
 import { dataStoreService, getIsActive } from '../../services/dataStoreService';
+import { kaderService } from '../../services/kaderService';
 
 export default function KelolaKaderPage({ currentUser, onShowToast }) {
   const [kaderList, setKaderList] = useState(() => dataStoreService.getKaderList());
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [dusunFilter, setDusunFilter] = useState('Semua');
   const [statusFilter, setStatusFilter] = useState('Semua');
@@ -28,68 +30,92 @@ export default function KelolaKaderPage({ currentUser, onShowToast }) {
     nama: '',
     nik: '',
     dusun: 'Dusun 1',
-    posyandu: 'Posyandu Mawar 1',
+    posyandu: 'Posyandu Desa Manud Jaya',
     telepon: '',
     email: '',
     peran: 'Kader Posyandu'
   });
 
-  // Reload data saat ada event
-  const refreshList = () => {
-    setKaderList(dataStoreService.getKaderList());
-  };
-
-  const handleToggleStatus = (id, nama) => {
-    const updated = dataStoreService.toggleKaderActive(id);
-    refreshList();
-    const isActive = getIsActive(updated);
-    if (onShowToast) {
-      onShowToast(`Status operasional kader "${nama}" diubah menjadi: ${isActive ? 'Aktif' : 'Non-Aktif / Cuti'}.`, 'info');
+  // Fetch data dari Supabase saat buka halaman
+  const refreshList = async () => {
+    try {
+      const data = await kaderService.getKaderList();
+      if (data && data.length > 0) {
+        setKaderList(data);
+      }
+    } catch (e) {
+      console.warn('Error refreshing kader:', e);
     }
   };
 
-  const handleHapusKader = (id, nama) => {
+  useEffect(() => {
+    refreshList();
+    const unsubscribe = dataStoreService.subscribe(() => {
+      refreshList();
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleToggleStatus = async (id, nama) => {
+    const currentItem = kaderList.find((k) => String(k.id) === String(id));
+    const currentActive = getIsActive(currentItem);
+    await kaderService.toggleKaderActive(id, currentActive);
+    await refreshList();
+    if (onShowToast) {
+      onShowToast(`Status operasional kader "${nama}" diubah menjadi: ${!currentActive ? 'Aktif' : 'Non-Aktif / Cuti'}.`, 'info');
+    }
+  };
+
+  const handleHapusKader = async (id, nama) => {
     const yakin = window.confirm(`Apakah Anda yakin ingin menghapus kader "${nama}"?\n\nCatatan: Data akan disuspend (soft delete) sehingga tidak muncul lagi di operasional aktif.`);
     if (yakin) {
-      dataStoreService.suspendKader(id);
-      refreshList();
+      await kaderService.suspendKader(id);
+      await refreshList();
       if (onShowToast) {
         onShowToast(`Kader "${nama}" berhasil dihapus (disuspend) dari sistem.`, 'success');
       }
     }
   };
 
-  const handleSimpanKader = (e) => {
+  const handleSimpanKader = async (e) => {
     e.preventDefault();
     if (!formData.nama || !formData.nik || !formData.telepon) {
       alert('Mohon lengkapi Nama, NIK, dan Nomor Telepon kader.');
       return;
     }
 
-    dataStoreService.addKader({
-      nama: formData.nama,
-      nik: formData.nik,
-      peran: formData.peran,
-      dusun: formData.dusun,
-      posyandu: formData.posyandu,
-      telepon: formData.telepon,
-      email: formData.email || `${formData.nama.toLowerCase().replace(/\s+/g, '.')}@manudjaya.id`
-    });
+    setLoading(true);
+    try {
+      await kaderService.tambahKader({
+        nama: formData.nama,
+        nik: formData.nik,
+        peran: formData.peran,
+        dusun: formData.dusun,
+        posyandu: formData.posyandu,
+        telepon: formData.telepon,
+        email: formData.email || `${formData.nama.toLowerCase().replace(/\s+/g, '.')}@manudjaya.id`
+      });
 
-    refreshList();
-    setIsModalOpen(false);
-    setFormData({
-      nama: '',
-      nik: '',
-      dusun: 'Dusun 1',
-      posyandu: 'Posyandu Mawar 1',
-      telepon: '',
-      email: '',
-      peran: 'Kader Posyandu'
-    });
+      await refreshList();
+      setIsModalOpen(false);
+      setFormData({
+        nama: '',
+        nik: '',
+        dusun: 'Dusun 1',
+        posyandu: 'Posyandu Desa Manud Jaya',
+        telepon: '',
+        email: '',
+        peran: 'Kader Posyandu'
+      });
 
-    if (onShowToast) {
-      onShowToast(`Kader baru "${formData.nama}" berhasil ditambahkan ke ${formData.posyandu}!`, 'success');
+      if (onShowToast) {
+        onShowToast(`Kader baru "${formData.nama}" berhasil disimpan ke database!`, 'success');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Gagal menyimpan kader baru ke database.');
+    } finally {
+      setLoading(false);
     }
   };
 
