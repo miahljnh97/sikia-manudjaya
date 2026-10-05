@@ -55,71 +55,63 @@ export function hitungUsiaDariTglLahir(tglLahirStr) {
 export function tentukanJenisPeserta(raw) {
   if (!raw) return 'Balita';
 
-  // 1. Cek jika sudah memiliki jenis_peserta non-default yang valid
-  if (raw.jenis_peserta && ['Ibu Hamil', 'Bayi', 'Lansia'].includes(raw.jenis_peserta)) {
+  // 1. Prioritas Utama: Baca langsung dari relasi master tipe_peserta di Supabase (nama / kode)
+  if (raw.tipe_peserta?.nama) {
+    const nama = raw.tipe_peserta.nama.trim();
+    const namaLower = nama.toLowerCase();
+    if (namaLower.includes('ibu')) return 'Ibu Hamil';
+    if (namaLower.includes('lansia')) return 'Lansia';
+    if (namaLower.includes('bayi')) return 'Bayi';
+    if (namaLower.includes('balita')) return 'Balita';
+    if (namaLower.includes('anak')) return 'Balita';
+    return nama;
+  }
+
+  if (raw.tipe_peserta?.kode) {
+    const k = raw.tipe_peserta.kode.toLowerCase();
+    if (k.includes('ibu')) return 'Ibu Hamil';
+    if (k.includes('lansia')) return 'Lansia';
+    if (k.includes('bayi')) return 'Bayi';
+    if (k.includes('balita') || k.includes('anak')) return 'Balita';
+  }
+
+  // 2. Cek tipe_id UUID langsung (4 UUID resmi master tipe_peserta di database Supabase)
+  const tipeId = String(raw.tipe_id || '').toLowerCase();
+  if (tipeId === 'b5e84397-0be0-4515-9fe1-6222b6792bc3') return 'Ibu Hamil';
+  if (tipeId === '7e4f92a1-8812-4d34-99fe-abcdef123456') return 'Lansia';
+  if (tipeId === '3a7c81d2-9901-4c12-88ef-123456789abc') return 'Bayi';
+  if (tipeId === '29bad3a5-2808-4ebd-be57-391ff0126b80') return 'Balita';
+
+  // 3. Cek properti jenis_peserta eksplisit
+  if (raw.jenis_peserta && ['Ibu Hamil', 'Balita', 'Bayi', 'Lansia'].includes(raw.jenis_peserta)) {
     return raw.jenis_peserta;
   }
 
-  // 2. Cek status ibu dari DB ('hamil', 'menyusui')
+  // 4. Cek status_ibu dari DB ('hamil', 'menyusui')
   const statusIbu = (raw.status_ibu || '').toLowerCase();
   if (statusIbu.includes('hamil') || statusIbu.includes('menyusui')) {
     return 'Ibu Hamil';
   }
 
-  // 3. Cek tipe_id UUID atau kode tipe_peserta
-  const tipeId = String(raw.tipe_id || '').toLowerCase();
-  const tipeKode = (raw.tipe_peserta?.kode || raw.tipe || '').toLowerCase();
+  // 5. Cek kolom legacy tipe
+  const legacyTipe = (raw.tipe || '').toLowerCase();
+  if (legacyTipe.includes('ibu')) return 'Ibu Hamil';
+  if (legacyTipe.includes('lansia')) return 'Lansia';
 
-  const isTipeIbu = tipeKode.includes('ibu') || tipeId === 'b5e84397-0be0-4515-9fe1-6222b6792bc3';
-  const isTipeAnak = tipeKode.includes('anak') || tipeKode.includes('balita') || tipeKode.includes('bayi') || tipeId === '29bad3a5-2808-4ebd-be57-391ff0126b80';
-  const isTipeLansia = tipeKode.includes('lansia');
-
-  // 4. Hitung usia dari tgl_lahir
+  // 6. Fallback kalkulasi usia jika tipe_peserta tidak diset di database
   const tglLahirStr = raw.tgl_lahir || raw.tanggal_lahir;
-  let usiaTahun = null;
-  let usiaBulan = null;
-
   if (tglLahirStr) {
     const lahir = new Date(tglLahirStr);
     if (!isNaN(lahir.getTime())) {
       const now = new Date();
-      usiaTahun = now.getFullYear() - lahir.getFullYear();
-      usiaBulan = (now.getFullYear() - lahir.getFullYear()) * 12 + (now.getMonth() - lahir.getMonth());
+      const usiaTahun = now.getFullYear() - lahir.getFullYear();
+      const usiaBulan = (now.getFullYear() - lahir.getFullYear()) * 12 + (now.getMonth() - lahir.getMonth());
+      if (usiaTahun >= 60) return 'Lansia';
+      if (usiaBulan < 12) return 'Bayi';
+      if (usiaTahun >= 1 && usiaTahun < 6) return 'Balita';
+      if (usiaTahun >= 12) return 'Ibu Hamil';
     }
   }
-
-  // Lansia: usia >= 60 tahun atau tipe lansia
-  if (isTipeLansia || (usiaTahun !== null && usiaTahun >= 60)) {
-    return 'Lansia';
-  }
-
-  // Klasifikasi berdasarkan usia jika tersedia
-  if (usiaTahun !== null) {
-    // Bayi: usia di bawah 12 bulan (< 1 tahun)
-    if (usiaBulan !== null && usiaBulan < 12 && !isTipeIbu) {
-      return 'Bayi';
-    }
-
-    // Balita: usia 1 s.d. 5 tahun
-    if (usiaTahun >= 1 && usiaTahun < 6 && !isTipeIbu) {
-      return 'Balita';
-    }
-
-    // Usia remaja / dewasa (>= 12 tahun)
-    if (usiaTahun >= 12) {
-      return 'Ibu Hamil';
-    }
-  }
-
-  // Fallback berdasarkan tipe_id / kode
-  if (isTipeIbu) return 'Ibu Hamil';
-  if (isTipeLansia) return 'Lansia';
-  if (isTipeAnak) {
-    if (usiaBulan !== null && usiaBulan < 12) return 'Bayi';
-    return 'Balita';
-  }
-
-  if (raw.jenis_peserta) return raw.jenis_peserta;
 
   return 'Balita';
 }
@@ -182,10 +174,11 @@ export const DUSUN_MAP = {
 export const TIPE_MAP = {
   'ibu': 'b5e84397-0be0-4515-9fe1-6222b6792bc3',
   'ibu hamil': 'b5e84397-0be0-4515-9fe1-6222b6792bc3',
-  'anak': '29bad3a5-2808-4ebd-be57-391ff0126b80',
+  'ibu_hamil': 'b5e84397-0be0-4515-9fe1-6222b6792bc3',
   'balita': '29bad3a5-2808-4ebd-be57-391ff0126b80',
-  'bayi': '29bad3a5-2808-4ebd-be57-391ff0126b80',
-  'lansia': 'b5e84397-0be0-4515-9fe1-6222b6792bc3'
+  'anak': '29bad3a5-2808-4ebd-be57-391ff0126b80',
+  'bayi': '3a7c81d2-9901-4c12-88ef-123456789abc',
+  'lansia': '7e4f92a1-8812-4d34-99fe-abcdef123456'
 };
 
 export function isValidUUID(str) {
@@ -208,6 +201,10 @@ export function resolveTipeId(val) {
   const s = String(val).trim();
   if (isValidUUID(s)) return s;
   const lower = s.toLowerCase();
+  if (lower.includes('ibu')) return TIPE_MAP['ibu_hamil'];
+  if (lower.includes('lansia')) return TIPE_MAP['lansia'];
+  if (lower.includes('bayi')) return TIPE_MAP['bayi'];
+  if (lower.includes('balita') || lower.includes('anak')) return TIPE_MAP['balita'];
   for (const [key, uuid] of Object.entries(TIPE_MAP)) {
     if (lower.includes(key)) return uuid;
   }

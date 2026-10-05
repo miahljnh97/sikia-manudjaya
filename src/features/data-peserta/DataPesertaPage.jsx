@@ -106,11 +106,13 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
 
   const handleSavePeserta = async (updated) => {
     try {
+      const isIbu = (updated.jenis_peserta || '').toLowerCase().includes('ibu');
       const payloadUpdate = {
         nama: updated.nama,
         nik: updated.nik,
         dusun_id: resolveDusunId(updated.dusun_id) || undefined,
-        tipe_id: resolveTipeId(updated.tipe_id || updated.jenis_peserta) || undefined,
+        tipe_id: resolveTipeId(updated.jenis_peserta) || resolveTipeId(updated.tipe_id) || undefined,
+        status_ibu: isIbu ? 'hamil' : null,
         tgl_lahir: toISODateString(updated.tanggal_lahir || updated.tgl_lahir) || undefined,
         no_wa: updated.telepon || updated.no_wa || undefined,
         alamat: updated.alamat || undefined,

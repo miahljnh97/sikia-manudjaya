@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { masterService } from '../../services/masterService';
+import { resolveTipeId } from '../../utils/pesertaAdapter';
 
 export default function RegistrasiModal({ isOpen, onClose, onSubmit, onShowToast }) {
   const [dusunList, setDusunList] = useState([]);
@@ -49,13 +50,24 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit, onShowToast
     }
     setErrorMsg('');
 
-    // Tentukan tipe_id dari master tipe_peserta
-    const isIbu = formData.jenis_peserta === 'Ibu Hamil';
-    const matchedTipe = tipeList.find(t => isIbu ? t.kode === 'ibu' : t.kode === 'anak');
+    // Tentukan tipe_id dari master tipe_peserta relasi Supabase
+    const jp = (formData.jenis_peserta || '').toLowerCase();
+    const isIbu = jp.includes('ibu');
+    const matchedTipe = tipeList.find(t => {
+      const kode = (t.kode || '').toLowerCase();
+      const nama = (t.nama || '').toLowerCase();
+      if (jp.includes('ibu') && (kode.includes('ibu') || nama.includes('ibu'))) return true;
+      if (jp === 'bayi' && (kode === 'bayi' || nama === 'bayi')) return true;
+      if (jp === 'lansia' && (kode === 'lansia' || nama === 'lansia')) return true;
+      if (jp === 'balita' && (kode === 'balita' || kode === 'anak' || nama === 'balita')) return true;
+      return false;
+    });
+
+    const finalTipeId = matchedTipe ? matchedTipe.id : resolveTipeId(formData.jenis_peserta);
 
     onSubmit({
       ...formData,
-      tipe_id: matchedTipe ? matchedTipe.id : null,
+      tipe_id: finalTipeId,
       status_ibu: isIbu ? 'hamil' : null,
     });
     setFormData({

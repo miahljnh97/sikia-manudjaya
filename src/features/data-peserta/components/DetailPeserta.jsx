@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Edit3, Save, X, User, Phone, Mail, MapPin, Calendar, Heart, Trash2, Eye, EyeOff, ChevronDown } from 'lucide-react';
 import { maskNik } from '../../../utils/nikUtils';
 import { masterService } from '../../../services/masterService';
+import { resolveTipeId } from '../../../utils/pesertaAdapter';
 
 export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKaderOrBidan = true }) {
   if (!peserta) return null;
@@ -20,6 +21,7 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
     email: peserta.email || '',
     jenis_kelamin: peserta.jenis_kelamin || 'Perempuan',
     jenis_peserta: peserta.jenis_peserta || 'Ibu Hamil',
+    tipe_id: peserta.tipe_id || resolveTipeId(peserta.jenis_peserta),
     telepon_pj: peserta.telepon_pj || '',
     catatan_observasi: peserta.catatan_observasi || '',
   });
@@ -35,13 +37,21 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
   }, []);
 
   const handleChange = (field, val) => {
-    setFormData((prev) => ({ ...prev, [field]: val }));
+    setFormData((prev) => ({
+      ...prev,
+      [field]: val,
+      ...(field === 'jenis_peserta' ? { tipe_id: resolveTipeId(val) } : {})
+    }));
   };
 
   const handleSave = (e) => {
     e.preventDefault();
     if (onSave) {
-      onSave({ ...peserta, ...formData });
+      onSave({
+        ...peserta,
+        ...formData,
+        tipe_id: resolveTipeId(formData.jenis_peserta) || formData.tipe_id || peserta.tipe_id
+      });
     }
   };
 

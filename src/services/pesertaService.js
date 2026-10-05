@@ -156,6 +156,9 @@ export const pesertaService = {
         if (cleanPayload.dusun_id) {
           cleanPayload.dusun_id = resolveDusunId(cleanPayload.dusun_id);
         }
+        if (cleanPayload.jenis_peserta && !cleanPayload.tipe_id) {
+          cleanPayload.tipe_id = resolveTipeId(cleanPayload.jenis_peserta);
+        }
         if (cleanPayload.tipe_id) {
           cleanPayload.tipe_id = resolveTipeId(cleanPayload.tipe_id);
         }
@@ -208,7 +211,7 @@ export const pesertaService = {
           no_kk: pesertaData.no_kk || null,
           alamat: pesertaData.alamat || null,
           dusun_id: resolveDusunId(pesertaData.dusun_id),
-          tipe_id: resolveTipeId(pesertaData.tipe_id),
+          tipe_id: resolveTipeId(pesertaData.tipe_id || pesertaData.jenis_peserta),
           status_ibu: pesertaData.status_ibu || null,
           tgl_lahir: pesertaData.tgl_lahir ? toISODateString(pesertaData.tgl_lahir) : null,
           no_wa: pesertaData.telepon || pesertaData.no_wa || null,
