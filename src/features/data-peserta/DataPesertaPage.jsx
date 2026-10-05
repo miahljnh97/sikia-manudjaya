@@ -5,113 +5,8 @@ import { dataStoreService } from '../../services/dataStoreService';
 import { pesertaService } from '../../services/pesertaService';
 import { maskNik } from '../../utils/nikUtils';
 
-export const DUMMY_DATA_PESERTA = [
-  {
-    id: 1,
-    nama: 'Siti Aminah',
-    nik: '3275021911970001',
-    jenis_peserta: 'Ibu Hamil',
-    tanggal_lahir: '19/11/1997',
-    usia: '29 tahun',
-    alamat: 'Dusun 1',
-    telepon: '081292836382',
-    email: 'siti.aminah@example.com',
-    jenis_kelamin: 'Perempuan',
-    telepon_pj: '081291281928',
-    catatan_observasi: 'Pasien perlu rujukan',
-    status: 'Aktif'
-  },
-  {
-    id: 2,
-    nama: 'Siti Nurhaliza',
-    nik: '3275020302230002',
-    jenis_peserta: 'Balita',
-    tanggal_lahir: '03 Feb 2023',
-    usia: '3 tahun',
-    alamat: 'Dusun 2',
-    telepon: '081234567891',
-    email: 'nurhaliza@example.com',
-    jenis_kelamin: 'Perempuan',
-    telepon_pj: '081234567800',
-    catatan_observasi: 'Imunisasi lengkap sesuai jadwal',
-    status: 'Aktif'
-  },
-  {
-    id: 3,
-    nama: 'Siti Aisyah',
-    nik: '3275021808250003',
-    jenis_peserta: 'Bayi',
-    tanggal_lahir: '18 Ags 2025',
-    usia: '1 bulan',
-    alamat: 'Dusun 1',
-    telepon: '081234567892',
-    email: 'aisyah@example.com',
-    jenis_kelamin: 'Perempuan',
-    telepon_pj: '081234567801',
-    catatan_observasi: 'Pemberian ASI eksklusif',
-    status: 'Aktif'
-  },
-  {
-    id: 4,
-    nama: 'Siti Fatimah',
-    nik: '3275012101960004',
-    jenis_peserta: 'Ibu Hamil',
-    tanggal_lahir: '21 Jan 1996',
-    usia: '30 tahun',
-    alamat: 'Dusun 3',
-    telepon: '081234567893',
-    email: 'fatimah@example.com',
-    jenis_kelamin: 'Perempuan',
-    telepon_pj: '081234567802',
-    catatan_observasi: 'Pemberian vitamin dan zat besi',
-    status: 'Aktif'
-  },
-  {
-    id: 5,
-    nama: 'Siti Zhafira',
-    nik: '3275021803220005',
-    jenis_peserta: 'Balita',
-    tanggal_lahir: '18 Mar 2022',
-    usia: '4 tahun',
-    alamat: 'Dusun 2',
-    telepon: '081234567894',
-    email: 'zhafira@example.com',
-    jenis_kelamin: 'Perempuan',
-    telepon_pj: '081234567803',
-    catatan_observasi: 'Tumbuh kembang normal',
-    status: 'Aktif'
-  },
-  {
-    id: 6,
-    nama: 'Siti Zulaikha',
-    nik: '3275012707210006',
-    jenis_peserta: 'Balita',
-    tanggal_lahir: '27 Jul 2021',
-    usia: '5 tahun',
-    alamat: 'Dusun 1',
-    telepon: '081234567895',
-    email: 'zulaikha@example.com',
-    jenis_kelamin: 'Perempuan',
-    telepon_pj: '081234567804',
-    catatan_observasi: 'Perlu cek lingkar kepala lanjutan',
-    status: 'Aktif'
-  },
-  {
-    id: 7,
-    nama: 'Siti Shakiva',
-    nik: '3275012707210007',
-    jenis_peserta: 'Balita',
-    tanggal_lahir: '27 Jul 2021',
-    usia: '5 tahun',
-    alamat: 'Dusun 1',
-    telepon: '081234567896',
-    email: 'shakiva@example.com',
-    jenis_kelamin: 'Perempuan',
-    telepon_pj: '081234567805',
-    catatan_observasi: 'Pemeriksaan rutin berkala',
-    status: 'Aktif'
-  }
-];
+// Master data peserta diambil 100% dari tabel `peserta` Supabase
+export const DUMMY_DATA_PESERTA = [];
 
 export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, initialSelectedId, onBackToDashboard }) {
   const isIbuRole = currentUser?.role === 'Ibu Balita' || currentUser?.role === 'ibu';
@@ -137,13 +32,13 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
     };
   }, []);
 
-  // Jika user adalah Ibu Balita, ambil data pribadinya (Siti Aminah)
-  const ibuSelfData = listPeserta[0] || DUMMY_DATA_PESERTA[0];
+  // Jika user adalah Ibu Balita, ambil data pribadinya dari database Supabase
+  const ibuSelfData = listPeserta.find((p) => p.user_id === currentUser?.user?.id || p.nama.toLowerCase().includes('aminah')) || listPeserta[0] || null;
 
   const [selectedPeserta, setSelectedPeserta] = useState(() => {
     if (isIbuRole) return ibuSelfData;
     if (initialSelectedId) {
-      return listPeserta.find((p) => p.id === initialSelectedId) || listPeserta[0];
+      return listPeserta.find((p) => p.id === initialSelectedId) || listPeserta[0] || null;
     }
     return null;
   });

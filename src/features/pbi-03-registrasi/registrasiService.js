@@ -1,6 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../../config/supabaseClient';
-import { INITIAL_DUMMY_PESERTA } from '../../models/pesertaModel';
 import { dataStoreService } from '../../services/dataStoreService';
+import { kunjunganService } from '../../services/kunjunganService';
 
 export const registrasiService = {
   /**
@@ -22,26 +22,27 @@ export const registrasiService = {
    * Simpan pendaftaran kunjungan baru ke Supabase dan DataStore Lokal
    */
   async simpanRegistrasi(kunjunganData) {
-    // 1. Simpan ke DataStore Terpusat (Local State & LocalStorage)
+    // 1. Simpan langsung ke database Supabase
+    try {
+      await kunjunganService.simpanKunjungan({
+        peserta_id: kunjunganData.peserta_id,
+        tanggal: kunjunganData.tanggalValue || kunjunganData.tanggal,
+        jam: kunjunganData.jam,
+        catatan: kunjunganData.catatan,
+        dicatat_oleh: kunjunganData.petugas_id
+      });
+    } catch (err) {
+      console.warn('Gagal simpan kunjungan ke Supabase:', err);
+    }
+
+    // 2. Simpan ke local DataStore sebagai reaktivitas UI instan
     const savedEntry = dataStoreService.addRiwayatKunjungan(kunjunganData);
 
-    // 2. Update status kehadiran di master data peserta jika ada id
     if (kunjunganData.peserta_id) {
       dataStoreService.updatePeserta(kunjunganData.peserta_id, {
         status_kehadiran: 'Sudah Hadir',
-        waktu_hadir: kunjunganData.jam || '09.00'
+        waktu_hadir: kunjunganData.jam || '08.30'
       });
-    }
-
-    // 3. Sync ke Supabase jika terkonfigurasi
-    if (isSupabaseConfigured && supabase) {
-      try {
-        await supabase
-          .from('kunjungan')
-          .insert([kunjunganData]);
-      } catch (err) {
-        console.warn('Supabase sync skipped/failed:', err);
-      }
     }
 
     return savedEntry;

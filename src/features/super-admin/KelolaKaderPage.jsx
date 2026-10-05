@@ -341,9 +341,7 @@ export default function KelolaKaderPage({ currentUser, onShowToast }) {
                     onChange={(e) => setFormData({ ...formData, posyandu: e.target.value })}
                     className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   >
-                    <option value="Posyandu Mawar 1">Posyandu Mawar 1</option>
-                    <option value="Posyandu Melati 2">Posyandu Melati 2</option>
-                    <option value="Posyandu Anggrek 3">Posyandu Anggrek 3</option>
+                    <option value="Posyandu Desa Manud Jaya">Posyandu Desa Manud Jaya</option>
                   </select>
                 </div>
               </div>

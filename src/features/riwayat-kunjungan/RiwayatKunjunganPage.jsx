@@ -10,11 +10,13 @@ import {
   Printer
 } from 'lucide-react';
 import { dataStoreService } from '../../services/dataStoreService';
+import { kunjunganService } from '../../services/kunjunganService';
 import DetailKunjunganModal from './components/DetailKunjunganModal';
 import { maskNik } from '../../utils/nikUtils';
 
 export default function RiwayatKunjunganPage({ currentUser }) {
-  const [riwayatList, setRiwayatList] = useState(() => dataStoreService.getRiwayatList());
+  const [riwayatList, setRiwayatList] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [periodeAwal, setPeriodeAwal] = useState('');
   const [periodeAkhir, setPeriodeAkhir] = useState('');
@@ -24,10 +26,22 @@ export default function RiwayatKunjunganPage({ currentUser }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedKunjunganForDetail, setSelectedKunjunganForDetail] = useState(null);
 
-  // Subscribe ke perubahan data store
+  const loadRiwayat = async () => {
+    setLoading(true);
+    try {
+      const data = await kunjunganService.getRiwayatKunjungan();
+      setRiwayatList(data);
+    } catch (e) {
+      console.warn('Gagal memuat riwayat kunjungan:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
+    loadRiwayat();
     const unsubscribe = dataStoreService.subscribe(() => {
-      setRiwayatList(dataStoreService.getRiwayatList());
+      loadRiwayat();
     });
     return () => unsubscribe();
   }, []);

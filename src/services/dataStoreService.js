@@ -28,72 +28,8 @@ export const getIsSuspend = (item) => {
   return false;
 };
 
-const INITIAL_KADER_LIST = [
-  {
-    id: 1,
-    nama: 'Annisa Wati',
-    nik: '3275025409890001',
-    peran: 'Kader Posyandu',
-    dusun: 'Dusun 1',
-    posyandu: 'Posyandu Mawar 1',
-    telepon: '081234567890',
-    email: 'kader.posyandu@manudjaya.id',
-    is_active: true,
-    IsActive: true,
-    is_suspend: false,
-    IsSuspend: false,
-    status: 'Aktif',
-    tanggal_bergabung: '15 Jan 2024'
-  },
-  {
-    id: 2,
-    nama: 'Siti Rahmawati',
-    nik: '3275026210920002',
-    peran: 'Kader Posyandu',
-    dusun: 'Dusun 2',
-    posyandu: 'Posyandu Melati 2',
-    telepon: '081234567891',
-    email: 'siti.rahma@manudjaya.id',
-    is_active: true,
-    IsActive: true,
-    is_suspend: false,
-    IsSuspend: false,
-    status: 'Aktif',
-    tanggal_bergabung: '01 Mar 2024'
-  },
-  {
-    id: 3,
-    nama: 'Nurul Hidayah',
-    nik: '3275024803950003',
-    peran: 'Kader Posyandu',
-    dusun: 'Dusun 3',
-    posyandu: 'Posyandu Anggrek 3',
-    telepon: '081234567892',
-    email: 'nurul.h@manudjaya.id',
-    is_active: true,
-    IsActive: true,
-    is_suspend: false,
-    IsSuspend: false,
-    status: 'Aktif',
-    tanggal_bergabung: '10 Mei 2024'
-  },
-  {
-    id: 4,
-    nama: 'Dewi Sartika',
-    nik: '3275027108900004',
-    peran: 'Kader Posyandu',
-    dusun: 'Dusun 1',
-    posyandu: 'Posyandu Mawar 1',
-    telepon: '081234567893',
-    email: 'dewi.sartika@manudjaya.id',
-    is_active: false,
-    IsActive: false,
-    is_suspend: false,
-    IsSuspend: false,
-    status: 'Cuti',
-    tanggal_bergabung: '20 Feb 2024'
-  }
-];
+// Data kader resmi diambil 100% dari tabel `kader` Supabase
+const INITIAL_KADER_LIST = [];
 
 // Helper aman membaca LocalStorage
 const loadFromStorage = (key, fallback) => {
