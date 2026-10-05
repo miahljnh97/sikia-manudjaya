@@ -19,8 +19,8 @@ export default function RiwayatKunjunganPage({ currentUser }) {
   const [riwayatList, setRiwayatList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [periodeAwal, setPeriodeAwal] = useState(getTodayISODate());
-  const [periodeAkhir, setPeriodeAkhir] = useState(getTodayISODate());
+  const [periodeAwal, setPeriodeAwal] = useState('');
+  const [periodeAkhir, setPeriodeAkhir] = useState('');
   const [selectedJenisPeserta, setSelectedJenisPeserta] = useState('Semua');
   const [selectedStatusPeserta, setSelectedStatusPeserta] = useState('Aktif');
   const [selectedDusun, setSelectedDusun] = useState('Semua');
@@ -51,8 +51,8 @@ export default function RiwayatKunjunganPage({ currentUser }) {
 
   const handleResetFilter = () => {
     setSearchQuery('');
-    setPeriodeAwal(getTodayISODate());
-    setPeriodeAkhir(getTodayISODate());
+    setPeriodeAwal('');
+    setPeriodeAkhir('');
     setSelectedJenisPeserta('Semua');
     setSelectedStatusPeserta('Aktif');
     setSelectedDusun('Semua');

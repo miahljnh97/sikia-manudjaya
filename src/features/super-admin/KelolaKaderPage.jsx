@@ -17,10 +17,12 @@ import {
 import { dataStoreService, getIsActive } from '../../services/dataStoreService';
 import { kaderService } from '../../services/kaderService';
 import { masterService } from '../../services/masterService';
+import ConfirmModal from '../../views/components/ConfirmModal';
 
 export default function KelolaKaderPage({ currentUser, onShowToast }) {
   const [kaderList, setKaderList] = useState(() => dataStoreService.getKaderList());
   const [loading, setLoading] = useState(false);
+  const [kaderToDelete, setKaderToDelete] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [dusunFilter, setDusunFilter] = useState('Semua');
   const [statusFilter, setStatusFilter] = useState('Semua');
@@ -98,14 +100,25 @@ export default function KelolaKaderPage({ currentUser, onShowToast }) {
     }
   };
 
-  const handleHapusKader = async (id, nama) => {
-    const yakin = window.confirm(`Apakah Anda yakin ingin menghapus kader "${nama}"?\n\nCatatan: Data akan disuspend (soft delete) sehingga tidak muncul lagi di operasional aktif.`);
-    if (yakin) {
-      await kaderService.suspendKader(id);
+  const handleHapusKader = (id, nama) => {
+    setKaderToDelete({ id, nama });
+  };
+
+  const confirmHapusKader = async () => {
+    if (!kaderToDelete) return;
+    try {
+      await kaderService.suspendKader(kaderToDelete.id);
       await refreshList();
       if (onShowToast) {
-        onShowToast(`Kader "${nama}" berhasil dihapus (disuspend) dari sistem.`, 'success');
+        onShowToast(`Kader "${kaderToDelete.nama}" berhasil dihapus (disuspend) dari sistem.`, 'success');
       }
+    } catch (e) {
+      console.error(e);
+      if (onShowToast) {
+        onShowToast('Gagal menghapus kader.', 'error');
+      }
+    } finally {
+      setKaderToDelete(null);
     }
   };
 
@@ -472,6 +485,16 @@ export default function KelolaKaderPage({ currentUser, onShowToast }) {
           </div>
         </div>
       )}
+
+      {/* Modal Konfirmasi Hapus Kader (Tanpa Browser Popup) */}
+      <ConfirmModal
+        isOpen={Boolean(kaderToDelete)}
+        title="Hapus Data Kader"
+        message={`Apakah Anda yakin ingin menghapus kader "${kaderToDelete?.nama}"?\n\nCatatan: Data akan disuspend (soft delete) sehingga tidak muncul lagi di operasional aktif.`}
+        confirmLabel="Hapus Kader"
+        onConfirm={confirmHapusKader}
+        onClose={() => setKaderToDelete(null)}
+      />
     </div>
   );
 }

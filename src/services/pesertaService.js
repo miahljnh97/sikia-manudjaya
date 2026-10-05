@@ -25,6 +25,7 @@ export const pesertaService = {
             dusun:dusun_id (id, nama, kode),
             tipe_peserta:tipe_id (id, kode, nama)
           `)
+          .eq('is_suspended', false)
           .order('id', { ascending: true });
 
         if (!error && data && data.length > 0) {
@@ -198,5 +199,22 @@ export const pesertaService = {
     };
     dataStoreService.addPeserta(fallback);
     return fallback;
+  },
+
+  /**
+   * Soft delete (suspend) peserta
+   */
+  async suspendPeserta(id) {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase
+          .from('peserta')
+          .update({ is_suspended: true, aktif: false })
+          .eq('id', id);
+      } catch (err) {
+        console.warn('Gagal suspend peserta di Supabase:', err);
+      }
+    }
+    return dataStoreService.suspendPeserta(id);
   }
 };

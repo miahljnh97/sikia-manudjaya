@@ -27,10 +27,12 @@ export const registrasiService = {
       await kunjunganService.simpanKunjungan({
         peserta_id: kunjunganData.peserta_id,
         posyandu_id: kunjunganData.posyandu_id,
+        posyandu: kunjunganData.posyandu,
         tanggal: kunjunganData.tanggalValue || kunjunganData.tanggal,
         jam: kunjunganData.jam,
         catatan: kunjunganData.catatan,
         jenis_pelayanan_ids: kunjunganData.jenis_pelayanan_ids || [],
+        jenis_pelayanan: kunjunganData.jenis_pelayanan || [],
         dicatat_oleh: kunjunganData.petugas_id,
         status_kehadiran: kunjunganData.status_kehadiran || 'hadir'
       });

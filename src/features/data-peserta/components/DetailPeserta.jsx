@@ -343,7 +343,17 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
       </div>
 
       {/* Tombol Aksi di Bawah Form Sesuai Figma */}
-      <div className="flex items-center justify-center gap-3 pt-2">
+      <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+        {onDelete && isKaderOrBidan && (
+          <button
+            type="button"
+            onClick={() => onDelete(peserta)}
+            className="px-5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <Trash2 size={14} />
+            <span>Hapus Peserta</span>
+          </button>
+        )}
         <button
           type="button"
           onClick={isEditing ? handleCancel : onBack}

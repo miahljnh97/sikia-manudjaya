@@ -136,7 +136,19 @@ export const kunjunganService = {
   /**
    * Simpan pendaftaran registrasi kunjungan baru ke Supabase
    */
-  async simpanKunjungan({ peserta_id, posyandu_id, tanggal, jam, catatan, jenis_pelayanan_ids = [], dicatat_oleh, status_kehadiran = 'hadir' }) {
+  async simpanKunjungan({ 
+    peserta_id, 
+    posyandu_id, 
+    posyandu, 
+    tanggal, 
+    jam, 
+    catatan, 
+    jenis_pelayanan_ids = [], 
+    jenis_pelayanan = [], 
+    dicatat_oleh, 
+    petugas_id,
+    status_kehadiran = 'hadir' 
+  }) {
     if (!isSupabaseConfigured || !supabase) {
       return null;
     }
@@ -144,14 +156,47 @@ export const kunjunganService = {
     try {
       const statusDb = toDbStatusKehadiran(status_kehadiran);
 
+      // Resolve Posyandu ID
+      let finalPosyanduId = posyandu_id || null;
+      try {
+        const { data: posyanduData } = await supabase.from('posyandu').select('id, nama').limit(5);
+        if (posyanduData && posyanduData.length > 0) {
+          if (posyandu) {
+            const found = posyanduData.find((p) => p.nama.toLowerCase().includes(String(posyandu).toLowerCase()));
+            if (found) finalPosyanduId = found.id;
+          }
+          if (!finalPosyanduId) {
+            finalPosyanduId = posyanduData[0].id;
+          }
+        }
+      } catch (err) {
+        console.warn('Gagal resolve posyandu_id:', err);
+      }
+
+      // Resolve Pelayanan IDs
+      let finalPelayananIds = Array.isArray(jenis_pelayanan_ids) ? [...jenis_pelayanan_ids] : [];
+      if (finalPelayananIds.length === 0 && Array.isArray(jenis_pelayanan) && jenis_pelayanan.length > 0) {
+        try {
+          const { data: layananData } = await supabase.from('jenis_pelayanan').select('id, nama');
+          if (layananData) {
+            finalPelayananIds = jenis_pelayanan.map((item) => {
+              const match = layananData.find((l) => l.id === item || l.nama.toLowerCase() === String(item).toLowerCase());
+              return match ? match.id : null;
+            }).filter(Boolean);
+          }
+        } catch (err) {
+          console.warn('Gagal resolve jenis_pelayanan_ids:', err);
+        }
+      }
+
       const payloadKunjungan = {
         peserta_id,
-        posyandu_id: posyandu_id || null,
+        posyandu_id: finalPosyanduId,
         tanggal: toISODateString(tanggal),
         jam_kedatangan: jam ? (jam.length === 5 ? `${jam}:00` : jam) : '08:30:00',
         status_kehadiran: statusDb,
         catatan: catatan || null,
-        dicatat_oleh: dicatat_oleh || '5c69e5ca-ba37-41b5-964e-5ef2525ef36d',
+        dicatat_oleh: dicatat_oleh || petugas_id || '5c69e5ca-ba37-41b5-964e-5ef2525ef36d',
         is_suspended: false
       };
 
@@ -167,8 +212,8 @@ export const kunjunganService = {
       }
 
       // Insert ke relasi kunjungan_pelayanan jika ada pilihan pelayanan
-      if (newKunjungan && jenis_pelayanan_ids.length > 0) {
-        const payloadRel = jenis_pelayanan_ids.map((id) => ({
+      if (newKunjungan && finalPelayananIds.length > 0) {
+        const payloadRel = finalPelayananIds.map((id) => ({
           kunjungan_id: newKunjungan.id,
           jenis_pelayanan_id: id,
           is_suspended: false
@@ -183,6 +228,24 @@ export const kunjunganService = {
     } catch (err) {
       console.error('Exception simpanKunjungan:', err);
       return null;
+    }
+  },
+
+  /**
+   * Update status kehadiran kunjungan
+   */
+  async updateStatusKunjungan(kunjunganId, statusKehadiran) {
+    if (!isSupabaseConfigured || !supabase) return false;
+    try {
+      const statusDb = toDbStatusKehadiran(statusKehadiran);
+      const { error } = await supabase
+        .from('kunjungan')
+        .update({ status_kehadiran: statusDb })
+        .eq('id', kunjunganId);
+      return !error;
+    } catch (e) {
+      console.warn('Gagal update status kunjungan:', e);
+      return false;
     }
   }
 };

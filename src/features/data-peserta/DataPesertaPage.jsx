@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, RotateCcw, Plus, FileText, ChevronLeft, ChevronRight, User, X } from 'lucide-react';
+import { Search, RotateCcw, Plus, FileText, ChevronLeft, ChevronRight, User, X, Trash2 } from 'lucide-react';
 import DetailPeserta from './components/DetailPeserta';
 import { dataStoreService } from '../../services/dataStoreService';
 import { pesertaService } from '../../services/pesertaService';
@@ -8,6 +8,7 @@ import { maskNik } from '../../utils/nikUtils';
 import { resolveDusunId, resolveTipeId } from '../../utils/pesertaAdapter';
 import { toISODateString } from '../../utils/dateUtils';
 import Toast from '../../shared/components/Toast';
+import ConfirmModal from '../../views/components/ConfirmModal';
 
 // Master data peserta diambil 100% dari tabel `peserta` Supabase
 export const DUMMY_DATA_PESERTA = [];
@@ -17,6 +18,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
 
   const [listPeserta, setListPeserta] = useState(() => dataStoreService.getPesertaList());
   const [dusunList, setDusunList] = useState([]);
+  const [pesertaToDelete, setPesertaToDelete] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const notify = (message, type = 'success') => {
@@ -140,12 +142,22 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
     }
   };
 
-  const handleDeletePeserta = (pesertaToDelete) => {
-    const yakin = window.confirm(`Apakah Anda yakin ingin menghapus data peserta "${pesertaToDelete.nama}"?\n\nCatatan: Data akan disuspend (soft delete) sehingga tidak akan muncul di daftar peserta aktif.`);
-    if (yakin) {
-      dataStoreService.suspendPeserta(pesertaToDelete.id);
+  const handleDeletePeserta = (peserta) => {
+    setPesertaToDelete(peserta);
+  };
+
+  const confirmDeletePeserta = async () => {
+    if (!pesertaToDelete) return;
+    try {
+      await pesertaService.suspendPeserta(pesertaToDelete.id);
+      setListPeserta((prev) => prev.filter((p) => p.id !== pesertaToDelete.id));
       setSelectedPeserta(null);
       notify(`Peserta "${pesertaToDelete.nama}" berhasil dihapus dari sistem.`, 'success');
+    } catch (err) {
+      console.error('Gagal hapus peserta:', err);
+      notify('Gagal menghapus data peserta.', 'error');
+    } finally {
+      setPesertaToDelete(null);
     }
   };
 
@@ -367,13 +379,23 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
                   <td className="py-3.5 px-5 text-slate-600">{item.usia}</td>
                   <td className="py-3.5 px-5 text-slate-600">{item.alamat}</td>
                   <td className="py-3.5 px-5 text-right">
-                    <button
-                      onClick={() => setSelectedPeserta(item)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 shadow-xs transition-colors cursor-pointer"
-                    >
-                      <FileText size={13} className="text-slate-400" />
-                      <span>Detail</span>
-                    </button>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        onClick={() => setSelectedPeserta(item)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 shadow-xs transition-colors cursor-pointer"
+                        title="Detail & Edit Peserta"
+                      >
+                        <FileText size={13} className="text-slate-400" />
+                        <span>Detail</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeletePeserta(item)}
+                        className="inline-flex items-center justify-center p-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded-lg text-xs transition-colors cursor-pointer shadow-xs"
+                        title="Hapus Peserta"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
                 );
@@ -429,6 +451,16 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
           onClose={() => setToast((prev) => ({ ...prev, show: false }))}
         />
       )}
+
+      {/* Modal Konfirmasi Hapus Peserta (Tanpa Browser Popup) */}
+      <ConfirmModal
+        isOpen={Boolean(pesertaToDelete)}
+        title="Hapus Data Peserta"
+        message={`Apakah Anda yakin ingin menghapus data peserta "${pesertaToDelete?.nama}"?\n\nCatatan: Data akan disuspend (soft delete) sehingga tidak akan muncul di daftar peserta aktif.`}
+        confirmLabel="Hapus Peserta"
+        onConfirm={confirmDeletePeserta}
+        onClose={() => setPesertaToDelete(null)}
+      />
     </div>
   );
 }
