@@ -20,7 +20,34 @@ export const pesertaService = {
           .order('id', { ascending: true });
 
         if (!error && data && data.length > 0) {
-          return data.map(normalizePeserta);
+          // Ambil status kunjungan posyandu hari ini dari tabel kunjungan
+          try {
+            const tglHariIni = new Date().toISOString().split('T')[0];
+            const { data: kunjunganHariIni } = await supabase
+              .from('kunjungan')
+              .select('peserta_id, status_kehadiran, jam_kedatangan')
+              .eq('tanggal', tglHariIni)
+              .eq('is_suspended', false);
+
+            const kunjunganMap = new Map();
+            (kunjunganHariIni || []).forEach((k) => {
+              if (k.peserta_id) kunjunganMap.set(k.peserta_id, k);
+            });
+
+            return data.map((row) => {
+              const norm = normalizePeserta(row);
+              const kunj = kunjunganMap.get(row.id);
+              if (kunj) {
+                const s = (kunj.status_kehadiran || '').toLowerCase();
+                norm.status_kehadiran = s === 'hadir' ? 'Sudah Hadir' : (s.includes('tidak') ? 'Tidak Hadir' : 'Belum Hadir');
+                norm.waktu_hadir = kunj.jam_kedatangan ? kunj.jam_kedatangan.slice(0, 5).replace(':', '.') : '08.45';
+              }
+              return norm;
+            });
+          } catch (e) {
+            console.warn('Gagal ambil relasi kunjungan hari ini:', e);
+            return data.map(normalizePeserta);
+          }
         }
       } catch (err) {
         console.warn('Gagal fetch data peserta dari Supabase:', err);
@@ -31,26 +58,56 @@ export const pesertaService = {
   },
 
   /**
-   * Update status kehadiran peserta
+   * Update status kehadiran peserta - Disimpan ke tabel `kunjungan` hari ini (bukan ke tabel `peserta`)
    */
   async updateStatusKehadiran(id, statusKehadiran) {
     const waktuSekarang = statusKehadiran === 'Sudah Hadir' 
       ? new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':')
       : null;
+    const jamDb = waktuSekarang ? `${waktuSekarang}:00` : '08:30:00';
+    const tglHariIni = new Date().toISOString().split('T')[0];
+    const statusDb = statusKehadiran === 'Sudah Hadir' ? 'hadir' : (statusKehadiran === 'Tidak Hadir' ? 'tidak hadir' : 'belum hadir');
 
     if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase
-        .from('peserta')
-        .update({
-          status_kehadiran: statusKehadiran,
-          waktu_hadir: waktuSekarang
-        })
-        .eq('id', id)
-        .select()
-        .single();
+      try {
+        const { data: existingKunjungan } = await supabase
+          .from('kunjungan')
+          .select('id')
+          .eq('peserta_id', id)
+          .eq('tanggal', tglHariIni)
+          .limit(1)
+          .maybeSingle();
 
-      if (!error && data) return data;
+        if (existingKunjungan?.id) {
+          await supabase
+            .from('kunjungan')
+            .update({
+              status_kehadiran: statusDb,
+              jam_kedatangan: jamDb
+            })
+            .eq('id', existingKunjungan.id);
+        } else {
+          await supabase
+            .from('kunjungan')
+            .insert([{
+              peserta_id: id,
+              tanggal: tglHariIni,
+              jam_kedatangan: jamDb,
+              status_kehadiran: statusDb,
+              dicatat_oleh: '5c69e5ca-ba37-41b5-964e-5ef2525ef36d',
+              is_suspended: false
+            }]);
+        }
+      } catch (err) {
+        console.warn('Gagal sinkron status kehadiran ke tabel kunjungan:', err);
+      }
     }
+
+    // Perbarui central dataStore lokal agar UI instan bereaksi
+    dataStoreService.updatePeserta(id, {
+      status_kehadiran: statusKehadiran,
+      waktu_hadir: waktuSekarang
+    });
 
     return { id, status_kehadiran: statusKehadiran, waktu_hadir: waktuSekarang };
   },
