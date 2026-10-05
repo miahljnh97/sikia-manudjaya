@@ -78,7 +78,7 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="nama@email.com"
-              className="w-full px-4 py-3 text-sm text-slate-800 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6782]/30 focus:border-[#FF6782] transition-all placeholder:text-slate-400"
+              className="w-full px-4 py-3 text-sm text-slate-800 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF7893]/30 focus:border-[#FF7893] transition-all placeholder:text-slate-400"
             />
           </div>
 
@@ -93,7 +93,7 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="************"
-              className="w-full px-4 py-3 text-sm text-slate-800 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6782]/30 focus:border-[#FF6782] transition-all placeholder:text-slate-400"
+              className="w-full px-4 py-3 text-sm text-slate-800 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF7893]/30 focus:border-[#FF7893] transition-all placeholder:text-slate-400"
             />
           </div>
 
@@ -104,24 +104,24 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300 text-[#FF6782] focus:ring-[#FF6782]"
+                className="w-4 h-4 rounded border-slate-300 text-[#FF7893] focus:ring-[#FF7893]"
               />
               <span>Ingat saya</span>
             </label>
             <button 
               type="button"
               onClick={onGoToLupaPassword}
-              className="text-slate-600 hover:text-[#FF6782] transition-colors cursor-pointer bg-transparent border-none p-0 text-xs"
+              className="text-slate-600 hover:text-[#FF7893] transition-colors cursor-pointer bg-transparent border-none p-0 text-xs"
             >
               Lupa password?
             </button>
           </div>
 
-          {/* Tombol Masuk - Pink / Coral Sesuai Figma */}
+          {/* Tombol Masuk - #FF7893 Sesuai Figma */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 px-4 bg-[#FF6782] hover:bg-[#ff5270] active:bg-[#e43f63] disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-rose-500/20 transition-all active:scale-[0.99] cursor-pointer"
+            className="w-full py-3.5 px-4 bg-[#FF7893] hover:bg-[#ff6180] active:bg-[#f15072] disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-[#FF7893]/25 transition-all active:scale-[0.99] cursor-pointer"
           >
             {loading ? 'Memproses...' : 'Masuk'}
           </button>

@@ -5,7 +5,7 @@ export default function LupaPasswordPage({ onBack }) {
     <div 
       className="min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat relative"
       style={{
-        backgroundImage: "url('/background.svg'), linear-gradient(135deg, #e0f2fe 0%, #fef3c7 50%, #fce7f3 100%)",
+        backgroundImage: "url('/bg-pwd.svg'), linear-gradient(135deg, #e0f2fe 0%, #fef3c7 50%, #fce7f3 100%)",
       }}
     >
       {/* Kartu Lupa Password - Persis Gambar Figma media_1791133015318.jpg */}
@@ -20,7 +20,7 @@ export default function LupaPasswordPage({ onBack }) {
         <button
           type="button"
           onClick={onBack}
-          className="w-full py-3.5 px-4 bg-[#FF6782] hover:bg-[#ff5270] active:bg-[#e43f63] text-white rounded-xl text-sm font-bold shadow-lg shadow-rose-500/20 transition-all active:scale-[0.99] cursor-pointer"
+          className="w-full py-3.5 px-4 bg-[#FF7893] hover:bg-[#ff6180] active:bg-[#f15072] text-white rounded-xl text-sm font-bold shadow-lg shadow-[#FF7893]/25 transition-all active:scale-[0.99] cursor-pointer"
         >
           Kembali
         </button>
