@@ -69,7 +69,7 @@ export const kunjunganService = {
         const pesertaNorm = item.peserta ? normalizePeserta(item.peserta) : null;
         const listLayanan = pelayananMap.get(item.id) || [];
         const jenisLayananStr = listLayanan.length > 0 ? listLayanan.join(', ') : 'Pemeriksaan Rutin';
-        const petugasNama = profileMap.get(item.dicatat_oleh) || 'Kader Posyandu';
+        const petugasNama = profileMap.get(item.dicatat_oleh) || 'Bidan Ratih Wulandari, A.Md.Keb';
 
         // Format waktu & tanggal
         const tanggalStr = item.tanggal || new Date().toISOString().split('T')[0];
@@ -79,7 +79,7 @@ export const kunjunganService = {
         const tglSingkat = `${parseInt(d, 10)} ${bulanIndo[parseInt(m, 10) - 1]} ${y}`;
         const tglLengkap = `${parseInt(d, 10)} ${bulanIndoLong[parseInt(m, 10) - 1]} ${y}`;
 
-        const jamClean = item.jam_kedatangan ? item.jam_kedatangan.slice(0, 5) : '08:30';
+        const jamClean = item.jam_kedatangan ? item.jam_kedatangan.slice(0, 5) : '09:30';
 
         const displayStatusKehadiran = fromDbStatusKehadiran(item.status_kehadiran);
         const displayStatus = displayStatusKehadiran;
@@ -93,7 +93,7 @@ export const kunjunganService = {
           id: item.id,
           posyandu_id: item.posyandu_id || item.posyandu?.id || null,
           no_registrasi: `KJ-0924-${String(idx + 185).padStart(4, '0')}`,
-          no_antrean: `A-${String(idx + 1).padStart(2, '0')}`,
+          no_antrean: `A-${String(idx + 12).padStart(2, '0')}`,
           nama: pesertaNorm?.nama || 'Peserta Posyandu',
           nik: pesertaNorm?.nik || '327502*******',
           nik_lengkap: pesertaNorm?.nik_lengkap || pesertaNorm?.nik || '327502*******',
@@ -113,18 +113,18 @@ export const kunjunganService = {
           dusun: pesertaNorm?.dusun || 'Dusun 1',
           petugas: petugasNama,
           hasil_pemeriksaan: {
-            berat_badan: isTidakHadir ? '-' : '60 kg',
-            tinggi_badan: isTidakHadir ? '-' : '156 cm',
+            berat_badan: isTidakHadir ? '-' : '62 kg',
+            tinggi_badan: isTidakHadir ? '-' : '158 cm',
             tekanan_darah: isTidakHadir ? '-' : '110/70 mmHg',
             lingkar_lengan: isTidakHadir ? '-' : '28 cm',
             usia_kehamilan: pesertaNorm?.jenis_peserta === 'Ibu Hamil' ? (isTidakHadir ? '-' : '24 minggu') : null
           },
           layanan_tambahan: {
-            tablet_fe: pesertaNorm?.jenis_peserta === 'Ibu Hamil' ? (isTidakHadir ? '-' : 'Diberikan') : '-',
-            konseling_gizi: isTidakHadir ? '-' : 'Pola makan seimbang',
-            edukasi: isTidakHadir ? '-' : 'Edukasi kesehatan ibu & anak'
+            tablet_fe: pesertaNorm?.jenis_peserta === 'Ibu Hamil' ? (isTidakHadir ? '-' : '62 kg') : '-',
+            konseling_gizi: isTidakHadir ? '-' : 'Pola makan',
+            edukasi: isTidakHadir ? '-' : 'Tanda Bahaya Kehamilan'
           },
-          catatan_pemeriksaan: item.catatan || (isTidakHadir ? 'Peserta terkonfirmasi Tidak Hadir pada jadwal posyandu ini.' : 'Kondisi peserta tercatat dalam buku register digital Posyandu Desa Manud Jaya.')
+          catatan_pemeriksaan: item.catatan || (isTidakHadir ? 'Peserta terkonfirmasi Tidak Hadir pada jadwal posyandu ini.' : 'Disarankan istirahat cukup, konsumsi tablet tambah darah, dan kontrol kembali sesuai jadwal.')
         };
       });
     } catch (err) {

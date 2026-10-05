@@ -1,33 +1,43 @@
 import React from 'react';
 import { 
-  User, 
   Edit2, 
   Calendar, 
   Clock, 
   MapPin, 
+  User, 
   Check, 
   Scale, 
   Ruler, 
   Pill, 
   Syringe, 
-  Smile, 
-  HeartPulse, 
   Heart, 
+  HeartPulse, 
   FileText 
 } from 'lucide-react';
-import { maskNik } from '../../../utils/nikUtils';
 
 export default function Step4Konfirmasi({
   peserta,
-  kunjunganData,
+  kunjunganData = {},
   selectedPelayanan = [],
-  statusKehadiran,
-  catatan,
+  statusKehadiran = 'Hadir',
+  catatan = '',
   onGoToStep,
   onBack,
   onSubmit,
   loading
 }) {
+  const formatMasked = (val) => {
+    if (!val) return '-';
+    const str = String(val).trim();
+    const clean = str.replace(/\D/g, '');
+    if (clean.length >= 10) {
+      const prefix = clean.slice(0, 4);
+      const suffix = clean.slice(-4);
+      return `${prefix}••••••••${suffix}`;
+    }
+    return str;
+  };
+
   const getLayananIcon = (name) => {
     switch (name) {
       case 'Penimbangan':
@@ -39,7 +49,9 @@ export default function Step4Konfirmasi({
       case 'Imunisasi':
         return <Syringe size={18} className="text-[#059669]" />;
       case 'Pemeriksaan Kehamilan':
-        return <Smile size={18} className="text-[#E11D48]" />;
+        return <Heart size={18} className="text-[#E11D48]" />;
+      case 'Pemeriksaan Lansia':
+        return <HeartPulse size={18} className="text-[#A21CAF]" />;
       default:
         return <FileText size={18} className="text-slate-500" />;
     }
@@ -57,26 +69,88 @@ export default function Step4Konfirmasi({
         return 'Pemberian imunisasi dasar';
       case 'Pemeriksaan Kehamilan':
         return 'Tekanan darah, tinggi fundus, DJJ';
+      case 'Pemeriksaan Lansia':
+        return 'Pemeriksaan kesehatan lansia';
       default:
-        return 'Pelayanan kesehatan posyandu';
+        return 'Pelayanan kesehatan Posyandu';
     }
   };
 
-  const getLayananBg = (name) => {
+  const getLayananCardStyle = (name) => {
     switch (name) {
       case 'Penimbangan':
-        return 'bg-[#EFF6FF] border-[#BFDBFE]';
+        return {
+          bg: 'bg-[#EFF6FF] border-[#BFDBFE]',
+          iconText: 'text-[#2563EB]'
+        };
       case 'Pengukuran Tinggi Badan':
-        return 'bg-[#F5F3FF] border-[#DDD6FE]';
+        return {
+          bg: 'bg-[#F5F3FF] border-[#DDD6FE]',
+          iconText: 'text-[#7C3AED]'
+        };
       case 'Pemberian Vitamin':
-        return 'bg-[#FFF1F2] border-[#FECDD3]';
+        return {
+          bg: 'bg-[#FFF1F2] border-[#FECDD3]',
+          iconText: 'text-[#E11D48]'
+        };
+      case 'Imunisasi':
+        return {
+          bg: 'bg-[#ECFDF5] border-[#A7F3D0]',
+          iconText: 'text-[#059669]'
+        };
+      case 'Pemeriksaan Kehamilan':
+        return {
+          bg: 'bg-[#FFF1F2] border-[#FECDD3]',
+          iconText: 'text-[#E11D48]'
+        };
+      case 'Pemeriksaan Lansia':
+        return {
+          bg: 'bg-[#FDF4FF] border-[#F5D0FE]',
+          iconText: 'text-[#A21CAF]'
+        };
       default:
-        return 'bg-slate-50 border-slate-200';
+        return {
+          bg: 'bg-slate-50 border-slate-200',
+          iconText: 'text-slate-600'
+        };
     }
   };
 
+  const getPesertaAvatar = () => {
+    const jenis = peserta?.jenis_peserta || 'Ibu Hamil';
+    if (jenis === 'Ibu Hamil') {
+      return {
+        bg: 'bg-[#FFF1F2] text-[#E11D48]',
+        badgeColor: 'text-[#E11D48]',
+        icon: <Heart size={22} className="text-[#E11D48]" />
+      };
+    }
+    if (jenis === 'Bayi' || jenis === 'Balita') {
+      return {
+        bg: 'bg-[#EFF6FF] text-[#2563EB]',
+        badgeColor: 'text-[#2563EB]',
+        icon: <User size={22} className="text-[#2563EB]" />
+      };
+    }
+    if (jenis === 'Lansia') {
+      return {
+        bg: 'bg-[#FDF4FF] text-[#A21CAF]',
+        badgeColor: 'text-[#A21CAF]',
+        icon: <HeartPulse size={22} className="text-[#A21CAF]" />
+      };
+    }
+    return {
+      bg: 'bg-[#ECFDF5] text-[#059669]',
+      badgeColor: 'text-[#059669]',
+      icon: <User size={22} className="text-[#059669]" />
+    };
+  };
+
+  const avatarInfo = getPesertaAvatar();
+
   return (
-    <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+    <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-xs space-y-7">
+      {/* Title */}
       <div>
         <h3 className="text-base font-bold text-slate-900">Konfirmasi Data Registrasi Kunjungan</h3>
         <p className="text-xs text-slate-400 mt-0.5">
@@ -84,157 +158,219 @@ export default function Step4Konfirmasi({
         </p>
       </div>
 
-      {/* 1. Ringkasan Data Peserta Sesuai Figma */}
-      <div className="border border-slate-100 rounded-2xl p-5 bg-[#F8FAFC]">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-xs font-bold text-slate-800">Data Peserta</h4>
+      {/* 1. Data Peserta Section */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-bold text-slate-900">Data Peserta</h4>
           <button
             type="button"
             onClick={() => onGoToStep(1)}
-            className="text-xs font-semibold text-blue-600 hover:underline inline-flex items-center gap-1 cursor-pointer"
+            className="text-xs font-medium text-blue-600 hover:text-blue-700 inline-flex items-center gap-1.5 cursor-pointer"
           >
-            <Edit2 size={12} /> Ubah
+            <Edit2 size={13} />
+            <span>Ubah</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-5">
-          <div className="w-14 h-14 rounded-full bg-[#FFE4E6] text-[#E11D48] flex items-center justify-center font-bold shrink-0">
-            <User size={26} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-2 gap-x-6 flex-1 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start pt-1">
+          {/* Kolom Kiri: Avatar + Nama & Kategori */}
+          <div className="md:col-span-4 flex items-center gap-3.5">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${avatarInfo.bg}`}>
+              {avatarInfo.icon}
+            </div>
             <div>
-              <div className="font-bold text-slate-900 text-sm">{peserta?.nama || 'Siti Aminah'}</div>
-              <span className="text-[10px] font-bold text-[#F43F5E] bg-[#FFF1F2] px-2 py-0.5 rounded border border-[#FFE4E6] mt-1 inline-block">
+              <div className="text-sm font-bold text-slate-900">
+                {peserta?.nama || 'Siti Aminah'}
+              </div>
+              <div className={`text-xs font-semibold ${avatarInfo.badgeColor} mt-0.5`}>
                 {peserta?.jenis_peserta || 'Ibu Hamil'}
+              </div>
+            </div>
+          </div>
+
+          {/* Kolom Tengah: NIK, Tanggal Lahir, Alamat */}
+          <div className="md:col-span-4 space-y-2.5">
+            <div>
+              <span className="text-[11px] text-slate-400 block font-normal">NIK</span>
+              <span className="text-xs font-bold text-slate-900 mt-0.5 block tracking-wide">
+                {formatMasked(peserta?.nik) || '3273••••••••0041'}
               </span>
             </div>
-            <div className="text-slate-500 space-y-1">
-              <div>
-                <span className="text-[10px] text-slate-400 block">NIK</span>
-                <strong className="text-slate-800 font-mono font-medium">{peserta?.nik ? maskNik(peserta.nik) : '3273••••••••0041'}</strong>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 block">Tanggal Lahir</span>
-                <strong className="text-slate-800">{peserta?.tanggal_lahir || '12 Mei 1994'} ({peserta?.usia || '32 tahun'})</strong>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 block">Alamat</span>
-                <strong className="text-slate-800">{peserta?.alamat || 'Dusun 3, Desa Manud Jaya'}</strong>
-              </div>
+            <div>
+              <span className="text-[11px] text-slate-400 block font-normal">Tanggal Lahir</span>
+              <span className="text-xs font-bold text-slate-900 mt-0.5 block">
+                {peserta?.tanggal_lahir || '12 Mei 1994'} {peserta?.usia ? `(${peserta.usia})` : '(32 tahun)'}
+              </span>
             </div>
-            <div className="text-slate-500 space-y-1">
-              <div>
-                <span className="text-[10px] text-slate-400 block">No. KK</span>
-                <strong className="text-slate-800">{peserta?.no_kk || '3273••••••••1099'}</strong>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 block">No. HP</span>
-                <strong className="text-slate-800">{peserta?.telepon || '0812-3456-7890'}</strong>
-              </div>
+            <div>
+              <span className="text-[11px] text-slate-400 block font-normal">Alamat</span>
+              <span className="text-xs font-bold text-slate-900 mt-0.5 block">
+                {peserta?.alamat || 'Dusun 3, Desa Manud Jaya'}
+              </span>
+            </div>
+          </div>
+
+          {/* Kolom Kanan: No. KK, No. HP */}
+          <div className="md:col-span-4 space-y-2.5">
+            <div>
+              <span className="text-[11px] text-slate-400 block font-normal">No. KK</span>
+              <span className="text-xs font-bold text-slate-900 mt-0.5 block tracking-wide">
+                {formatMasked(peserta?.no_kk) || '3273••••••••1099'}
+              </span>
+            </div>
+            <div>
+              <span className="text-[11px] text-slate-400 block font-normal">No. HP</span>
+              <span className="text-xs font-bold text-slate-900 mt-0.5 block">
+                {peserta?.telepon || peserta?.no_wa || '0812-3456-7890'}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. Grid Informasi Kunjungan & Status Kehadiran Sesuai Figma */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Informasi Kunjungan */}
-        <div className="border border-slate-100 rounded-2xl p-5 bg-white">
-          <div className="flex items-center justify-between mb-3">
+      {/* 2. Grid Informasi Kunjungan & Status Kehadiran (Sesuai Gambar 1) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
+        {/* Kolom Kiri: Informasi Kunjungan */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
             <h4 className="text-xs font-bold text-slate-900">Informasi Kunjungan</h4>
             <button
               type="button"
               onClick={() => onGoToStep(1)}
-              className="text-xs font-semibold text-blue-600 hover:underline inline-flex items-center gap-1 cursor-pointer"
+              className="text-xs font-medium text-blue-600 hover:text-blue-700 inline-flex items-center gap-1.5 cursor-pointer"
             >
-              <Edit2 size={12} /> Ubah
+              <Edit2 size={13} />
+              <span>Ubah</span>
             </button>
           </div>
-          <div className="space-y-2.5 text-xs text-slate-600">
-            <div className="flex items-center gap-2.5">
-              <Calendar size={15} className="text-slate-400 shrink-0" />
-              <span>Tanggal Kunjungan: <strong className="text-slate-900">{kunjunganData.tanggal}</strong></span>
+
+          <div className="space-y-3.5 pt-1">
+            <div className="flex items-start gap-3">
+              <Calendar size={16} className="text-slate-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="text-[11px] text-slate-400 block">Tanggal Kunjungan</span>
+                <span className="text-xs font-bold text-slate-900 block mt-0.5">
+                  {kunjunganData?.tanggal || '27 September 2026'}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-2.5">
-              <Clock size={15} className="text-slate-400 shrink-0" />
-              <span>Jam Kunjungan: <strong className="text-slate-900">{kunjunganData.jam} WIB</strong></span>
+
+            <div className="flex items-start gap-3">
+              <Clock size={16} className="text-slate-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="text-[11px] text-slate-400 block">Jam Kunjungan</span>
+                <span className="text-xs font-bold text-slate-900 block mt-0.5">
+                  {kunjunganData?.jam || '08:30'} WIB
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-2.5">
-              <MapPin size={15} className="text-slate-400 shrink-0" />
-              <span>Posyandu: <strong className="text-slate-900">{kunjunganData.posyandu}</strong></span>
+
+            <div className="flex items-start gap-3">
+              <MapPin size={16} className="text-slate-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="text-[11px] text-slate-400 block">Posyandu</span>
+                <span className="text-xs font-bold text-slate-900 block mt-0.5">
+                  {kunjunganData?.posyandu || 'Posyandu Desa Manud Jaya'}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-2.5">
-              <User size={15} className="text-slate-400 shrink-0" />
-              <span>Kader Pencatat: <strong className="text-slate-900">{kunjunganData.kaderPencatat || 'Siti Rahma'}</strong></span>
+
+            <div className="flex items-start gap-3">
+              <User size={16} className="text-slate-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="text-[11px] text-slate-400 block">Kader Pencatat</span>
+                <span className="text-xs font-bold text-slate-900 block mt-0.5">
+                  {kunjunganData?.kaderPencatat || 'Siti Rahma'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Status Kehadiran Card */}
-        <div className="border border-slate-100 rounded-2xl p-5 bg-white flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-bold text-slate-900">Status Kehadiran</h4>
-              <button
-                type="button"
-                onClick={() => onGoToStep(3)}
-                className="text-xs font-semibold text-blue-600 hover:underline inline-flex items-center gap-1 cursor-pointer"
-              >
-                <Edit2 size={12} /> Ubah
-              </button>
-            </div>
-            <div className="p-3 bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl flex items-center gap-3">
+        {/* Kolom Kanan: Status Kehadiran (dengan border pemisah di kiri) */}
+        <div className="space-y-4 md:border-l md:border-slate-100 md:pl-8">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-bold text-slate-900">Status Kehadiran</h4>
+            <button
+              type="button"
+              onClick={() => onGoToStep(3)}
+              className="text-xs font-medium text-blue-600 hover:text-blue-700 inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <Edit2 size={13} />
+              <span>Ubah</span>
+            </button>
+          </div>
+
+          <div className="pt-1 space-y-3">
+            <div className="p-4 bg-[#F0FDF4] border border-[#BBF7D0] rounded-2xl flex items-center gap-3.5">
               <div className="w-7 h-7 rounded-full bg-[#10B981] text-white flex items-center justify-center shrink-0">
                 <Check size={16} strokeWidth={3} />
               </div>
               <div>
-                <div className="font-bold text-xs text-[#065F46]">{statusKehadiran}</div>
-                <p className="text-[11px] text-[#047857]">Peserta datang ke Posyandu dan mendapatkan pelayanan.</p>
+                <div className="font-bold text-sm text-[#166534]">{statusKehadiran || 'Hadir'}</div>
+                <p className="text-[11px] text-slate-600 mt-0.5">
+                  {statusKehadiran === 'Hadir' 
+                    ? 'Peserta datang ke Posyandu dan mendapatkan pelayanan.'
+                    : statusKehadiran === 'Izin'
+                    ? 'Peserta berhalangan hadir dengan pemberitahuan sebelumnya.'
+                    : statusKehadiran === 'Sakit'
+                    ? 'Peserta tidak dapat hadir karena kondisi kesehatan.'
+                    : 'Peserta tidak hadir tanpa konfirmasi atau keterangan.'}
+                </p>
               </div>
             </div>
-          </div>
-          <div className="mt-3 text-[11px] text-slate-400 border-t border-slate-100 pt-2">
-            Catatan: <span className="text-slate-700 font-medium">{catatan || '-'}</span>
+
+            <div className="pt-1">
+              <span className="text-[11px] text-slate-400 block">Catatan</span>
+              <span className="text-xs font-bold text-slate-900 block mt-0.5">
+                {catatan || '-'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 3. Ringkasan Jenis Pelayanan Terpilih Sesuai Figma Cards */}
-      <div className="border border-slate-100 rounded-2xl p-5 bg-white">
-        <div className="flex items-center justify-between mb-3">
+      {/* 3. Jenis Pelayanan yang Dipilih */}
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center justify-between">
           <h4 className="text-xs font-bold text-slate-900">Jenis Pelayanan yang Dipilih</h4>
           <button
             type="button"
             onClick={() => onGoToStep(2)}
-            className="text-xs font-semibold text-blue-600 hover:underline inline-flex items-center gap-1 cursor-pointer"
+            className="text-xs font-medium text-blue-600 hover:text-blue-700 inline-flex items-center gap-1.5 cursor-pointer"
           >
-            <Edit2 size={12} /> Ubah
+            <Edit2 size={13} />
+            <span>Ubah</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {selectedPelayanan.map((layanan, i) => (
-            <div key={i} className={`p-3.5 rounded-2xl border flex items-center gap-3 ${getLayananBg(layanan)}`}>
-              <div className="shrink-0">
-                {getLayananIcon(layanan)}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
+          {selectedPelayanan.map((layanan, i) => {
+            const style = getLayananCardStyle(layanan);
+            return (
+              <div key={i} className={`p-3.5 rounded-2xl border flex items-center gap-3.5 ${style.bg}`}>
+                <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-2xs">
+                  {getLayananIcon(layanan)}
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-xs text-slate-900 truncate">{layanan}</div>
+                  <div className="text-[11px] text-slate-500 mt-0.5 truncate">{getLayananDesc(layanan)}</div>
+                </div>
               </div>
-              <div className="min-w-0">
-                <div className="font-bold text-xs text-slate-900 truncate">{layanan}</div>
-                <div className="text-[10px] text-slate-500 mt-0.5 truncate">{getLayananDesc(layanan)}</div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* Bottom Action Button Sesuai Figma (Issue #24: Biru dengan Check Icon) */}
-      <div className="pt-2 flex items-center justify-between border-t border-slate-100">
+      {/* 4. Bottom Action Buttons */}
+      <div className="pt-4 flex items-center justify-between">
         <button
           type="button"
           onClick={onBack}
-          className="px-5 py-2.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl cursor-pointer"
+          className="px-5 py-2.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl cursor-pointer transition-all inline-flex items-center gap-1.5"
         >
-          ← Kembali ke Status Kehadiran
+          <span>←</span>
+          <span>Kembali ke Status Kehadiran</span>
         </button>
 
         <button

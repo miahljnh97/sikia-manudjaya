@@ -263,8 +263,8 @@ export default function PencarianPasien({
                     );
                   } else if (statusStr.includes('selesai') || statusStr.includes('dilayani')) {
                     statusBadge = (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-[#DBEAFE] text-[#1D4ED8]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB]" />
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-[#ECFDF3] text-[#12B76A]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#12B76A]" />
                         Sudah dilayani
                       </span>
                     );

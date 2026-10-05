@@ -344,7 +344,7 @@ export default function RiwayatKunjunganPage({ currentUser }) {
                           }
                           if (s.includes('dilayani') || s.includes('selesai')) {
                             return (
-                              <span className="px-2.5 py-1 bg-[#DBEAFE] border border-[#BFDBFE] text-[#1D4ED8] rounded-full text-[11px] font-semibold">
+                              <span className="px-2.5 py-1 bg-[#ECFDF3] border border-[#A6F4C5] text-[#12B76A] rounded-full text-[11px] font-semibold">
                                 Selesai Dilayani
                               </span>
                             );

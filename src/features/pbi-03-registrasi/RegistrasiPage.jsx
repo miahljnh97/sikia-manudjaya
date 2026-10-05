@@ -84,32 +84,29 @@ export default function RegistrasiPage({ currentUser, onBackToDashboard, onTamba
         </p>
       </div>
 
-      {/* Stepper Progress Bar (Hanya tampil saat mode wizard) */}
+      {/* Stepper Progress Bar Sesuai Gambar 2 */}
       {mode === 'wizard' && (
         <div className="py-2">
           <div className="flex items-center justify-between max-w-2xl mx-auto relative">
             {/* Connecting line */}
-            <div className="absolute top-4 left-6 right-6 h-[2px] bg-slate-200 -z-0" />
+            <div className="absolute top-5 left-8 right-8 h-[2px] bg-slate-200 -z-0" />
             
             {steps.map((st) => {
               const isActive = currentStep === st.num;
-              const isPast = currentStep > st.num;
               return (
                 <div key={st.num} className="relative z-10 flex flex-col items-center">
                   <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                       isActive
-                        ? 'bg-blue-600 text-white shadow-md ring-4 ring-blue-100'
-                        : isPast
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-white border-2 border-slate-300 text-slate-400'
+                        ? 'bg-[#2563EB] text-white shadow-md ring-4 ring-blue-100'
+                        : 'bg-white border-2 border-slate-200 text-slate-400'
                     }`}
                   >
-                    {isPast ? '✓' : st.num}
+                    {st.num}
                   </div>
                   <span
                     className={`text-xs mt-2 font-medium ${
-                      isActive ? 'text-blue-600 font-bold' : 'text-slate-500'
+                      isActive ? 'text-[#2563EB] font-bold' : 'text-slate-500'
                     }`}
                   >
                     {st.label}

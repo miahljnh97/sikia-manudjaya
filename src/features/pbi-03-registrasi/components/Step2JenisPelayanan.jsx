@@ -23,7 +23,7 @@ export default function Step2JenisPelayanan({
   onBack,
   onNext
 }) {
-  const isIbuHamilPeserta = peserta?.jenis_peserta === 'Ibu Hamil';
+  const isIbuHamilPeserta = (peserta?.jenis_peserta || '').toLowerCase().includes('ibu');
 
   const layananDasar = [
     { id: 'Penimbangan', label: 'Penimbangan', desc: 'Berat badan dan panjang badan', icon: Scale },
@@ -45,13 +45,13 @@ export default function Step2JenisPelayanan({
 
   return (
     <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
-      {/* Header & Banner Info di sebelah kanan (Issue #15) */}
+      {/* Header & Banner Info di sebelah kanan Sesuai Gambar 2 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h3 className="text-base font-bold text-slate-900">
           Pilih Jenis Pelayanan
         </h3>
         
-        {/* Banner Info Biru di Kanan Sesuai Figma */}
+        {/* Banner Info Biru di Kanan */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] text-xs text-[#2563EB] font-medium self-start sm:self-auto">
           <Info size={14} className="shrink-0 text-[#2563EB]" />
           <span>Jenis pelayanan dapat dipilih lebih dari satu</span>
@@ -60,8 +60,8 @@ export default function Step2JenisPelayanan({
 
       {/* Pelayanan Dasar */}
       <div className="space-y-3">
-        <h4 className="text-xs font-bold text-slate-800">Pelayanan Dasar</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <h4 className="text-xs font-bold text-slate-900">Pelayanan Dasar</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
           {layananDasar.map((item) => {
             const Icon = item.icon;
             const isSelected = selectedPelayanan.includes(item.id);
@@ -69,24 +69,32 @@ export default function Step2JenisPelayanan({
               <div
                 key={item.id}
                 onClick={() => onTogglePelayanan(item.id)}
-                className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-start gap-3.5 ${
+                className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex items-center gap-3 cursor-pointer ${
                   isSelected
-                    ? 'border-blue-600 bg-blue-50/50 shadow-xs'
-                    : 'border-slate-200/80 bg-white hover:bg-slate-50'
+                    ? 'border-2 border-[#2563EB] bg-[#F0F7FF]/50 shadow-xs'
+                    : 'border border-slate-200/90 bg-white hover:border-slate-300'
                 }`}
               >
-                <div className={`w-5 h-5 rounded-md border flex items-center justify-center mt-0.5 shrink-0 ${
-                  isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'
+                {/* Checkbox */}
+                <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${
+                  isSelected ? 'bg-[#2563EB] border-[#2563EB] text-white' : 'border-slate-300 bg-white'
                 }`}>
                   {isSelected && <Check size={13} strokeWidth={3} />}
                 </div>
 
+                {/* Icon box (Soft Blue Square) */}
+                <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0">
+                  <Icon size={20} />
+                </div>
+
+                {/* Label and description */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 font-bold text-xs text-slate-800">
-                    <Icon size={14} className={isSelected ? 'text-blue-600' : 'text-slate-400'} />
-                    <span className="truncate">{item.label}</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5 leading-snug line-clamp-1">{item.desc}</p>
+                  <h5 className="font-bold text-xs text-slate-900 leading-tight truncate">
+                    {item.label}
+                  </h5>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-tight line-clamp-1">
+                    {item.desc}
+                  </p>
                 </div>
               </div>
             );
@@ -94,13 +102,13 @@ export default function Step2JenisPelayanan({
         </div>
       </div>
 
-      {/* Pelayanan Khusus Ibu Hamil (Issue #16: disable jika bukan bumil, Issue #17: style standar, Issue #18: tanpa tanda kurung) */}
+      {/* Pelayanan Khusus Ibu Hamil */}
       <div className="space-y-3 pt-2">
         <div className="flex items-center gap-2">
           <h4 className="text-xs font-bold text-[#E11D48]">Pelayanan Khusus Ibu Hamil</h4>
-          <span className="text-[10px] text-slate-400 font-medium">Tersedia untuk peserta kategori Ibu Hamil</span>
+          <span className="text-[11px] text-slate-400 font-normal">Tersedia untuk peserta kategori Ibu Hamil</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
           {layananIbuHamil.map((item) => {
             const Icon = item.icon;
             const isSelected = selectedPelayanan.includes(item.id);
@@ -112,26 +120,34 @@ export default function Step2JenisPelayanan({
                 onClick={() => {
                   if (!isDisabled) onTogglePelayanan(item.id);
                 }}
-                className={`p-4 rounded-2xl border transition-all flex items-start gap-3.5 ${
+                className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex items-center gap-3 ${
                   isDisabled 
                     ? 'border-slate-100 bg-slate-50/60 opacity-40 cursor-not-allowed'
                     : isSelected
-                    ? 'border-blue-600 bg-blue-50/50 shadow-xs cursor-pointer'
-                    : 'border-rose-100 bg-white hover:bg-rose-50/20 cursor-pointer'
+                    ? 'border-2 border-[#2563EB] bg-[#F0F7FF]/50 shadow-xs cursor-pointer'
+                    : 'border border-[#FECDD3] bg-white hover:border-[#FDA4AF] cursor-pointer'
                 }`}
               >
-                <div className={`w-5 h-5 rounded-md border flex items-center justify-center mt-0.5 shrink-0 ${
-                  isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'
+                {/* Checkbox */}
+                <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${
+                  isSelected ? 'bg-[#2563EB] border-[#2563EB] text-white' : 'border-[#FECDD3] bg-white'
                 }`}>
                   {isSelected && <Check size={13} strokeWidth={3} />}
                 </div>
 
+                {/* Icon box (Soft Pink Square) */}
+                <div className="w-10 h-10 rounded-xl bg-[#FFF1F2] text-[#E11D48] flex items-center justify-center shrink-0">
+                  <Icon size={20} />
+                </div>
+
+                {/* Label and description */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 font-bold text-xs text-slate-800">
-                    <Icon size={14} className={isSelected ? 'text-blue-600' : 'text-[#FB7185]'} />
-                    <span className="truncate">{item.label}</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5 leading-snug line-clamp-1">{item.desc}</p>
+                  <h5 className="font-bold text-xs text-slate-900 leading-tight truncate">
+                    {item.label}
+                  </h5>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-tight line-clamp-1">
+                    {item.desc}
+                  </p>
                 </div>
               </div>
             );
@@ -144,7 +160,7 @@ export default function Step2JenisPelayanan({
         <button
           type="button"
           onClick={onBack}
-          className="px-5 py-2.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl cursor-pointer"
+          className="px-5 py-2.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl cursor-pointer shadow-xs transition-colors"
         >
           ← Kembali ke Data Kunjungan
         </button>
@@ -152,7 +168,7 @@ export default function Step2JenisPelayanan({
         <button
           type="button"
           onClick={onNext}
-          className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs cursor-pointer"
+          className="px-6 py-2.5 text-xs font-bold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-xl shadow-xs cursor-pointer transition-colors"
         >
           Lanjut ke Status Kehadiran →
         </button>

@@ -86,9 +86,9 @@ export default function ParticipantTable({
         <button
           onClick={() => onUpdateStatus(item.id, getNextStatus(item.status_kehadiran))}
           title="Status: Sudah dilayani (Klik untuk ubah ke status berikutnya)"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#DBEAFE] text-[#1D4ED8] border border-[#BFDBFE] hover:bg-[#BFDBFE]/60 transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#ECFDF3] text-[#12B76A] border border-[#A6F4C5] hover:bg-[#D1FADF] transition-colors cursor-pointer"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#12B76A]" />
           <span>Sudah dilayani</span>
         </button>
       );
