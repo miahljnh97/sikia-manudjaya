@@ -152,6 +152,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
   const [jenisFilter, setJenisFilter] = useState('Semua');
   const [statusFilter, setStatusFilter] = useState('Aktif');
   const [wilayahFilter, setWilayahFilter] = useState('Semua');
+  const [sortOrder, setSortOrder] = useState('Nama A-Z');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
 
