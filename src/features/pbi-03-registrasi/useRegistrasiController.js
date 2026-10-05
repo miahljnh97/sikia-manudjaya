@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { registrasiService } from './registrasiService';
 import { pesertaService } from '../../services/pesertaService';
 import { dataStoreService } from '../../services/dataStoreService';
-import { getTanggalFormatStandar, getJamMenitSekarang } from '../../utils/dateUtils';
+import { getTanggalFormatStandar, getJamMenitSekarang, getTodayISODate } from '../../utils/dateUtils';
 
 export function useRegistrasiController(currentUser, onSuccessRegistrasi) {
   // Mode: 'pencarian' | 'wizard'
@@ -40,6 +40,7 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi) {
 
   // Form State Kunjungan (PBI 03B, 03C, 03D)
   const [kunjunganData, setKunjunganData] = useState({
+    tanggalValue: getTodayISODate(),
     tanggal: getTanggalFormatStandar(),
     jam: getJamMenitSekarang(),
     posyandu: 'Posyandu Desa Manud Jaya',
@@ -59,14 +60,18 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi) {
         (item.nik || '').includes(searchQuery) ||
         (item.no_kk || '').includes(searchQuery);
       const matchJenis = jenisFilter === 'Semua' || item.jenis_peserta === jenisFilter;
+      const matchStatus = statusFilter === 'Semua' || (item.status_kehadiran || 'Menunggu').toLowerCase().includes(statusFilter.toLowerCase());
       const matchWilayah = wilayahFilter === 'Semua' || item.dusun === wilayahFilter || item.alamat?.includes(wilayahFilter);
-      return matchSearch && matchJenis && matchWilayah;
+      return matchSearch && matchJenis && matchStatus && matchWilayah;
     });
-  }, [rawPesertaList, searchQuery, jenisFilter, wilayahFilter]);
+  }, [rawPesertaList, searchQuery, jenisFilter, statusFilter, wilayahFilter]);
 
   // Aksi memilih peserta dari hasil pencarian
   const handleSelectPeserta = async (peserta) => {
     setSelectedPeserta(peserta);
+    if (peserta.status_kehadiran) {
+      setStatusKehadiran(peserta.status_kehadiran);
+    }
     const riwayat = await registrasiService.getRiwayatKunjungan(peserta.id);
     setRiwayatList(riwayat);
     setMode('wizard');
@@ -99,6 +104,7 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi) {
         peserta_id: selectedPeserta?.id,
         nama_peserta: selectedPeserta?.nama,
         tanggal: kunjunganData.tanggal,
+        tanggalValue: kunjunganData.tanggalValue || getTodayISODate(),
         jam: kunjunganData.jam,
         posyandu: kunjunganData.posyandu,
         kader_pencatat: kunjunganData.kaderPencatat,

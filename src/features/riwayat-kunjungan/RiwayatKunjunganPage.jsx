@@ -13,13 +13,14 @@ import { dataStoreService } from '../../services/dataStoreService';
 import { kunjunganService } from '../../services/kunjunganService';
 import DetailKunjunganModal from './components/DetailKunjunganModal';
 import { maskNik } from '../../utils/nikUtils';
+import { getTodayISODate, toISODateString } from '../../utils/dateUtils';
 
 export default function RiwayatKunjunganPage({ currentUser }) {
   const [riwayatList, setRiwayatList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [periodeAwal, setPeriodeAwal] = useState('');
-  const [periodeAkhir, setPeriodeAkhir] = useState('');
+  const [periodeAwal, setPeriodeAwal] = useState(getTodayISODate());
+  const [periodeAkhir, setPeriodeAkhir] = useState(getTodayISODate());
   const [selectedJenisPeserta, setSelectedJenisPeserta] = useState('Semua');
   const [selectedStatusPeserta, setSelectedStatusPeserta] = useState('Aktif');
   const [selectedDusun, setSelectedDusun] = useState('Semua');
@@ -50,8 +51,8 @@ export default function RiwayatKunjunganPage({ currentUser }) {
 
   const handleResetFilter = () => {
     setSearchQuery('');
-    setPeriodeAwal('');
-    setPeriodeAkhir('');
+    setPeriodeAwal(getTodayISODate());
+    setPeriodeAkhir(getTodayISODate());
     setSelectedJenisPeserta('Semua');
     setSelectedStatusPeserta('Aktif');
     setSelectedDusun('Semua');
@@ -76,20 +77,9 @@ export default function RiwayatKunjunganPage({ currentUser }) {
 
       // Filter Periode Kunjungan (Rentang Tanggal)
       if (periodeAwal || periodeAkhir) {
-        // Normalisasi format tanggal: jika format DD Mon YYYY, kita periksa string atau parse
-        const kunjunganStr = item.tanggal_kunjungan || '';
-        // Cek jika ada input tanggal (format YYYY-MM-DD dari HTML5 datepicker)
-        if (periodeAwal) {
-          const tglAwal = new Date(periodeAwal);
-          const tglItem = new Date(kunjunganStr);
-          if (!isNaN(tglItem.getTime()) && tglItem < tglAwal) return false;
-        }
-        if (periodeAkhir) {
-          const tglAkhir = new Date(periodeAkhir);
-          tglAkhir.setHours(23, 59, 59, 999);
-          const tglItem = new Date(kunjunganStr);
-          if (!isNaN(tglItem.getTime()) && tglItem > tglAkhir) return false;
-        }
+        const itemIso = item.tanggal_iso || toISODateString(item.tanggal_kunjungan);
+        if (periodeAwal && itemIso < periodeAwal) return false;
+        if (periodeAkhir && itemIso > periodeAkhir) return false;
       }
 
       // Filter Jenis Peserta
@@ -330,9 +320,35 @@ export default function RiwayatKunjunganPage({ currentUser }) {
                         {item.hasil_catatan}
                       </td>
                       <td className="py-3.5 px-4 text-center">
-                        <span className="px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full text-[11px] font-semibold">
-                          {item.status}
-                        </span>
+                        {(() => {
+                          const s = (item.status || item.status_kehadiran || '').toLowerCase();
+                          if (s.includes('tidak')) {
+                            return (
+                              <span className="px-2.5 py-1 bg-[#FEE2E2] border border-[#FECDD3] text-[#991B1B] rounded-full text-[11px] font-semibold">
+                                Tidak Hadir
+                              </span>
+                            );
+                          }
+                          if (s.includes('tunggu')) {
+                            return (
+                              <span className="px-2.5 py-1 bg-slate-100 border border-slate-200 text-slate-700 rounded-full text-[11px] font-semibold">
+                                Menunggu
+                              </span>
+                            );
+                          }
+                          if (s.includes('dilayani') || s.includes('selesai')) {
+                            return (
+                              <span className="px-2.5 py-1 bg-[#DBEAFE] border border-[#BFDBFE] text-[#1D4ED8] rounded-full text-[11px] font-semibold">
+                                Selesai Dilayani
+                              </span>
+                            );
+                          }
+                          return (
+                            <span className="px-2.5 py-1 bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] rounded-full text-[11px] font-semibold">
+                              Hadir
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="py-3.5 px-4 text-center">
                         <button

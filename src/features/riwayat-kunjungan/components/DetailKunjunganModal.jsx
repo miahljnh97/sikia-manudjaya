@@ -107,8 +107,16 @@ export default function DetailKunjunganModal({ kunjungan, isOpen, onClose }) {
 
           <div className="text-left sm:text-right shrink-0">
             <div className="text-[11px] text-slate-400">Status Kunjungan</div>
-            <div className="text-sm font-bold text-[#10B981] mt-0.5">
-              {kunjungan.status_lengkap || 'Selesai Dilayani'}
+            <div className={`text-sm font-bold mt-0.5 ${
+              (kunjungan.status_kehadiran || kunjungan.status_lengkap || '').toLowerCase().includes('tidak')
+                ? 'text-rose-600'
+                : (kunjungan.status_kehadiran || kunjungan.status_lengkap || '').toLowerCase().includes('tunggu')
+                ? 'text-slate-600'
+                : (kunjungan.status_kehadiran || kunjungan.status_lengkap || '').toLowerCase().includes('dilayani')
+                ? 'text-blue-600'
+                : 'text-[#10B981]'
+            }`}>
+              {kunjungan.status_lengkap || kunjungan.status_kehadiran || 'Selesai Dilayani'}
             </div>
             <div className="text-[11px] text-slate-400 mt-0.5">
               No. Antrean <span className="font-semibold text-slate-700">{kunjungan.no_antrean}</span>

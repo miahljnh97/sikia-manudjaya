@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Edit2, Calendar, Clock, Check, ChevronDown } from 'lucide-react';
 import { masterService } from '../../../services/masterService';
+import { getTodayISODate } from '../../../utils/dateUtils';
 
 export default function Step1DataKunjungan({
   peserta,
@@ -102,7 +103,7 @@ export default function Step1DataKunjungan({
             <div className="relative">
               <input
                 type="date"
-                value={kunjunganData.tanggalValue || ''}
+                value={kunjunganData.tanggalValue || getTodayISODate()}
                 onChange={(e) => {
                   const val = e.target.value;
                   onChangeData('tanggalValue', val);

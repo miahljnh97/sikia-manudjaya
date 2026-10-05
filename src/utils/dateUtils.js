@@ -39,12 +39,23 @@ export function getJamMenitSekarang(date = new Date()) {
 }
 
 /**
+ * Mengambil tanggal hari ini dalam format ISO 'YYYY-MM-DD' sesuai zona waktu lokal pengguna
+ */
+export function getTodayISODate(d = new Date()) {
+  const target = d instanceof Date && !isNaN(d.getTime()) ? d : new Date();
+  const year = target.getFullYear();
+  const month = String(target.getMonth() + 1).padStart(2, '0');
+  const day = String(target.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Konversi teks tanggal (seperti "6 Oktober 2026", "26 Sep 2026", atau Date) ke format ISO 'YYYY-MM-DD' untuk PostgreSQL
  */
 export function toISODateString(input) {
-  if (!input) return new Date().toISOString().split('T')[0];
+  if (!input) return getTodayISODate();
   if (input instanceof Date && !isNaN(input.getTime())) {
-    return input.toISOString().split('T')[0];
+    return getTodayISODate(input);
   }
   if (typeof input === 'string') {
     const trimmed = input.trim();
@@ -79,9 +90,9 @@ export function toISODateString(input) {
     }
     const d = new Date(trimmed);
     if (!isNaN(d.getTime())) {
-      return d.toISOString().split('T')[0];
+      return getTodayISODate(d);
     }
   }
-  return new Date().toISOString().split('T')[0];
+  return getTodayISODate();
 }
 

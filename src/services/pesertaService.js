@@ -2,7 +2,7 @@ import { supabase, isSupabaseConfigured } from '../config/supabaseClient';
 import { INITIAL_DUMMY_PESERTA } from '../models/pesertaModel';
 import { dataStoreService } from './dataStoreService';
 import { normalizePeserta, resolveDusunId, resolveTipeId } from '../utils/pesertaAdapter';
-import { toISODateString } from '../utils/dateUtils';
+import { toISODateString, getTodayISODate } from '../utils/dateUtils';
 
 export const pesertaService = {
   /**
@@ -23,16 +23,22 @@ export const pesertaService = {
         if (!error && data && data.length > 0) {
           // Ambil status kunjungan posyandu hari ini dari tabel kunjungan
           try {
-            const tglHariIni = new Date().toISOString().split('T')[0];
+            const todayLocal = getTodayISODate();
+            const todayUTC = new Date().toISOString().split('T')[0];
+            const targetDates = Array.from(new Set([todayLocal, todayUTC]));
+
             const { data: kunjunganHariIni } = await supabase
               .from('kunjungan')
-              .select('peserta_id, status_kehadiran, jam_kedatangan')
-              .eq('tanggal', tglHariIni)
-              .eq('is_suspended', false);
+              .select('peserta_id, status_kehadiran, jam_kedatangan, created_at')
+              .in('tanggal', targetDates)
+              .eq('is_suspended', false)
+              .order('created_at', { ascending: false });
 
             const kunjunganMap = new Map();
             (kunjunganHariIni || []).forEach((k) => {
-              if (k.peserta_id) kunjunganMap.set(k.peserta_id, k);
+              if (k.peserta_id && !kunjunganMap.has(k.peserta_id)) {
+                kunjunganMap.set(k.peserta_id, k);
+              }
             });
 
             return data.map((row) => {
@@ -78,7 +84,9 @@ export const pesertaService = {
       ? new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':')
       : null;
     const jamDb = waktuSekarang ? `${waktuSekarang}:00` : '08:30:00';
-    const tglHariIni = new Date().toISOString().split('T')[0];
+    const tglHariIni = getTodayISODate();
+    const todayUTC = new Date().toISOString().split('T')[0];
+    const targetDates = Array.from(new Set([tglHariIni, todayUTC]));
 
     let statusDb = 'hadir';
     const s = (statusKehadiran || '').toLowerCase();
@@ -98,7 +106,8 @@ export const pesertaService = {
           .from('kunjungan')
           .select('id')
           .eq('peserta_id', id)
-          .eq('tanggal', tglHariIni)
+          .in('tanggal', targetDates)
+          .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
 
@@ -106,6 +115,7 @@ export const pesertaService = {
           await supabase
             .from('kunjungan')
             .update({
+              tanggal: tglHariIni,
               status_kehadiran: statusDb,
               jam_kedatangan: jamDb
             })

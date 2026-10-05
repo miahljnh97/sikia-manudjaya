@@ -81,7 +81,31 @@ export const kunjunganService = {
 
         const jamClean = item.jam_kedatangan ? item.jam_kedatangan.slice(0, 5) : '08:30';
 
-        const isHadir = (item.status_kehadiran || '').toLowerCase() === 'hadir';
+        const statusRaw = (item.status_kehadiran || '').toLowerCase();
+        let displayStatus = 'Selesai';
+        let displayStatusLengkap = 'Selesai Dilayani';
+        let displayStatusKehadiran = 'Hadir';
+
+        if (statusRaw.includes('tidak')) {
+          displayStatus = 'Tidak Hadir';
+          displayStatusLengkap = 'Tidak Hadir';
+          displayStatusKehadiran = 'Tidak Hadir';
+        } else if (statusRaw.includes('tunggu')) {
+          displayStatus = 'Menunggu';
+          displayStatusLengkap = 'Menunggu';
+          displayStatusKehadiran = 'Menunggu';
+        } else if (statusRaw.includes('dilayani') || statusRaw.includes('selesai')) {
+          displayStatus = 'Sudah Dilayani';
+          displayStatusLengkap = 'Selesai Dilayani';
+          displayStatusKehadiran = 'Sudah dilayani';
+        } else {
+          displayStatus = 'Hadir';
+          displayStatusLengkap = 'Hadir';
+          displayStatusKehadiran = 'Hadir';
+        }
+
+        const isHadir = displayStatusKehadiran === 'Hadir' || displayStatusKehadiran === 'Sudah dilayani';
+        const isTidakHadir = displayStatusKehadiran === 'Tidak Hadir';
         const namaPosyandu = item.posyandu?.nama || 'Posyandu Desa Manud Jaya';
 
         return {
@@ -93,32 +117,33 @@ export const kunjunganService = {
           nik: pesertaNorm?.nik || '327502*******',
           nik_lengkap: pesertaNorm?.nik_lengkap || pesertaNorm?.nik || '327502*******',
           jenis_peserta: pesertaNorm?.jenis_peserta || 'Ibu Hamil',
+          tanggal_iso: tanggalStr,
           tanggal_kunjungan: tglSingkat,
           tanggal_kunjungan_lengkap: tglLengkap,
           waktu: `${jamClean} WIB`,
           tempat: namaPosyandu,
           posyandu: namaPosyandu,
           jenis_pelayanan: jenisLayananStr,
-          hasil_catatan: item.catatan || (isHadir ? 'Pemeriksaan rutin selesai' : 'Tidak hadir pada jadwal posyandu'),
-          status: 'Selesai',
-          status_lengkap: isHadir ? 'Selesai Dilayani' : 'Belum Hadir',
-          status_kehadiran: isHadir ? 'Hadir' : 'Tidak Hadir',
+          hasil_catatan: item.catatan || (isTidakHadir ? 'Tidak hadir pada jadwal posyandu' : (isHadir ? 'Pemeriksaan rutin selesai' : 'Menunggu pemeriksaan')),
+          status: displayStatus,
+          status_lengkap: displayStatusLengkap,
+          status_kehadiran: displayStatusKehadiran,
           status_peserta: pesertaNorm?.status || 'Aktif',
           dusun: pesertaNorm?.dusun || 'Dusun 1',
           petugas: petugasNama,
           hasil_pemeriksaan: {
-            berat_badan: isHadir ? '60 kg' : '-',
-            tinggi_badan: isHadir ? '156 cm' : '-',
-            tekanan_darah: isHadir ? '110/70 mmHg' : '-',
-            lingkar_lengan: isHadir ? '28 cm' : '-',
-            usia_kehamilan: pesertaNorm?.jenis_peserta === 'Ibu Hamil' ? '24 minggu' : null
+            berat_badan: isTidakHadir ? '-' : '60 kg',
+            tinggi_badan: isTidakHadir ? '-' : '156 cm',
+            tekanan_darah: isTidakHadir ? '-' : '110/70 mmHg',
+            lingkar_lengan: isTidakHadir ? '-' : '28 cm',
+            usia_kehamilan: pesertaNorm?.jenis_peserta === 'Ibu Hamil' ? (isTidakHadir ? '-' : '24 minggu') : null
           },
           layanan_tambahan: {
-            tablet_fe: pesertaNorm?.jenis_peserta === 'Ibu Hamil' ? 'Diberikan' : '-',
-            konseling_gizi: 'Pola makan seimbang',
-            edukasi: 'Edukasi kesehatan ibu & anak'
+            tablet_fe: pesertaNorm?.jenis_peserta === 'Ibu Hamil' ? (isTidakHadir ? '-' : 'Diberikan') : '-',
+            konseling_gizi: isTidakHadir ? '-' : 'Pola makan seimbang',
+            edukasi: isTidakHadir ? '-' : 'Edukasi kesehatan ibu & anak'
           },
-          catatan_pemeriksaan: item.catatan || 'Kondisi peserta tercatat dalam buku register digital Posyandu Desa Manud Jaya.'
+          catatan_pemeriksaan: item.catatan || (isTidakHadir ? 'Peserta terkonfirmasi Tidak Hadir pada jadwal posyandu ini.' : 'Kondisi peserta tercatat dalam buku register digital Posyandu Desa Manud Jaya.')
         };
       });
     } catch (err) {
@@ -130,18 +155,25 @@ export const kunjunganService = {
   /**
    * Simpan pendaftaran registrasi kunjungan baru ke Supabase
    */
-  async simpanKunjungan({ peserta_id, posyandu_id, tanggal, jam, catatan, jenis_pelayanan_ids = [], dicatat_oleh }) {
+  async simpanKunjungan({ peserta_id, posyandu_id, tanggal, jam, catatan, jenis_pelayanan_ids = [], dicatat_oleh, status_kehadiran = 'hadir' }) {
     if (!isSupabaseConfigured || !supabase) {
       return null;
     }
 
     try {
+      let statusDb = 'hadir';
+      const s = (status_kehadiran || '').toLowerCase();
+      if (s.includes('tidak')) statusDb = 'tidak hadir';
+      else if (s.includes('tunggu')) statusDb = 'menunggu';
+      else if (s.includes('dilayani') || s.includes('selesai')) statusDb = 'sudah dilayani';
+      else statusDb = 'hadir';
+
       const payloadKunjungan = {
         peserta_id,
         posyandu_id: posyandu_id || null,
         tanggal: toISODateString(tanggal),
         jam_kedatangan: jam ? `${jam}:00` : '08:30:00',
-        status_kehadiran: 'hadir',
+        status_kehadiran: statusDb,
         catatan: catatan || null,
         dicatat_oleh: dicatat_oleh || '5c69e5ca-ba37-41b5-964e-5ef2525ef36d',
         is_suspended: false
