@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import StatCards from '../components/StatCards';
@@ -13,7 +12,6 @@ import KelolaKaderPage from '../../features/super-admin/KelolaKaderPage';
 import UnderDevelopmentPage from '../../shared/components/UnderDevelopmentPage';
 import IbuDashboardView from '../../features/dashboard/components/IbuDashboardView';
 import Toast from '../../shared/components/Toast';
-import { getTanggalHariIniLengkap } from '../../utils/dateUtils';
 import { useDashboardController } from '../../controllers/useDashboardController';
 
 export default function DashboardPage({ currentUser, onLogout, currentPath = '/dashboard', onNavigate }) {
@@ -167,31 +165,14 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
             />
           ) : (
             <>
-              {/* Top Greeting & Date Widget */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                    Selamat pagi, {currentUser?.nama || 'Annisa Wati'} <span>👋</span>
-                  </h1>
-                  <p className="text-xs text-slate-500 font-medium mt-1">
-                    Berikut ringkasan kegiatan Posyandu hari ini.
-                  </p>
-                </div>
-
-                {/* Date Widget Pill */}
-                <div className="flex items-center">
-                  <div className="bg-white border border-slate-100 shadow-xs px-3.5 py-2 rounded-xl flex items-center gap-2.5">
-                    <Calendar size={18} className="text-blue-500 shrink-0" />
-                    <div className="text-left">
-                      <div className="text-xs font-bold text-slate-800 leading-tight">
-                        {getTanggalHariIniLengkap()}
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-medium">
-                        Posyandu Desa Manud Jaya
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {/* Top Greeting */}
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                  Selamat pagi, {currentUser?.nama || 'Annisa Wati'} <span>👋</span>
+                </h1>
+                <p className="text-xs text-slate-500 font-medium mt-1">
+                  Berikut ringkasan kegiatan Posyandu hari ini.
+                </p>
               </div>
 
               {/* 6 Metrik Kartu Ringkasan */}
