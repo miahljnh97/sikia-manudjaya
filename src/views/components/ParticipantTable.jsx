@@ -197,7 +197,7 @@ export default function ParticipantTable({
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50 text-xs font-bold text-slate-700">
+            <tr className="border-b border-slate-100 bg-slate-50/50 text-xs font-bold text-[#4B5563]">
               <th className="py-3.5 px-5 w-12">No</th>
               <th className="py-3.5 px-5">Nama Peserta</th>
               <th className="py-3.5 px-5">NIK</th>

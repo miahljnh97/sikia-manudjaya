@@ -254,7 +254,7 @@ export default function RiwayatKunjunganPage({ currentUser }) {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200/70 text-slate-600 font-bold">
+              <tr className="bg-slate-50/80 border-b border-slate-200/70 text-[#4B5563] font-bold">
                 <th className="py-3 px-4 w-12 text-center">No</th>
                 <th className="py-3 px-4">Nama</th>
                 <th className="py-3 px-4">Tanggal Kunjungan</th>

@@ -200,7 +200,7 @@ export default function PencarianPasien({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50/60 text-slate-400 text-[11px] font-semibold uppercase border-b border-slate-100">
+              <tr className="bg-slate-50/60 text-[#4B5563] text-xs font-bold border-b border-slate-100">
                 <th className="py-3.5 px-5 w-12">No</th>
                 <th className="py-3.5 px-5">Nama Peserta</th>
                 <th className="py-3.5 px-5">NIK</th>
