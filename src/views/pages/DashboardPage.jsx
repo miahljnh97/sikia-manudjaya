@@ -158,6 +158,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
             <RegistrasiPage 
               currentUser={currentUser} 
               onBackToDashboard={handleRegistrasiSuccess} 
+              onTambahPesertaBaru={() => setIsModalOpen(true)}
             />
           ) : activeMenu !== 'Dashboard' ? (
             <UnderDevelopmentPage

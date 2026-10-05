@@ -7,7 +7,7 @@ import Step4Konfirmasi from './components/Step4Konfirmasi';
 import RiwayatKunjunganCard from './components/RiwayatKunjunganCard';
 import { useRegistrasiController } from './useRegistrasiController';
 
-export default function RegistrasiPage({ currentUser, onBackToDashboard }) {
+export default function RegistrasiPage({ currentUser, onBackToDashboard, onTambahPesertaBaru }) {
   const {
     mode,
     setMode,
@@ -137,7 +137,7 @@ export default function RegistrasiPage({ currentUser, onBackToDashboard }) {
           onResetFilter={handleResetFilter}
           pesertaList={pesertaList}
           onSelectPeserta={handleSelectPeserta}
-          onTambahPesertaBaru={() => alert('Buka form pendaftaran peserta baru')}
+          onTambahPesertaBaru={onTambahPesertaBaru}
         />
       ) : (
         <div className="flex flex-col lg:flex-row gap-6 items-start">
