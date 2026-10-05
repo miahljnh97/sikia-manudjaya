@@ -49,33 +49,31 @@ export default function RegistrasiPage({ currentUser, onBackToDashboard, onTamba
     <div className="space-y-6">
       {/* Breadcrumb Header */}
       <div>
-        <div className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 mb-1">
-          <span>Registrasi Kunjungan</span>
-          {mode === 'wizard' && (
-            <>
-              <span>›</span>
-              <span className={currentStep === 1 ? 'text-slate-800 font-bold' : ''}>Data Kunjungan</span>
-              {currentStep >= 2 && (
-                <>
-                  <span>›</span>
-                  <span className={currentStep === 2 ? 'text-slate-800 font-bold' : ''}>Jenis Pelayanan</span>
-                </>
-              )}
-              {currentStep >= 3 && (
-                <>
-                  <span>›</span>
-                  <span className={currentStep === 3 ? 'text-slate-800 font-bold' : ''}>Status Kehadiran</span>
-                </>
-              )}
-              {currentStep === 4 && (
-                <>
-                  <span>›</span>
-                  <span className="text-slate-800 font-bold">Konfirmasi</span>
-                </>
-              )}
-            </>
-          )}
-        </div>
+        {mode === 'wizard' && (
+          <div className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 mb-1">
+            <span>Registrasi Kunjungan</span>
+            <span>›</span>
+            <span className={currentStep === 1 ? 'text-slate-800 font-bold' : ''}>Data Kunjungan</span>
+            {currentStep >= 2 && (
+              <>
+                <span>›</span>
+                <span className={currentStep === 2 ? 'text-slate-800 font-bold' : ''}>Jenis Pelayanan</span>
+              </>
+            )}
+            {currentStep >= 3 && (
+              <>
+                <span>›</span>
+                <span className={currentStep === 3 ? 'text-slate-800 font-bold' : ''}>Status Kehadiran</span>
+              </>
+            )}
+            {currentStep === 4 && (
+              <>
+                <span>›</span>
+                <span className="text-slate-800 font-bold">Konfirmasi</span>
+              </>
+            )}
+          </div>
+        )}
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
           {mode === 'pencarian' ? 'Registrasi' : 'Registrasi Kunjungan'}
         </h1>
