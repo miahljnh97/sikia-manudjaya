@@ -277,6 +277,8 @@ export default function RiwayatKunjunganPage({ currentUser }) {
                 paginatedList.map((item, idx) => {
                   const isHamil = item.jenis_peserta === 'Ibu Hamil';
                   const isBayi = item.jenis_peserta === 'Bayi';
+                  const isLansia = item.jenis_peserta === 'Lansia';
+
                   return (
                     <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-3.5 px-4 text-center font-medium text-slate-500">
@@ -289,6 +291,8 @@ export default function RiwayatKunjunganPage({ currentUser }) {
                               ? 'bg-rose-50 text-rose-500' 
                               : isBayi 
                               ? 'bg-blue-50 text-blue-500' 
+                              : isLansia
+                              ? 'bg-purple-50 text-purple-500'
                               : 'bg-emerald-50 text-emerald-500'
                           }`}>
                             <User size={14} />
@@ -308,6 +312,8 @@ export default function RiwayatKunjunganPage({ currentUser }) {
                             ? 'bg-rose-50 text-rose-600 border border-rose-100' 
                             : isBayi 
                             ? 'bg-blue-50 text-blue-600 border border-blue-100' 
+                            : isLansia
+                            ? 'bg-purple-50 text-purple-600 border border-purple-100'
                             : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                         }`}>
                           {item.jenis_peserta}

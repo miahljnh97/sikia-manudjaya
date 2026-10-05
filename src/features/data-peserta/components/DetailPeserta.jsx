@@ -270,6 +270,7 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
                   <option value="Ibu Hamil">Ibu Hamil</option>
                   <option value="Balita">Balita</option>
                   <option value="Bayi">Bayi</option>
+                  <option value="Lansia">Lansia</option>
                 </select>
                 <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>

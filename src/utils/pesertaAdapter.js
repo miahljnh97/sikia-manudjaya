@@ -48,36 +48,78 @@ export function hitungUsiaDariTglLahir(tglLahirStr) {
 }
 
 /**
- * Tentukan kategori peserta ('Ibu Hamil' | 'Balita' | 'Bayi' | 'Ibu Menyusui' | 'Lainnya')
+ * Tentukan kategori peserta ('Ibu Hamil' | 'Balita' | 'Bayi' | 'Lansia')
  * @param {Object} raw 
- * @returns {'Ibu Hamil'|'Balita'|'Bayi'|'Ibu Balita'}
+ * @returns {'Ibu Hamil'|'Balita'|'Bayi'|'Lansia'}
  */
 export function tentukanJenisPeserta(raw) {
-  // Jika sudah memiliki field jenis_peserta (misal format dummy atau sudah dinormalisasi)
-  if (raw.jenis_peserta) return raw.jenis_peserta;
+  if (!raw) return 'Balita';
 
-  // Baca dari kolom tipe langsung atau relasi tipe_peserta
-  const tipe = (raw.tipe_peserta?.kode || raw.tipe || '').toLowerCase();
-  const statusIbu = (raw.status_ibu || '').toLowerCase();
-
-  if (tipe === 'ibu') {
-    if (statusIbu === 'hamil') return 'Ibu Hamil';
-    return 'Ibu Hamil'; // Default kategori ibu di Posyandu KIA jika tidak spesifik
+  // 1. Cek jika sudah memiliki jenis_peserta non-default yang valid
+  if (raw.jenis_peserta && ['Ibu Hamil', 'Bayi', 'Lansia'].includes(raw.jenis_peserta)) {
+    return raw.jenis_peserta;
   }
 
-  if (tipe === 'anak') {
-    if (raw.tgl_lahir) {
-      const lahir = new Date(raw.tgl_lahir);
-      if (!isNaN(lahir.getTime())) {
-        const selisihBulan = (new Date().getFullYear() - lahir.getFullYear()) * 12 + (new Date().getMonth() - lahir.getMonth());
-        if (selisihBulan < 12) {
-          return 'Bayi';
-        }
-        return 'Balita';
-      }
+  // 2. Cek status ibu dari DB ('hamil', 'menyusui')
+  const statusIbu = (raw.status_ibu || '').toLowerCase();
+  if (statusIbu.includes('hamil') || statusIbu.includes('menyusui')) {
+    return 'Ibu Hamil';
+  }
+
+  // 3. Cek tipe_id UUID atau kode tipe_peserta
+  const tipeId = String(raw.tipe_id || '').toLowerCase();
+  const tipeKode = (raw.tipe_peserta?.kode || raw.tipe || '').toLowerCase();
+
+  const isTipeIbu = tipeKode.includes('ibu') || tipeId === 'b5e84397-0be0-4515-9fe1-6222b6792bc3';
+  const isTipeAnak = tipeKode.includes('anak') || tipeKode.includes('balita') || tipeKode.includes('bayi') || tipeId === '29bad3a5-2808-4ebd-be57-391ff0126b80';
+  const isTipeLansia = tipeKode.includes('lansia');
+
+  // 4. Hitung usia dari tgl_lahir
+  const tglLahirStr = raw.tgl_lahir || raw.tanggal_lahir;
+  let usiaTahun = null;
+  let usiaBulan = null;
+
+  if (tglLahirStr) {
+    const lahir = new Date(tglLahirStr);
+    if (!isNaN(lahir.getTime())) {
+      const now = new Date();
+      usiaTahun = now.getFullYear() - lahir.getFullYear();
+      usiaBulan = (now.getFullYear() - lahir.getFullYear()) * 12 + (now.getMonth() - lahir.getMonth());
     }
+  }
+
+  // Lansia: usia >= 60 tahun atau tipe lansia
+  if (isTipeLansia || (usiaTahun !== null && usiaTahun >= 60)) {
+    return 'Lansia';
+  }
+
+  // Klasifikasi berdasarkan usia jika tersedia
+  if (usiaTahun !== null) {
+    // Bayi: usia di bawah 12 bulan (< 1 tahun)
+    if (usiaBulan !== null && usiaBulan < 12 && !isTipeIbu) {
+      return 'Bayi';
+    }
+
+    // Balita: usia 1 s.d. 5 tahun
+    if (usiaTahun >= 1 && usiaTahun < 6 && !isTipeIbu) {
+      return 'Balita';
+    }
+
+    // Usia remaja / dewasa (>= 12 tahun)
+    if (usiaTahun >= 12) {
+      return 'Ibu Hamil';
+    }
+  }
+
+  // Fallback berdasarkan tipe_id / kode
+  if (isTipeIbu) return 'Ibu Hamil';
+  if (isTipeLansia) return 'Lansia';
+  if (isTipeAnak) {
+    if (usiaBulan !== null && usiaBulan < 12) return 'Bayi';
     return 'Balita';
   }
+
+  if (raw.jenis_peserta) return raw.jenis_peserta;
 
   return 'Balita';
 }
@@ -98,9 +140,10 @@ export function normalizePeserta(row) {
 
   // Jenis kelamin
   let jenisKelamin = row.jenis_kelamin;
-  if (!jenisKelamin) {
-    const tipeKode = (row.tipe_peserta?.kode || row.tipe || '').toLowerCase();
-    jenisKelamin = (tipeKode === 'ibu' || jenisPeserta === 'Ibu Hamil') ? 'Perempuan' : 'Laki-laki';
+  if (jenisPeserta === 'Ibu Hamil') {
+    jenisKelamin = 'Perempuan';
+  } else if (!jenisKelamin) {
+    jenisKelamin = 'Laki-laki';
   } else if (jenisKelamin === 'P') {
     jenisKelamin = 'Perempuan';
   } else if (jenisKelamin === 'L') {
@@ -141,7 +184,8 @@ export const TIPE_MAP = {
   'ibu hamil': 'b5e84397-0be0-4515-9fe1-6222b6792bc3',
   'anak': '29bad3a5-2808-4ebd-be57-391ff0126b80',
   'balita': '29bad3a5-2808-4ebd-be57-391ff0126b80',
-  'bayi': '29bad3a5-2808-4ebd-be57-391ff0126b80'
+  'bayi': '29bad3a5-2808-4ebd-be57-391ff0126b80',
+  'lansia': 'b5e84397-0be0-4515-9fe1-6222b6792bc3'
 };
 
 export function isValidUUID(str) {

@@ -229,6 +229,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
               <option value="Ibu Hamil">Ibu Hamil</option>
               <option value="Balita">Balita</option>
               <option value="Bayi">Bayi</option>
+              <option value="Lansia">Lansia</option>
             </select>
           </div>
 
@@ -325,6 +326,8 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
                   badgeClass = 'bg-[#DCFCE7] text-[#166534] border-[#BBF7D0]';
                 } else if (item.jenis_peserta === 'Bayi') {
                   badgeClass = 'bg-[#DBEAFE] text-[#1D4ED8] border-[#BFDBFE]';
+                } else if (item.jenis_peserta === 'Lansia') {
+                  badgeClass = 'bg-purple-100 text-purple-700 border-purple-200';
                 }
 
                 return (
@@ -333,7 +336,9 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
                     <td className="py-3.5 px-5 font-bold text-slate-900 flex items-center gap-2">
                       <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
                         item.jenis_peserta === 'Ibu Hamil' ? 'bg-rose-100 text-rose-600' :
-                        item.jenis_peserta === 'Balita' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'
+                        item.jenis_peserta === 'Balita' ? 'bg-emerald-100 text-emerald-600' :
+                        item.jenis_peserta === 'Bayi' ? 'bg-blue-100 text-blue-600' :
+                        'bg-purple-100 text-purple-600'
                       }`}>
                         <User size={12} />
                       </span>

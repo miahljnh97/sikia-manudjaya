@@ -53,6 +53,12 @@ export default function ParticipantTable({
             Bayi
           </span>
         );
+      case 'Lansia':
+        return (
+          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+            Lansia
+          </span>
+        );
       default:
         return (
           <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600">
@@ -169,6 +175,7 @@ export default function ParticipantTable({
               <option value="Ibu Hamil">Ibu Hamil</option>
               <option value="Balita">Balita</option>
               <option value="Bayi">Bayi</option>
+              <option value="Lansia">Lansia</option>
             </select>
             <Filter size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
             <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />

@@ -128,6 +128,7 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit, onShowToast
                 <option value="Balita">Balita</option>
                 <option value="Bayi">Bayi</option>
                 <option value="Ibu Hamil">Ibu Hamil</option>
+                <option value="Lansia">Lansia</option>
               </select>
             </div>
 

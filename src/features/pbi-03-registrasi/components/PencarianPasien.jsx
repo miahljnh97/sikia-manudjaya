@@ -95,6 +95,7 @@ export default function PencarianPasien({
                 <option value="Ibu Hamil">Ibu Hamil</option>
                 <option value="Balita">Balita</option>
                 <option value="Bayi">Bayi</option>
+                <option value="Lansia">Lansia</option>
               </select>
             </div>
 
@@ -232,6 +233,9 @@ export default function PencarianPasien({
                   } else if (item.jenis_peserta === 'Bayi') {
                     badgeClass = 'bg-[#DBEAFE] text-[#1D4ED8] border-[#BFDBFE]';
                     iconBg = 'bg-blue-100 text-blue-600';
+                  } else if (item.jenis_peserta === 'Lansia') {
+                    badgeClass = 'bg-purple-100 text-purple-700 border-purple-200';
+                    iconBg = 'bg-purple-100 text-purple-600';
                   }
 
                   // Status badge dengan bullet dot sesuai Figma
