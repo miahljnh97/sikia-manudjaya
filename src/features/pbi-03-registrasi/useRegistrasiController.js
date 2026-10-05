@@ -117,12 +117,15 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi) {
       if (onSuccessRegistrasi) {
         onSuccessRegistrasi(suksesMsg);
       } else {
-        alert(suksesMsg);
         setMode('pencarian');
         setCurrentStep(1);
       }
     } catch (err) {
-      alert('Gagal menyimpan registrasi: ' + err.message);
+      if (onSuccessRegistrasi) {
+        onSuccessRegistrasi('Gagal menyimpan registrasi: ' + err.message, 'error');
+      } else {
+        console.error('Gagal menyimpan registrasi:', err);
+      }
     } finally {
       setSubmitting(false);
     }

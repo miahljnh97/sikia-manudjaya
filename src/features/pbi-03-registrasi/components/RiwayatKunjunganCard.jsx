@@ -45,7 +45,7 @@ export default function RiwayatKunjunganCard({ riwayatList = [] }) {
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
           <h4 className="text-xs font-bold text-slate-800">Riwayat Kunjungan Terakhir</h4>
           <button 
-            onClick={() => alert('Buka riwayat lengkap')}
+            type="button"
             className="text-[11px] font-semibold text-blue-600 hover:underline flex items-center gap-1"
           >
             Lihat semua

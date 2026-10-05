@@ -112,7 +112,9 @@ export default function KelolaKaderPage({ currentUser, onShowToast }) {
   const handleSimpanKader = async (e) => {
     e.preventDefault();
     if (!formData.nama || !formData.nik || !formData.telepon) {
-      alert('Mohon lengkapi Nama, NIK, dan Nomor Telepon kader.');
+      if (onShowToast) {
+        onShowToast('Mohon lengkapi Nama, NIK, dan Nomor Telepon kader.', 'error');
+      }
       return;
     }
 
@@ -145,7 +147,9 @@ export default function KelolaKaderPage({ currentUser, onShowToast }) {
       }
     } catch (err) {
       console.error(err);
-      alert('Gagal menyimpan kader baru ke database.');
+      if (onShowToast) {
+        onShowToast('Gagal menyimpan kader baru ke database.', 'error');
+      }
     } finally {
       setLoading(false);
     }

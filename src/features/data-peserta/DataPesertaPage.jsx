@@ -7,15 +7,25 @@ import { masterService } from '../../services/masterService';
 import { maskNik } from '../../utils/nikUtils';
 import { resolveDusunId, resolveTipeId } from '../../utils/pesertaAdapter';
 import { toISODateString } from '../../utils/dateUtils';
+import Toast from '../../shared/components/Toast';
 
 // Master data peserta diambil 100% dari tabel `peserta` Supabase
 export const DUMMY_DATA_PESERTA = [];
 
-export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, initialSelectedId, onBackToDashboard }) {
+export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, initialSelectedId, onBackToDashboard, onShowToast }) {
   const isIbuRole = currentUser?.role === 'Ibu Balita' || currentUser?.role === 'ibu';
 
   const [listPeserta, setListPeserta] = useState(() => dataStoreService.getPesertaList());
   const [dusunList, setDusunList] = useState([]);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  const notify = (message, type = 'success') => {
+    if (onShowToast) {
+      onShowToast(message, type);
+    } else {
+      setToast({ show: true, message, type });
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -110,12 +120,12 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
 
       const saved = await pesertaService.updatePeserta(updated.id, payloadUpdate);
       setSelectedPeserta(saved || updated);
-      alert(`Data peserta "${updated.nama}" berhasil diperbarui dan disinkronkan ke database!`);
+      notify(`Data peserta "${updated.nama}" berhasil diperbarui!`, 'success');
     } catch (e) {
       console.warn('Error update peserta:', e);
       const saved = dataStoreService.updatePeserta(updated.id, updated);
       setSelectedPeserta(saved || updated);
-      alert(`Data peserta "${updated.nama}" berhasil diperbarui!`);
+      notify(`Data peserta "${updated.nama}" berhasil diperbarui!`, 'success');
     }
   };
 
@@ -124,7 +134,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
     if (yakin) {
       dataStoreService.suspendPeserta(pesertaToDelete.id);
       setSelectedPeserta(null);
-      alert(`Peserta "${pesertaToDelete.nama}" berhasil dihapus (disuspend) dari sistem.`);
+      notify(`Peserta "${pesertaToDelete.nama}" berhasil dihapus dari sistem.`, 'success');
     }
   };
 
@@ -395,6 +405,14 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
           </div>
         </div>
       </div>
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast((prev) => ({ ...prev, show: false }))}
+        />
+      )}
     </div>
   );
 }

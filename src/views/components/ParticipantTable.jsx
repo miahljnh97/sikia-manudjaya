@@ -20,6 +20,7 @@ export default function ParticipantTable({
   setFilterType,
   onUpdateStatus,
   onLihatDetail,
+  onShowToast,
   loading
 }) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -176,7 +177,7 @@ export default function ParticipantTable({
           {/* Export Button */}
           <button 
             type="button"
-            onClick={() => alert('Data peserta berhasil disiapkan untuk diunduh.')}
+            onClick={() => onShowToast ? onShowToast('Data peserta berhasil disiapkan untuk diunduh.', 'info') : null}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
           >
             <Download size={13} className="text-slate-500" />

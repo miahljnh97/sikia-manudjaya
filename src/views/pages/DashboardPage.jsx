@@ -142,6 +142,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
                 setActiveMenu('Dashboard');
               }}
               onTambahPesertaBaru={() => setIsModalOpen(true)}
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
             />
           ) : activeMenu === 'Riwayat Kunjungan' ? (
             <RiwayatKunjunganPage currentUser={currentUser} />
@@ -151,12 +152,16 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
               onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
             />
           ) : isIbuRole ? (
-            <IbuDashboardView user={currentUser} />
+            <IbuDashboardView 
+              user={currentUser} 
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
+            />
           ) : activeMenu === 'Registrasi Kunjungan' ? (
             <RegistrasiPage 
               currentUser={currentUser} 
               onBackToDashboard={handleRegistrasiSuccess} 
               onTambahPesertaBaru={() => setIsModalOpen(true)}
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
             />
           ) : activeMenu !== 'Dashboard' ? (
             <UnderDevelopmentPage
@@ -190,6 +195,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
                 setFilterType={setFilterType}
                 onUpdateStatus={handleUpdateStatusWithToast}
                 onLihatDetail={handleLihatDetailDariDashboard}
+                onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
                 loading={loading}
               />
             </>
@@ -202,6 +208,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleTambahPeserta}
+        onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
       />
 
       {/* Modern Toast Notification */}

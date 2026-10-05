@@ -2,7 +2,7 @@ import React from 'react';
 import { Calendar, Bell, Heart, Smile, Activity, FileCheck, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { getJadwalBulanDepan } from '../../../utils/dateUtils';
 
-export default function IbuDashboardView({ user }) {
+export default function IbuDashboardView({ user, onShowToast }) {
   const anak = {
     nama: 'Budi Santoso',
     usia: '8 bulan',
@@ -144,8 +144,9 @@ export default function IbuDashboardView({ user }) {
               <div className="text-slate-500 text-[11px]">Bidan Desa Manud Jaya</div>
             </div>
             <button 
-              onClick={() => alert('Fitur chat/konsultasi WhatsApp siap terhubung ke nomor Bidan Desa')}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-[11px] shadow-xs"
+              type="button"
+              onClick={() => onShowToast ? onShowToast('Fitur konsultasi WhatsApp siap terhubung ke nomor Bidan Desa.', 'info') : window.open('https://wa.me/6281234567890', '_blank')}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-[11px] shadow-xs cursor-pointer transition-colors"
             >
               Hubungi via WhatsApp
             </button>
