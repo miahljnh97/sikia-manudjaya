@@ -1,6 +1,7 @@
 # SIKIA — Sistem Informasi Kesehatan Ibu dan Anak Desa Manud Jaya
 > **Magister Teknologi Informasi (MTI) UI — CSIM801023 Dinamika Tim Perangkat Lunak (DTPL)**  
-> **Kelompok / Tim**: Tim 03  
+> **Kelompok / Tim**: Tim 03
+> **Kelas**: 2025F 
 > **Studi Kasus**: Layanan Posyandu Terintegrasi Desa Manud Jaya  
 
 ---
