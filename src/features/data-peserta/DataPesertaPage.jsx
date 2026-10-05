@@ -51,7 +51,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
 
   const [searchQuery, setSearchQuery] = useState('');
   const [jenisFilter, setJenisFilter] = useState('Semua');
-  const [statusFilter, setStatusFilter] = useState('Aktif');
+  const [statusFilter, setStatusFilter] = useState('Semua');
   const [wilayahFilter, setWilayahFilter] = useState('Semua');
   const [sortOrder, setSortOrder] = useState('Nama A-Z');
   const [currentPage, setCurrentPage] = useState(1);
@@ -249,9 +249,9 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
           <div className="flex items-end">
             <button
               onClick={handleReset}
-              className="w-full p-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl inline-flex items-center justify-center gap-1.5"
+              className="w-full p-2 text-xs font-semibold text-[#3B82F6] hover:text-[#2563EB] hover:underline inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer bg-transparent border-0"
             >
-              <RotateCcw size={13} />
+              <RotateCcw size={13} className="text-[#3B82F6]" />
               <span>Reset Filter</span>
             </button>
           </div>
@@ -296,30 +296,37 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {paginatedList.map((item, idx) => (
-                <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-3.5 px-5 text-slate-400">{startIndex + idx + 1}</td>
-                  <td className="py-3.5 px-5 font-bold text-slate-900 flex items-center gap-2">
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
-                      item.jenis_peserta === 'Ibu Hamil' ? 'bg-rose-100 text-rose-600' :
-                      item.jenis_peserta === 'Balita' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'
-                    }`}>
-                      <User size={12} />
-                    </span>
-                    <span>{item.nama}</span>
-                  </td>
-                  <td className="py-3.5 px-5 font-mono text-slate-600 font-medium">
-                    {maskNik(item.nik)}
-                  </td>
-                  <td className="py-3.5 px-5">
-                    <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border ${
-                      item.jenis_peserta === 'Ibu Hamil' ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                      item.jenis_peserta === 'Balita' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'
-                    }`}>
-                      {item.jenis_peserta}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-5 text-slate-500">{item.tanggal_lahir}</td>
+              {paginatedList.map((item, idx) => {
+                let badgeClass = 'bg-slate-100 text-slate-600 border-slate-200';
+                if (item.jenis_peserta === 'Ibu Hamil') {
+                  badgeClass = 'bg-[#FEE2E2] text-[#991B1B] border-[#FECDD3]';
+                } else if (item.jenis_peserta === 'Balita') {
+                  badgeClass = 'bg-[#DCFCE7] text-[#166534] border-[#BBF7D0]';
+                } else if (item.jenis_peserta === 'Bayi') {
+                  badgeClass = 'bg-[#DBEAFE] text-[#1D4ED8] border-[#BFDBFE]';
+                }
+
+                return (
+                  <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-3.5 px-5 text-slate-400">{startIndex + idx + 1}</td>
+                    <td className="py-3.5 px-5 font-bold text-slate-900 flex items-center gap-2">
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+                        item.jenis_peserta === 'Ibu Hamil' ? 'bg-rose-100 text-rose-600' :
+                        item.jenis_peserta === 'Balita' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'
+                      }`}>
+                        <User size={12} />
+                      </span>
+                      <span>{item.nama}</span>
+                    </td>
+                    <td className="py-3.5 px-5 font-mono text-slate-600 font-medium">
+                      {maskNik(item.nik)}
+                    </td>
+                    <td className="py-3.5 px-5">
+                      <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border ${badgeClass}`}>
+                        {item.jenis_peserta}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-5 text-slate-500">{item.tanggal_lahir}</td>
                   <td className="py-3.5 px-5 text-slate-600">{item.usia}</td>
                   <td className="py-3.5 px-5 text-slate-600">{item.alamat}</td>
                   <td className="py-3.5 px-5 text-right">
@@ -332,7 +339,8 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

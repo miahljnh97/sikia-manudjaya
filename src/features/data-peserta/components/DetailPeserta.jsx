@@ -367,21 +367,44 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
       {/* Card Catatan Tambahan / Observasi */}
       <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-xs space-y-4">
         <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">
-          Catatan Tambahan / Observasi Petugas
+          Catatan Tambahan / Observasi
         </h3>
         {isEditing ? (
           <textarea
             rows={3}
             value={formData.catatan_observasi}
             onChange={(e) => handleChange('catatan_observasi', e.target.value)}
-            placeholder="Catatan kesehatan atau arahan rujukan..."
+            placeholder="Pasien perlu rujukan..."
             className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
           />
         ) : (
           <div className="w-full px-4 py-3 bg-slate-50/70 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-800">
-            {formData.catatan_observasi || 'Tidak ada catatan observasi'}
+            {formData.catatan_observasi || 'Pasien perlu rujukan'}
           </div>
         )}
+      </div>
+
+      {/* Tombol Aksi di Bawah Form Sesuai Figma */}
+      <div className="flex items-center justify-center gap-3 pt-2">
+        <button
+          type="button"
+          onClick={isEditing ? handleCancel : onBack}
+          className="px-6 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+        >
+          Batal
+        </button>
+        <button
+          type="submit"
+          onClick={(e) => {
+            if (!isEditing) {
+              e.preventDefault();
+              setIsEditing(true);
+            }
+          }}
+          className="px-6 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] text-[#FFFFFF] rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+        >
+          Simpan Data Peserta
+        </button>
       </div>
     </form>
   );
