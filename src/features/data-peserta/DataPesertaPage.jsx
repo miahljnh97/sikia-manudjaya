@@ -3,6 +3,7 @@ import { Search, RotateCcw, Plus, FileText, ChevronLeft, ChevronRight, User } fr
 import DetailPeserta from './components/DetailPeserta';
 import { dataStoreService } from '../../services/dataStoreService';
 import { pesertaService } from '../../services/pesertaService';
+import { masterService } from '../../services/masterService';
 import { maskNik } from '../../utils/nikUtils';
 
 // Master data peserta diambil 100% dari tabel `peserta` Supabase
@@ -12,6 +13,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
   const isIbuRole = currentUser?.role === 'Ibu Balita' || currentUser?.role === 'ibu';
 
   const [listPeserta, setListPeserta] = useState(() => dataStoreService.getPesertaList());
+  const [dusunList, setDusunList] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -22,6 +24,10 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
       }
     };
     fetchPeserta();
+
+    masterService.getDusunList().then((res) => {
+      if (isMounted && res) setDusunList(res);
+    });
 
     const unsubscribe = dataStoreService.subscribe(() => {
       fetchPeserta();
@@ -86,10 +92,29 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
     setCurrentPage(1);
   };
 
-  const handleSavePeserta = (updated) => {
-    const saved = dataStoreService.updatePeserta(updated.id, updated);
-    setSelectedPeserta(saved || updated);
-    alert(`Data peserta "${updated.nama}" berhasil diperbarui dan disinkronkan ke seluruh sistem!`);
+  const handleSavePeserta = async (updated) => {
+    try {
+      const payloadUpdate = {
+        nama: updated.nama,
+        nik: updated.nik,
+        dusun_id: updated.dusun_id || undefined,
+        tipe_id: updated.tipe_id || undefined,
+        tgl_lahir: updated.tanggal_lahir || updated.tgl_lahir || undefined,
+        no_wa: updated.telepon || updated.no_wa || undefined,
+        alamat: updated.alamat || undefined,
+        jenis_kelamin: updated.jenis_kelamin === 'Perempuan' ? 'P' : (updated.jenis_kelamin === 'Laki-laki' ? 'L' : updated.jenis_kelamin),
+        nama_suami: updated.nama_suami || undefined,
+      };
+
+      const saved = await pesertaService.updatePeserta(updated.id, payloadUpdate);
+      setSelectedPeserta(saved || updated);
+      alert(`Data peserta "${updated.nama}" berhasil diperbarui dan disinkronkan ke database!`);
+    } catch (e) {
+      console.warn('Error update peserta:', e);
+      const saved = dataStoreService.updatePeserta(updated.id, updated);
+      setSelectedPeserta(saved || updated);
+      alert(`Data peserta "${updated.nama}" berhasil diperbarui!`);
+    }
   };
 
   const handleDeletePeserta = (pesertaToDelete) => {
@@ -207,9 +232,17 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
               className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none"
             >
               <option value="Semua">Semua</option>
-              <option value="Dusun 1">Dusun 1</option>
-              <option value="Dusun 2">Dusun 2</option>
-              <option value="Dusun 3">Dusun 3</option>
+              {dusunList.length > 0 ? (
+                dusunList.map((d) => (
+                  <option key={d.id} value={d.nama}>{d.nama}</option>
+                ))
+              ) : (
+                <>
+                  <option value="Dusun 1">Dusun 1</option>
+                  <option value="Dusun 2">Dusun 2</option>
+                  <option value="Dusun 3">Dusun 3</option>
+                </>
+              )}
             </select>
           </div>
 

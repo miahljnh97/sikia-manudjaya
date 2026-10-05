@@ -1,14 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { masterService } from '../../services/masterService';
 
 export default function RegistrasiModal({ isOpen, onClose, onSubmit }) {
+  const [dusunList, setDusunList] = useState([]);
+  const [tipeList, setTipeList] = useState([]);
+
   const [formData, setFormData] = useState({
     nama: '',
     nik: '',
     jenis_peserta: 'Balita',
+    dusun_id: '',
+    tipe_id: '',
     usia: '',
     alamat: 'Manud Jaya',
   });
+
+  useEffect(() => {
+    let isMounted = true;
+    Promise.all([masterService.getDusunList(), masterService.getTipePesertaList()])
+      .then(([dusuns, tipes]) => {
+        if (isMounted) {
+          if (dusuns && dusuns.length > 0) {
+            setDusunList(dusuns);
+            setFormData(prev => ({ ...prev, dusun_id: prev.dusun_id || dusuns[0].id }));
+          }
+          if (tipes && tipes.length > 0) {
+            setTipeList(tipes);
+          }
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -18,11 +43,22 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit }) {
       alert('Nama dan NIK wajib diisi!');
       return;
     }
-    onSubmit(formData);
+
+    // Tentukan tipe_id dari master tipe_peserta
+    const isIbu = formData.jenis_peserta === 'Ibu Hamil';
+    const matchedTipe = tipeList.find(t => isIbu ? t.kode === 'ibu' : t.kode === 'anak');
+
+    onSubmit({
+      ...formData,
+      tipe_id: matchedTipe ? matchedTipe.id : null,
+      status_ibu: isIbu ? 'hamil' : null,
+    });
     setFormData({
       nama: '',
       nik: '',
       jenis_peserta: 'Balita',
+      dusun_id: dusunList[0]?.id || '',
+      tipe_id: '',
       usia: '',
       alamat: 'Manud Jaya',
     });
@@ -94,14 +130,41 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit }) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Alamat Domisili</label>
-            <input
-              type="text"
-              value={formData.alamat}
-              onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Wilayah / Dusun</label>
+              <select
+                value={formData.dusun_id}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const matched = dusunList.find(d => d.id === val);
+                  setFormData({
+                    ...formData,
+                    dusun_id: val,
+                    alamat: matched ? matched.nama : formData.alamat
+                  });
+                }}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+              >
+                {dusunList.length > 0 ? (
+                  dusunList.map((d) => (
+                    <option key={d.id} value={d.id}>{d.nama}</option>
+                  ))
+                ) : (
+                  <option value="">Pilih Dusun...</option>
+                )}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Alamat Domisili</label>
+              <input
+                type="text"
+                value={formData.alamat}
+                onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+              />
+            </div>
           </div>
 
           <div className="pt-2 flex justify-end gap-2">

@@ -56,7 +56,8 @@ export function tentukanJenisPeserta(raw) {
   // Jika sudah memiliki field jenis_peserta (misal format dummy atau sudah dinormalisasi)
   if (raw.jenis_peserta) return raw.jenis_peserta;
 
-  const tipe = (raw.tipe || '').toLowerCase();
+  // Baca dari kolom tipe langsung atau relasi tipe_peserta
+  const tipe = (raw.tipe_peserta?.kode || raw.tipe || '').toLowerCase();
   const statusIbu = (raw.status_ibu || '').toLowerCase();
 
   if (tipe === 'ibu') {
@@ -92,10 +93,14 @@ export function normalizePeserta(row) {
   const jenisPeserta = tentukanJenisPeserta(row);
   const usia = row.usia || hitungUsiaDariTglLahir(row.tgl_lahir);
 
+  // Ambil nama dusun dari relasi dusun_id (objek relasi dusun) atau fallback ke kolom dusun
+  const namaDusun = row.dusun?.nama || row.dusun || 'Dusun 1';
+
   // Jenis kelamin
   let jenisKelamin = row.jenis_kelamin;
   if (!jenisKelamin) {
-    jenisKelamin = (row.tipe === 'ibu' || jenisPeserta === 'Ibu Hamil') ? 'Perempuan' : 'Laki-laki';
+    const tipeKode = (row.tipe_peserta?.kode || row.tipe || '').toLowerCase();
+    jenisKelamin = (tipeKode === 'ibu' || jenisPeserta === 'Ibu Hamil') ? 'Perempuan' : 'Laki-laki';
   } else if (jenisKelamin === 'P') {
     jenisKelamin = 'Perempuan';
   } else if (jenisKelamin === 'L') {
@@ -105,14 +110,16 @@ export function normalizePeserta(row) {
   return {
     ...row,
     id: row.id,
+    dusun_id: row.dusun_id || row.dusun?.id || null,
+    tipe_id: row.tipe_id || row.tipe_peserta?.id || null,
     nama: row.nama || 'Peserta Tanpa Nama',
     nik: row.nik || '',
     nik_lengkap: row.nik || '',
     no_kk: row.no_kk || '',
     jenis_peserta: jenisPeserta,
     usia: usia,
-    alamat: row.alamat || row.dusun || 'Desa Manud Jaya',
-    dusun: row.dusun || 'Dusun 1',
+    alamat: row.alamat || namaDusun || 'Desa Manud Jaya',
+    dusun: namaDusun,
     tanggal_lahir: row.tgl_lahir || row.tanggal_lahir || '',
     telepon: row.no_wa || row.telepon || '-',
     jenis_kelamin: jenisKelamin,

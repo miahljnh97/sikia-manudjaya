@@ -11,12 +11,17 @@ export const kunjunganService = {
     }
 
     try {
-      // 1. Ambil data kunjungan beserta relasi peserta
+      // 1. Ambil data kunjungan beserta relasi peserta dan posyandu
       const { data: kunjunganList, error: kunjError } = await supabase
         .from('kunjungan')
         .select(`
           *,
-          peserta:peserta_id (*)
+          peserta:peserta_id (
+            *,
+            dusun:dusun_id (id, nama, kode),
+            tipe_peserta:tipe_id (id, kode, nama)
+          ),
+          posyandu:posyandu_id (id, nama)
         `)
         .eq('is_suspended', false)
         .order('created_at', { ascending: false });
@@ -76,9 +81,11 @@ export const kunjunganService = {
         const jamClean = item.jam_kedatangan ? item.jam_kedatangan.slice(0, 5) : '08:30';
 
         const isHadir = (item.status_kehadiran || '').toLowerCase() === 'hadir';
+        const namaPosyandu = item.posyandu?.nama || 'Posyandu Desa Manud Jaya';
 
         return {
           id: item.id,
+          posyandu_id: item.posyandu_id || item.posyandu?.id || null,
           no_registrasi: `KJ-0924-${String(idx + 185).padStart(4, '0')}`,
           no_antrean: `A-${String(idx + 1).padStart(2, '0')}`,
           nama: pesertaNorm?.nama || 'Peserta Posyandu',
@@ -88,7 +95,8 @@ export const kunjunganService = {
           tanggal_kunjungan: tglSingkat,
           tanggal_kunjungan_lengkap: tglLengkap,
           waktu: `${jamClean} WIB`,
-          tempat: 'Posyandu Desa Manud Jaya',
+          tempat: namaPosyandu,
+          posyandu: namaPosyandu,
           jenis_pelayanan: jenisLayananStr,
           hasil_catatan: item.catatan || (isHadir ? 'Pemeriksaan rutin selesai' : 'Tidak hadir pada jadwal posyandu'),
           status: 'Selesai',
@@ -121,7 +129,7 @@ export const kunjunganService = {
   /**
    * Simpan pendaftaran registrasi kunjungan baru ke Supabase
    */
-  async simpanKunjungan({ peserta_id, tanggal, jam, catatan, jenis_pelayanan_ids = [], dicatat_oleh }) {
+  async simpanKunjungan({ peserta_id, posyandu_id, tanggal, jam, catatan, jenis_pelayanan_ids = [], dicatat_oleh }) {
     if (!isSupabaseConfigured || !supabase) {
       return null;
     }
@@ -129,7 +137,7 @@ export const kunjunganService = {
     try {
       const payloadKunjungan = {
         peserta_id,
-        posyandu_id: 1, // Posyandu Desa Manud Jaya
+        posyandu_id: posyandu_id || null,
         tanggal: tanggal || new Date().toISOString().split('T')[0],
         jam_kedatangan: jam ? `${jam}:00` : '08:30:00',
         status_kehadiran: 'hadir',

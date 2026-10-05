@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { dataStoreService, getIsActive } from '../../services/dataStoreService';
 import { kaderService } from '../../services/kaderService';
+import { masterService } from '../../services/masterService';
 
 export default function KelolaKaderPage({ currentUser, onShowToast }) {
   const [kaderList, setKaderList] = useState(() => dataStoreService.getKaderList());
@@ -24,16 +25,21 @@ export default function KelolaKaderPage({ currentUser, onShowToast }) {
   const [dusunFilter, setDusunFilter] = useState('Semua');
   const [statusFilter, setStatusFilter] = useState('Semua');
 
+  // Master Data dari Database Supabase
+  const [dusunList, setDusunList] = useState([]);
+  const [posyanduList, setPosyanduList] = useState([]);
+  const [rolesList, setRolesList] = useState([]);
+
   // Modal State Tambah Kader Baru
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     nama: '',
     nik: '',
-    dusun: 'Dusun 1',
-    posyandu: 'Posyandu Desa Manud Jaya',
+    dusun_id: '',
+    posyandu_id: '',
+    role_id: '',
     telepon: '',
     email: '',
-    peran: 'Kader Posyandu'
   });
 
   // Fetch data dari Supabase saat buka halaman
@@ -50,6 +56,32 @@ export default function KelolaKaderPage({ currentUser, onShowToast }) {
 
   useEffect(() => {
     refreshList();
+    
+    // Load master lists
+    const loadMasters = async () => {
+      try {
+        const [dusunRes, posyanduRes, rolesRes] = await Promise.all([
+          masterService.getDusunList(),
+          masterService.getPosyanduList(),
+          masterService.getRolesList(),
+        ]);
+        setDusunList(dusunRes);
+        setPosyanduList(posyanduRes);
+        setRolesList(rolesRes);
+
+        // Inisialisasi default form jika kosong
+        setFormData(prev => ({
+          ...prev,
+          dusun_id: prev.dusun_id || (dusunRes[0]?.id || ''),
+          posyandu_id: prev.posyandu_id || (posyanduRes[0]?.id || ''),
+          role_id: prev.role_id || (rolesRes.find(r => r.kode === 'kader')?.id || rolesRes[0]?.id || '')
+        }));
+      } catch (err) {
+        console.warn('Error fetching master records:', err);
+      }
+    };
+    loadMasters();
+
     const unsubscribe = dataStoreService.subscribe(() => {
       refreshList();
     });
@@ -89,9 +121,9 @@ export default function KelolaKaderPage({ currentUser, onShowToast }) {
       await kaderService.tambahKader({
         nama: formData.nama,
         nik: formData.nik,
-        peran: formData.peran,
-        dusun: formData.dusun,
-        posyandu: formData.posyandu,
+        dusun_id: formData.dusun_id || (dusunList[0]?.id || null),
+        posyandu_id: formData.posyandu_id || (posyanduList[0]?.id || null),
+        role_id: formData.role_id || (rolesList.find(r => r.kode === 'kader')?.id || null),
         telepon: formData.telepon,
         email: formData.email || `${formData.nama.toLowerCase().replace(/\s+/g, '.')}@manudjaya.id`
       });
@@ -101,11 +133,11 @@ export default function KelolaKaderPage({ currentUser, onShowToast }) {
       setFormData({
         nama: '',
         nik: '',
-        dusun: 'Dusun 1',
-        posyandu: 'Posyandu Desa Manud Jaya',
+        dusun_id: dusunList[0]?.id || '',
+        posyandu_id: posyanduList[0]?.id || '',
+        role_id: rolesList.find(r => r.kode === 'kader')?.id || '',
         telepon: '',
         email: '',
-        peran: 'Kader Posyandu'
       });
 
       if (onShowToast) {
@@ -176,9 +208,17 @@ export default function KelolaKaderPage({ currentUser, onShowToast }) {
             className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
           >
             <option value="Semua">Semua Wilayah</option>
-            <option value="Dusun 1">Dusun 1</option>
-            <option value="Dusun 2">Dusun 2</option>
-            <option value="Dusun 3">Dusun 3</option>
+            {dusunList.length > 0 ? (
+              dusunList.map((d) => (
+                <option key={d.id} value={d.nama}>{d.nama}</option>
+              ))
+            ) : (
+              <>
+                <option value="Dusun 1">Dusun 1</option>
+                <option value="Dusun 2">Dusun 2</option>
+                <option value="Dusun 3">Dusun 3</option>
+              </>
+            )}
           </select>
 
           <select
@@ -322,28 +362,66 @@ export default function KelolaKaderPage({ currentUser, onShowToast }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Wilayah / Dusun</label>
+                  <label className="block font-bold text-slate-700 mb-1">Wilayah / Dusun *</label>
                   <select
-                    value={formData.dusun}
-                    onChange={(e) => setFormData({ ...formData, dusun: e.target.value })}
+                    value={formData.dusun_id}
+                    onChange={(e) => {
+                      const newDusunId = e.target.value;
+                      // Filter posyandu yang cocok jika ada
+                      const matchingPosyandu = posyanduList.find(p => p.dusun_id === newDusunId);
+                      setFormData({ 
+                        ...formData, 
+                        dusun_id: newDusunId,
+                        posyandu_id: matchingPosyandu ? matchingPosyandu.id : formData.posyandu_id
+                      });
+                    }}
                     className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   >
-                    <option value="Dusun 1">Dusun 1</option>
-                    <option value="Dusun 2">Dusun 2</option>
-                    <option value="Dusun 3">Dusun 3</option>
+                    {dusunList.length > 0 ? (
+                      dusunList.map((d) => (
+                        <option key={d.id} value={d.id}>{d.nama}</option>
+                      ))
+                    ) : (
+                      <option value="">Pilih Dusun...</option>
+                    )}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Posyandu Penugasan</label>
+                  <label className="block font-bold text-slate-700 mb-1">Posyandu Penugasan *</label>
                   <select
-                    value={formData.posyandu}
-                    onChange={(e) => setFormData({ ...formData, posyandu: e.target.value })}
+                    value={formData.posyandu_id}
+                    onChange={(e) => setFormData({ ...formData, posyandu_id: e.target.value })}
                     className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   >
-                    <option value="Posyandu Desa Manud Jaya">Posyandu Desa Manud Jaya</option>
+                    {posyanduList.length > 0 ? (
+                      posyanduList
+                        .filter(p => !formData.dusun_id || !p.dusun_id || p.dusun_id === formData.dusun_id)
+                        .map((p) => (
+                          <option key={p.id} value={p.id}>{p.nama}</option>
+                        ))
+                    ) : (
+                      <option value="">Pilih Posyandu...</option>
+                    )}
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Peran / Jabatan Sistem</label>
+                <select
+                  value={formData.role_id}
+                  onChange={(e) => setFormData({ ...formData, role_id: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                >
+                  {rolesList.length > 0 ? (
+                    rolesList.map((r) => (
+                      <option key={r.id} value={r.id}>{r.nama || r.kode}</option>
+                    ))
+                  ) : (
+                    <option value="">Kader Posyandu</option>
+                  )}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

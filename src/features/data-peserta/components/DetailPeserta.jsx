@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Edit3, Save, X, User, Phone, Mail, MapPin, Calendar, Heart, Trash2, Eye, EyeOff, ChevronDown } from 'lucide-react';
 import { maskNik } from '../../../utils/nikUtils';
+import { masterService } from '../../../services/masterService';
 
 export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKaderOrBidan = true }) {
   if (!peserta) return null;
 
   const [isEditing, setIsEditing] = useState(false);
   const [showNik, setShowNik] = useState(true);
+  const [dusunList, setDusunList] = useState([]);
   const [formData, setFormData] = useState({
     nama: peserta.nama || '',
     nik: peserta.nik || '',
     tanggal_lahir: peserta.tanggal_lahir || '',
     alamat: peserta.alamat || '',
+    dusun_id: peserta.dusun_id || '',
+    dusun: peserta.dusun || '',
     telepon: peserta.telepon || '',
     email: peserta.email || '',
     jenis_kelamin: peserta.jenis_kelamin || 'Perempuan',
@@ -19,6 +23,16 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
     telepon_pj: peserta.telepon_pj || '',
     catatan_observasi: peserta.catatan_observasi || '',
   });
+
+  useEffect(() => {
+    let isMounted = true;
+    masterService.getDusunList().then((res) => {
+      if (isMounted && res) setDusunList(res);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleChange = (field, val) => {
     setFormData((prev) => ({ ...prev, [field]: val }));
@@ -220,20 +234,34 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
             {isEditing ? (
               <div className="relative">
                 <select
-                  value={formData.alamat}
-                  onChange={(e) => handleChange('alamat', e.target.value)}
+                  value={formData.dusun_id || formData.alamat}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const matchedDusun = dusunList.find(d => d.id === val || d.nama === val);
+                    handleChange('dusun_id', matchedDusun ? matchedDusun.id : val);
+                    handleChange('alamat', matchedDusun ? matchedDusun.nama : val);
+                    handleChange('dusun', matchedDusun ? matchedDusun.nama : val);
+                  }}
                   className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 appearance-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer"
                 >
-                  <option value="Dusun 1">Dusun 1</option>
-                  <option value="Dusun 2">Dusun 2</option>
-                  <option value="Dusun 3">Dusun 3</option>
-                  <option value="Manud Jaya">Manud Jaya</option>
+                  {dusunList.length > 0 ? (
+                    dusunList.map((d) => (
+                      <option key={d.id} value={d.id}>{d.nama}</option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="Dusun 1">Dusun 1</option>
+                      <option value="Dusun 2">Dusun 2</option>
+                      <option value="Dusun 3">Dusun 3</option>
+                      <option value="Manud Jaya">Manud Jaya</option>
+                    </>
+                  )}
                 </select>
                 <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>
             ) : (
               <div className="w-full px-4 py-3 bg-slate-50/70 border border-slate-200/80 rounded-xl font-medium text-slate-800">
-                {formData.alamat}
+                {formData.alamat || formData.dusun}
               </div>
             )}
           </div>

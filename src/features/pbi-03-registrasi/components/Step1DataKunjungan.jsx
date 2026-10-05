@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Edit2, Calendar, Clock, Check, ChevronDown } from 'lucide-react';
+import { masterService } from '../../../services/masterService';
 
 export default function Step1DataKunjungan({
   peserta,
@@ -9,6 +10,23 @@ export default function Step1DataKunjungan({
   onNext,
   onBatal
 }) {
+  const [posyanduList, setPosyanduList] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    masterService.getPosyanduList().then((list) => {
+      if (isMounted && list && list.length > 0) {
+        setPosyanduList(list);
+        if (!kunjunganData.posyandu_id) {
+          onChangeData('posyandu_id', list[0].id);
+          onChangeData('posyandu', list[0].nama);
+        }
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
   return (
     <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
       {/* 1. Header Identitas Peserta Terpilih */}
@@ -124,11 +142,22 @@ export default function Step1DataKunjungan({
             </label>
             <div className="relative">
               <select
-                value={kunjunganData.posyandu || 'Posyandu Desa Manud Jaya'}
-                onChange={(e) => onChangeData('posyandu', e.target.value)}
+                value={kunjunganData.posyandu_id || kunjunganData.posyandu || ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const selectedObj = posyanduList.find(p => p.id === val || p.nama === val);
+                  onChangeData('posyandu_id', selectedObj ? selectedObj.id : val);
+                  onChangeData('posyandu', selectedObj ? selectedObj.nama : val);
+                }}
                 className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               >
-                <option value="Posyandu Desa Manud Jaya">Posyandu Desa Manud Jaya</option>
+                {posyanduList.length > 0 ? (
+                  posyanduList.map((p) => (
+                    <option key={p.id} value={p.id}>{p.nama}</option>
+                  ))
+                ) : (
+                  <option value="Posyandu Desa Manud Jaya">Posyandu Desa Manud Jaya</option>
+                )}
               </select>
               <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             </div>
