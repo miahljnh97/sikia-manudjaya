@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../config/supabaseClient';
 import { normalizePeserta } from '../utils/pesertaAdapter';
+import { toISODateString } from '../utils/dateUtils';
 
 export const kunjunganService = {
   /**
@@ -138,7 +139,7 @@ export const kunjunganService = {
       const payloadKunjungan = {
         peserta_id,
         posyandu_id: posyandu_id || null,
-        tanggal: tanggal || new Date().toISOString().split('T')[0],
+        tanggal: toISODateString(tanggal),
         jam_kedatangan: jam ? `${jam}:00` : '08:30:00',
         status_kehadiran: 'hadir',
         catatan: catatan || null,
