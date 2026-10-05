@@ -20,6 +20,7 @@ export default function ParticipantTable({
   setFilterType,
   onUpdateStatus,
   onLihatDetail,
+  onShowToast,
   loading
 }) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -31,25 +32,31 @@ export default function ParticipantTable({
   const startIndex = (currentActualPage - 1) * itemsPerPage;
   const paginatedList = pesertaList.slice(startIndex, startIndex + itemsPerPage);
 
-  // Badge jenis peserta styling
+  // Badge jenis peserta styling sesuai spesifikasi Figma
   const renderJenisBadge = (jenis) => {
     switch (jenis) {
       case 'Ibu Hamil':
         return (
-          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#FFF1F2] text-[#F43F5E] border border-[#FFE4E6]">
+          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#FEE2E2] text-[#991B1B] border border-[#FECDD3]">
             Ibu Hamil
           </span>
         );
       case 'Balita':
         return (
-          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#ECFDF5] text-[#10B981] border border-[#D1FAE5]">
+          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]">
             Balita
           </span>
         );
       case 'Bayi':
         return (
-          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#EEF2FF] text-[#6366F1] border border-[#E0E7FF]">
+          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#DBEAFE] text-[#1D4ED8] border border-[#BFDBFE]">
             Bayi
+          </span>
+        );
+      case 'Lansia':
+        return (
+          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+            Lansia
           </span>
         );
       default:
@@ -61,51 +68,72 @@ export default function ParticipantTable({
     }
   };
 
-  // Badge status kehadiran styling + dropdown switch status
+  // Cycle urutan status: Menunggu -> Hadir -> Sudah dilayani -> Tidak Hadir -> Menunggu
+  const getNextStatus = (curr) => {
+    const s = (curr || '').toLowerCase();
+    if (s.includes('dilayani') || s.includes('selesai')) return 'Tidak Hadir';
+    if (s.includes('tidak')) return 'Menunggu';
+    if (s.includes('hadir') && !s.includes('belum')) return 'Sudah dilayani';
+    return 'Hadir';
+  };
+
+  // Badge status kehadiran styling + interaksi ubah ke 4 status
   const renderStatusBadge = (item) => {
-    const status = item.status_kehadiran;
+    const s = (item.status_kehadiran || 'Menunggu').toLowerCase();
 
-    if (status === 'Sudah Hadir') {
+    if (s.includes('dilayani') || s.includes('selesai')) {
       return (
         <button
-          onClick={() => onUpdateStatus(item.id, 'Belum Hadir')}
-          title="Klik untuk ubah menjadi Belum Hadir"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
+          onClick={() => onUpdateStatus(item.id, getNextStatus(item.status_kehadiran))}
+          title="Status: Sudah dilayani (Klik untuk ubah ke status berikutnya)"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#ECFDF3] text-[#12B76A] border border-[#A6F4C5] hover:bg-[#D1FADF] transition-colors cursor-pointer"
         >
-          <span className="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">
-            <Check size={10} strokeWidth={3} />
-          </span>
-          <span>Sudah Hadir</span>
-          {item.waktu_hadir && (
-            <span className="text-[10px] text-emerald-600 font-normal">
-              {item.waktu_hadir}
+          <span className="w-1.5 h-1.5 rounded-full bg-[#12B76A]" />
+          <span>Sudah dilayani</span>
+        </button>
+      );
+    }
+
+    if (s.includes('tidak')) {
+      return (
+        <button
+          onClick={() => onUpdateStatus(item.id, getNextStatus(item.status_kehadiran))}
+          title="Status: Tidak Hadir (Klik untuk ubah ke status berikutnya)"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#FEE2E2] text-[#991B1B] border border-[#FECDD3] hover:bg-[#FECDD3]/60 transition-colors cursor-pointer"
+        >
+          <X size={13} strokeWidth={3} className="text-[#991B1B]" />
+          <span>Tidak Hadir</span>
+        </button>
+      );
+    }
+
+    if (s.includes('hadir') && !s.includes('belum')) {
+      return (
+        <button
+          onClick={() => onUpdateStatus(item.id, getNextStatus(item.status_kehadiran))}
+          title="Status: Hadir (Klik untuk ubah ke status berikutnya)"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0] hover:bg-[#BBF7D0]/60 transition-colors cursor-pointer"
+        >
+          <Check size={13} strokeWidth={3} className="text-[#166534]" />
+          <div className="flex flex-col text-left leading-tight">
+            <span>Sudah Hadir</span>
+            <span className="text-[10px] text-[#15803D] font-normal font-mono">
+              {item.waktu_hadir || '08.45'}
             </span>
-          )}
+          </div>
         </button>
       );
     }
 
-    if (status === 'Belum Hadir') {
-      return (
-        <button
-          onClick={() => onUpdateStatus(item.id, 'Sudah Hadir')}
-          title="Klik untuk ubah menjadi Sudah Hadir"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors cursor-pointer"
-        >
-          <Clock size={12} className="text-amber-500" />
-          <span>Belum Hadir</span>
-        </button>
-      );
-    }
-
+    // Default: Menunggu / Belum Hadir
     return (
       <button
-        onClick={() => onUpdateStatus(item.id, 'Sudah Hadir')}
-        title="Klik untuk ubah menjadi Sudah Hadir"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer"
+        onClick={() => onUpdateStatus(item.id, getNextStatus(item.status_kehadiran))}
+        title="Status: Menunggu (Klik untuk ubah ke status berikutnya)"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#F1F5F9] text-[#475569] border border-[#E2E8F0] hover:bg-[#E2E8F0] transition-colors cursor-pointer"
       >
-        <X size={12} className="text-rose-500" />
-        <span>Tidak Hadir</span>
+        <Clock size={13} className="text-[#64748B]" />
+        <span>Menunggu</span>
       </button>
     );
   };
@@ -147,6 +175,7 @@ export default function ParticipantTable({
               <option value="Ibu Hamil">Ibu Hamil</option>
               <option value="Balita">Balita</option>
               <option value="Bayi">Bayi</option>
+              <option value="Lansia">Lansia</option>
             </select>
             <Filter size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
             <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -155,7 +184,7 @@ export default function ParticipantTable({
           {/* Export Button */}
           <button 
             type="button"
-            onClick={() => alert('Data peserta berhasil disiapkan untuk diunduh.')}
+            onClick={() => onShowToast ? onShowToast('Data peserta berhasil disiapkan untuk diunduh.', 'info') : null}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
           >
             <Download size={13} className="text-slate-500" />
@@ -168,7 +197,7 @@ export default function ParticipantTable({
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50 text-xs font-bold text-slate-700">
+            <tr className="border-b border-slate-100 bg-slate-50/50 text-xs font-bold text-[#4B5563]">
               <th className="py-3.5 px-5 w-12">No</th>
               <th className="py-3.5 px-5">Nama Peserta</th>
               <th className="py-3.5 px-5">NIK</th>

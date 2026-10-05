@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../config/supabaseClient';
-import { normalizePeserta } from '../utils/pesertaAdapter';
+import { normalizePeserta, toDbStatusKehadiran, fromDbStatusKehadiran } from '../utils/schemaMapper';
+import { toISODateString } from '../utils/dateUtils';
 
 export const kunjunganService = {
   /**
@@ -68,7 +69,7 @@ export const kunjunganService = {
         const pesertaNorm = item.peserta ? normalizePeserta(item.peserta) : null;
         const listLayanan = pelayananMap.get(item.id) || [];
         const jenisLayananStr = listLayanan.length > 0 ? listLayanan.join(', ') : 'Pemeriksaan Rutin';
-        const petugasNama = profileMap.get(item.dicatat_oleh) || 'Kader Posyandu';
+        const petugasNama = profileMap.get(item.dicatat_oleh) || 'Bidan Ratih Wulandari, A.Md.Keb';
 
         // Format waktu & tanggal
         const tanggalStr = item.tanggal || new Date().toISOString().split('T')[0];
@@ -78,46 +79,52 @@ export const kunjunganService = {
         const tglSingkat = `${parseInt(d, 10)} ${bulanIndo[parseInt(m, 10) - 1]} ${y}`;
         const tglLengkap = `${parseInt(d, 10)} ${bulanIndoLong[parseInt(m, 10) - 1]} ${y}`;
 
-        const jamClean = item.jam_kedatangan ? item.jam_kedatangan.slice(0, 5) : '08:30';
+        const jamClean = item.jam_kedatangan ? item.jam_kedatangan.slice(0, 5) : '09:30';
 
-        const isHadir = (item.status_kehadiran || '').toLowerCase() === 'hadir';
+        const displayStatusKehadiran = fromDbStatusKehadiran(item.status_kehadiran);
+        const displayStatus = displayStatusKehadiran;
+        const displayStatusLengkap = displayStatusKehadiran === 'Sudah dilayani' ? 'Selesai Dilayani' : displayStatusKehadiran;
+
+        const isHadir = displayStatusKehadiran === 'Hadir' || displayStatusKehadiran === 'Sudah dilayani';
+        const isTidakHadir = displayStatusKehadiran === 'Tidak Hadir';
         const namaPosyandu = item.posyandu?.nama || 'Posyandu Desa Manud Jaya';
 
         return {
           id: item.id,
           posyandu_id: item.posyandu_id || item.posyandu?.id || null,
           no_registrasi: `KJ-0924-${String(idx + 185).padStart(4, '0')}`,
-          no_antrean: `A-${String(idx + 1).padStart(2, '0')}`,
+          no_antrean: `A-${String(idx + 12).padStart(2, '0')}`,
           nama: pesertaNorm?.nama || 'Peserta Posyandu',
           nik: pesertaNorm?.nik || '327502*******',
           nik_lengkap: pesertaNorm?.nik_lengkap || pesertaNorm?.nik || '327502*******',
           jenis_peserta: pesertaNorm?.jenis_peserta || 'Ibu Hamil',
+          tanggal_iso: tanggalStr,
           tanggal_kunjungan: tglSingkat,
           tanggal_kunjungan_lengkap: tglLengkap,
           waktu: `${jamClean} WIB`,
           tempat: namaPosyandu,
           posyandu: namaPosyandu,
           jenis_pelayanan: jenisLayananStr,
-          hasil_catatan: item.catatan || (isHadir ? 'Pemeriksaan rutin selesai' : 'Tidak hadir pada jadwal posyandu'),
-          status: 'Selesai',
-          status_lengkap: isHadir ? 'Selesai Dilayani' : 'Belum Hadir',
-          status_kehadiran: isHadir ? 'Hadir' : 'Tidak Hadir',
+          hasil_catatan: item.catatan || (isTidakHadir ? 'Tidak hadir pada jadwal posyandu' : (isHadir ? 'Pemeriksaan rutin selesai' : 'Menunggu pemeriksaan')),
+          status: displayStatus,
+          status_lengkap: displayStatusLengkap,
+          status_kehadiran: displayStatusKehadiran,
           status_peserta: pesertaNorm?.status || 'Aktif',
           dusun: pesertaNorm?.dusun || 'Dusun 1',
           petugas: petugasNama,
           hasil_pemeriksaan: {
-            berat_badan: isHadir ? '60 kg' : '-',
-            tinggi_badan: isHadir ? '156 cm' : '-',
-            tekanan_darah: isHadir ? '110/70 mmHg' : '-',
-            lingkar_lengan: isHadir ? '28 cm' : '-',
-            usia_kehamilan: pesertaNorm?.jenis_peserta === 'Ibu Hamil' ? '24 minggu' : null
+            berat_badan: isTidakHadir ? '-' : '62 kg',
+            tinggi_badan: isTidakHadir ? '-' : '158 cm',
+            tekanan_darah: isTidakHadir ? '-' : '110/70 mmHg',
+            lingkar_lengan: isTidakHadir ? '-' : '28 cm',
+            usia_kehamilan: pesertaNorm?.jenis_peserta === 'Ibu Hamil' ? (isTidakHadir ? '-' : '24 minggu') : null
           },
           layanan_tambahan: {
-            tablet_fe: pesertaNorm?.jenis_peserta === 'Ibu Hamil' ? 'Diberikan' : '-',
-            konseling_gizi: 'Pola makan seimbang',
-            edukasi: 'Edukasi kesehatan ibu & anak'
+            tablet_fe: pesertaNorm?.jenis_peserta === 'Ibu Hamil' ? (isTidakHadir ? '-' : '62 kg') : '-',
+            konseling_gizi: isTidakHadir ? '-' : 'Pola makan',
+            edukasi: isTidakHadir ? '-' : 'Tanda Bahaya Kehamilan'
           },
-          catatan_pemeriksaan: item.catatan || 'Kondisi peserta tercatat dalam buku register digital Posyandu Desa Manud Jaya.'
+          catatan_pemeriksaan: item.catatan || (isTidakHadir ? 'Peserta terkonfirmasi Tidak Hadir pada jadwal posyandu ini.' : 'Disarankan istirahat cukup, konsumsi tablet tambah darah, dan kontrol kembali sesuai jadwal.')
         };
       });
     } catch (err) {
@@ -129,20 +136,67 @@ export const kunjunganService = {
   /**
    * Simpan pendaftaran registrasi kunjungan baru ke Supabase
    */
-  async simpanKunjungan({ peserta_id, posyandu_id, tanggal, jam, catatan, jenis_pelayanan_ids = [], dicatat_oleh }) {
+  async simpanKunjungan({ 
+    peserta_id, 
+    posyandu_id, 
+    posyandu, 
+    tanggal, 
+    jam, 
+    catatan, 
+    jenis_pelayanan_ids = [], 
+    jenis_pelayanan = [], 
+    dicatat_oleh, 
+    petugas_id,
+    status_kehadiran = 'hadir' 
+  }) {
     if (!isSupabaseConfigured || !supabase) {
       return null;
     }
 
     try {
+      const statusDb = toDbStatusKehadiran(status_kehadiran);
+
+      // Resolve Posyandu ID
+      let finalPosyanduId = posyandu_id || null;
+      try {
+        const { data: posyanduData } = await supabase.from('posyandu').select('id, nama').limit(5);
+        if (posyanduData && posyanduData.length > 0) {
+          if (posyandu) {
+            const found = posyanduData.find((p) => p.nama.toLowerCase().includes(String(posyandu).toLowerCase()));
+            if (found) finalPosyanduId = found.id;
+          }
+          if (!finalPosyanduId) {
+            finalPosyanduId = posyanduData[0].id;
+          }
+        }
+      } catch (err) {
+        console.warn('Gagal resolve posyandu_id:', err);
+      }
+
+      // Resolve Pelayanan IDs
+      let finalPelayananIds = Array.isArray(jenis_pelayanan_ids) ? [...jenis_pelayanan_ids] : [];
+      if (finalPelayananIds.length === 0 && Array.isArray(jenis_pelayanan) && jenis_pelayanan.length > 0) {
+        try {
+          const { data: layananData } = await supabase.from('jenis_pelayanan').select('id, nama');
+          if (layananData) {
+            finalPelayananIds = jenis_pelayanan.map((item) => {
+              const match = layananData.find((l) => l.id === item || l.nama.toLowerCase() === String(item).toLowerCase());
+              return match ? match.id : null;
+            }).filter(Boolean);
+          }
+        } catch (err) {
+          console.warn('Gagal resolve jenis_pelayanan_ids:', err);
+        }
+      }
+
       const payloadKunjungan = {
         peserta_id,
-        posyandu_id: posyandu_id || null,
-        tanggal: tanggal || new Date().toISOString().split('T')[0],
-        jam_kedatangan: jam ? `${jam}:00` : '08:30:00',
-        status_kehadiran: 'hadir',
+        posyandu_id: finalPosyanduId,
+        tanggal: toISODateString(tanggal),
+        jam_kedatangan: jam ? (jam.length === 5 ? `${jam}:00` : jam) : '08:30:00',
+        status_kehadiran: statusDb,
         catatan: catatan || null,
-        dicatat_oleh: dicatat_oleh || '5c69e5ca-ba37-41b5-964e-5ef2525ef36d',
+        dicatat_oleh: dicatat_oleh || petugas_id || '5c69e5ca-ba37-41b5-964e-5ef2525ef36d',
         is_suspended: false
       };
 
@@ -158,8 +212,8 @@ export const kunjunganService = {
       }
 
       // Insert ke relasi kunjungan_pelayanan jika ada pilihan pelayanan
-      if (newKunjungan && jenis_pelayanan_ids.length > 0) {
-        const payloadRel = jenis_pelayanan_ids.map((id) => ({
+      if (newKunjungan && finalPelayananIds.length > 0) {
+        const payloadRel = finalPelayananIds.map((id) => ({
           kunjungan_id: newKunjungan.id,
           jenis_pelayanan_id: id,
           is_suspended: false
@@ -174,6 +228,24 @@ export const kunjunganService = {
     } catch (err) {
       console.error('Exception simpanKunjungan:', err);
       return null;
+    }
+  },
+
+  /**
+   * Update status kehadiran kunjungan
+   */
+  async updateStatusKunjungan(kunjunganId, statusKehadiran) {
+    if (!isSupabaseConfigured || !supabase) return false;
+    try {
+      const statusDb = toDbStatusKehadiran(statusKehadiran);
+      const { error } = await supabase
+        .from('kunjungan')
+        .update({ status_kehadiran: statusDb })
+        .eq('id', kunjunganId);
+      return !error;
+    } catch (e) {
+      console.warn('Gagal update status kunjungan:', e);
+      return false;
     }
   }
 };

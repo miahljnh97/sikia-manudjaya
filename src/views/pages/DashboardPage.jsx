@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Edit3 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import StatCards from '../components/StatCards';
@@ -13,7 +12,6 @@ import KelolaKaderPage from '../../features/super-admin/KelolaKaderPage';
 import UnderDevelopmentPage from '../../shared/components/UnderDevelopmentPage';
 import IbuDashboardView from '../../features/dashboard/components/IbuDashboardView';
 import Toast from '../../shared/components/Toast';
-import { getTanggalHariIniLengkap } from '../../utils/dateUtils';
 import { useDashboardController } from '../../controllers/useDashboardController';
 
 export default function DashboardPage({ currentUser, onLogout, currentPath = '/dashboard', onNavigate }) {
@@ -144,6 +142,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
                 setActiveMenu('Dashboard');
               }}
               onTambahPesertaBaru={() => setIsModalOpen(true)}
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
             />
           ) : activeMenu === 'Riwayat Kunjungan' ? (
             <RiwayatKunjunganPage currentUser={currentUser} />
@@ -153,12 +152,16 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
               onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
             />
           ) : isIbuRole ? (
-            <IbuDashboardView user={currentUser} />
+            <IbuDashboardView 
+              user={currentUser} 
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
+            />
           ) : activeMenu === 'Registrasi Kunjungan' ? (
             <RegistrasiPage 
               currentUser={currentUser} 
               onBackToDashboard={handleRegistrasiSuccess} 
               onTambahPesertaBaru={() => setIsModalOpen(true)}
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
             />
           ) : activeMenu !== 'Dashboard' ? (
             <UnderDevelopmentPage
@@ -167,39 +170,14 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
             />
           ) : (
             <>
-              {/* Top Greeting & Date Widget */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                    Selamat pagi, {currentUser?.nama || 'Annisa Wati'} <span>👋</span>
-                  </h1>
-                  <p className="text-xs text-slate-500 font-medium mt-1">
-                    Berikut ringkasan kegiatan Posyandu hari ini.
-                  </p>
-                </div>
-
-                {/* Date Widget Pill */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="bg-white border border-slate-100 shadow-xs px-3.5 py-2 rounded-xl flex items-center gap-2.5">
-                    <Calendar size={18} className="text-blue-500 shrink-0" />
-                    <div className="text-left">
-                      <div className="text-xs font-bold text-slate-800 leading-tight">
-                        {getTanggalHariIniLengkap()}
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-medium">
-                        Posyandu Desa Manud Jaya
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setToast({ show: true, message: 'Tanggal kegiatan mengikuti jadwal operasional resmi Posyandu hari ini.', type: 'info' })}
-                    className="bg-white border border-slate-200 shadow-xs px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Edit3 size={14} className="text-slate-500" />
-                    <span>Ubah Tanggal</span>
-                  </button>
-                </div>
+              {/* Top Greeting */}
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                  Selamat pagi, {currentUser?.nama || 'Annisa Wati'} <span>👋</span>
+                </h1>
+                <p className="text-xs text-slate-500 font-medium mt-1">
+                  Berikut ringkasan kegiatan Posyandu hari ini.
+                </p>
               </div>
 
               {/* 6 Metrik Kartu Ringkasan */}
@@ -217,6 +195,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
                 setFilterType={setFilterType}
                 onUpdateStatus={handleUpdateStatusWithToast}
                 onLihatDetail={handleLihatDetailDariDashboard}
+                onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
                 loading={loading}
               />
             </>
@@ -229,6 +208,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleTambahPeserta}
+        onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
       />
 
       {/* Modern Toast Notification */}

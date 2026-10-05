@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { masterService } from '../../services/masterService';
+import { resolveTipeId } from '../../utils/pesertaAdapter';
 
-export default function RegistrasiModal({ isOpen, onClose, onSubmit }) {
+export default function RegistrasiModal({ isOpen, onClose, onSubmit, onShowToast }) {
   const [dusunList, setDusunList] = useState([]);
   const [tipeList, setTipeList] = useState([]);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const [formData, setFormData] = useState({
     nama: '',
@@ -40,17 +42,32 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.nama || !formData.nik) {
-      alert('Nama dan NIK wajib diisi!');
+      if (onShowToast) {
+        onShowToast('Nama dan NIK wajib diisi!', 'error');
+      }
+      setErrorMsg('Nama dan NIK wajib diisi!');
       return;
     }
+    setErrorMsg('');
 
-    // Tentukan tipe_id dari master tipe_peserta
-    const isIbu = formData.jenis_peserta === 'Ibu Hamil';
-    const matchedTipe = tipeList.find(t => isIbu ? t.kode === 'ibu' : t.kode === 'anak');
+    // Tentukan tipe_id dari master tipe_peserta relasi Supabase
+    const jp = (formData.jenis_peserta || '').toLowerCase();
+    const isIbu = jp.includes('ibu');
+    const matchedTipe = tipeList.find(t => {
+      const kode = (t.kode || '').toLowerCase();
+      const nama = (t.nama || '').toLowerCase();
+      if (jp.includes('ibu') && (kode.includes('ibu') || nama.includes('ibu'))) return true;
+      if (jp === 'bayi' && (kode === 'bayi' || nama === 'bayi')) return true;
+      if (jp === 'lansia' && (kode === 'lansia' || nama === 'lansia')) return true;
+      if (jp === 'balita' && (kode === 'balita' || kode === 'anak' || nama === 'balita')) return true;
+      return false;
+    });
+
+    const finalTipeId = matchedTipe ? matchedTipe.id : resolveTipeId(formData.jenis_peserta);
 
     onSubmit({
       ...formData,
-      tipe_id: matchedTipe ? matchedTipe.id : null,
+      tipe_id: finalTipeId,
       status_ibu: isIbu ? 'hamil' : null,
     });
     setFormData({
@@ -80,6 +97,14 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit }) {
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {errorMsg && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center justify-between">
+              <span>{errorMsg}</span>
+              <button type="button" onClick={() => setErrorMsg('')} className="p-0.5 hover:bg-rose-100 rounded">
+                <X size={13} />
+              </button>
+            </div>
+          )}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap</label>
             <input
@@ -112,9 +137,18 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit }) {
                 onChange={(e) => setFormData({ ...formData, jenis_peserta: e.target.value })}
                 className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
               >
-                <option value="Balita">Balita</option>
-                <option value="Bayi">Bayi</option>
-                <option value="Ibu Hamil">Ibu Hamil</option>
+                {tipeList.length > 0 ? (
+                  tipeList.map((t) => (
+                    <option key={t.id} value={t.nama}>{t.nama}</option>
+                  ))
+                ) : (
+                  <>
+                    <option value="Balita">Balita</option>
+                    <option value="Bayi">Bayi</option>
+                    <option value="Ibu Hamil">Ibu Hamil</option>
+                    <option value="Lansia">Lansia</option>
+                  </>
+                )}
               </select>
             </div>
 

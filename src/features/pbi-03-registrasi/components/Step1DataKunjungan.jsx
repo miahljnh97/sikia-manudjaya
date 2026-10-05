@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User, Edit2, Calendar, Clock, Check, ChevronDown } from 'lucide-react';
+import { User, Edit2, Calendar, Clock, Check, ChevronDown, Accessibility } from 'lucide-react';
 import { masterService } from '../../../services/masterService';
+import { getTodayISODate } from '../../../utils/dateUtils';
 
 export default function Step1DataKunjungan({
   peserta,
@@ -27,6 +28,11 @@ export default function Step1DataKunjungan({
       isMounted = false;
     };
   }, []);
+
+  const isIbuHamil = (peserta?.jenis_peserta || 'Ibu Hamil') === 'Ibu Hamil';
+  const isBayi = peserta?.jenis_peserta === 'Bayi';
+  const isLansia = peserta?.jenis_peserta === 'Lansia';
+
   return (
     <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
       {/* 1. Header Identitas Peserta Terpilih */}
@@ -42,48 +48,86 @@ export default function Step1DataKunjungan({
         </button>
       </div>
 
-      {/* Identitas Card Box Sesuai Figma (Issue #13) */}
-      <div className="p-5 rounded-2xl bg-[#F8FAFC] border border-slate-100 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-[#FFE4E6] text-[#E11D48] flex items-center justify-center font-bold shrink-0">
-            <User size={26} />
+      {/* Identitas Card Box Sesuai Figma / Mockup Gambar */}
+      <div className="p-5 sm:p-6 rounded-2xl bg-[#F8FAFC] border border-slate-100 flex flex-col xl:flex-row gap-6 xl:items-center justify-between">
+        {/* Sisi Kiri: Avatar + Info Utama */}
+        <div className="flex items-center gap-4.5 flex-1 min-w-0">
+          <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 ${
+            isIbuHamil 
+              ? 'bg-[#FFF1F2] text-[#E11D48]' 
+              : isBayi 
+              ? 'bg-[#DBEAFE] text-[#1D4ED8]' 
+              : isLansia 
+              ? 'bg-purple-100 text-purple-700' 
+              : 'bg-[#DCFCE7] text-[#166534]'
+          }`}>
+            <Accessibility size={28} />
           </div>
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <h4 className="text-sm font-bold text-slate-900">{peserta?.nama || 'Siti Aminah'}</h4>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFF1F2] text-[#F43F5E] border border-[#FFE4E6]">
+
+          <div className="space-y-2 flex-1 min-w-0">
+            {/* Nama & Badge */}
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h4 className="text-base font-bold text-slate-900 tracking-tight">
+                {peserta?.nama || 'Siti Aminah'}
+              </h4>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                isIbuHamil 
+                  ? 'bg-[#FFF1F2] text-[#E11D48]' 
+                  : isBayi 
+                  ? 'bg-[#DBEAFE] text-[#1D4ED8]' 
+                  : isLansia 
+                  ? 'bg-purple-100 text-purple-700' 
+                  : 'bg-[#DCFCE7] text-[#166534]'
+              }`}>
                 {peserta?.jenis_peserta || 'Ibu Hamil'}
               </span>
             </div>
-            <div className="text-xs text-slate-500 flex flex-wrap gap-x-6 gap-y-1">
+
+            {/* 3 Kolom: NIK, Tanggal Lahir, Alamat */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-2 gap-x-6">
               <div>
-                <span className="text-[10px] text-slate-400 block">NIK</span>
-                <span className="font-mono text-slate-800 font-medium">{peserta?.nik || '3273055205940003'}</span>
+                <span className="text-xs text-slate-400 block font-normal">NIK</span>
+                <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                  {peserta?.nik || '3273055205940003'}
+                </span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 block">Tanggal Lahir</span>
-                <span className="text-slate-800 font-medium">{peserta?.tanggal_lahir || '12 Mei 1994'} ({peserta?.usia || '32 tahun'})</span>
+                <span className="text-xs text-slate-400 block font-normal">Tanggal Lahir</span>
+                <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                  {peserta?.tanggal_lahir || '12 Mei 1994'} {peserta?.usia ? `(${peserta.usia})` : '(32 tahun)'}
+                </span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 block">Alamat</span>
-                <span className="text-slate-800 font-medium">{peserta?.alamat || 'Dusun 1, Desa Manud Jaya'}</span>
+                <span className="text-xs text-slate-400 block font-normal">Alamat</span>
+                <span className="text-sm font-bold text-slate-900 mt-0.5 block truncate" title={peserta?.alamat || 'Dusun 1, Desa Manud Jaya'}>
+                  {peserta?.alamat || 'Dusun 1, Desa Manud Jaya'}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="text-xs text-slate-500 border-t md:border-t-0 md:border-l border-slate-200 pt-3 md:pt-0 md:pl-6 space-y-1 shrink-0">
-          <div>
-            <span className="text-[10px] text-slate-400 block">Nama Suami</span>
-            <strong className="text-slate-800">{peserta?.nama_suami || 'Budi Santoso'}</strong>
-          </div>
-          <div>
-            <span className="text-[10px] text-slate-400 block">No. KK</span>
-            <strong className="text-slate-800">{peserta?.no_kk || '3273 0501 0412'}</strong>
-          </div>
-          <div>
-            <span className="text-[10px] text-slate-400 block">No. HP</span>
-            <strong className="text-slate-800">{peserta?.telepon || '0812 3456 7890'}</strong>
+        {/* Divider & Sisi Kanan: Nama Suami, No. KK, No. HP */}
+        <div className="border-t xl:border-t-0 xl:border-l border-slate-200/80 pt-4 xl:pt-0 xl:pl-8 shrink-0">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-2.5">
+            <div>
+              <span className="text-xs text-slate-400 block font-normal">Nama Suami</span>
+              <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                {peserta?.nama_suami || 'Budi Santoso'}
+              </span>
+            </div>
+            <div>
+              <span className="text-xs text-slate-400 block font-normal">No. KK</span>
+              <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                {peserta?.no_kk || '3273 0501 0412'}
+              </span>
+            </div>
+            <div>
+              <span className="text-xs text-slate-400 block font-normal">No. HP</span>
+              <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                {peserta?.telepon || peserta?.no_wa || '0812 3456 7890'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -102,7 +146,7 @@ export default function Step1DataKunjungan({
             <div className="relative">
               <input
                 type="date"
-                value={kunjunganData.tanggalValue || ''}
+                value={kunjunganData.tanggalValue || getTodayISODate()}
                 onChange={(e) => {
                   const val = e.target.value;
                   onChangeData('tanggalValue', val);

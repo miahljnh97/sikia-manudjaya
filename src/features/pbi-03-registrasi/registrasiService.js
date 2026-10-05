@@ -27,11 +27,14 @@ export const registrasiService = {
       await kunjunganService.simpanKunjungan({
         peserta_id: kunjunganData.peserta_id,
         posyandu_id: kunjunganData.posyandu_id,
+        posyandu: kunjunganData.posyandu,
         tanggal: kunjunganData.tanggalValue || kunjunganData.tanggal,
         jam: kunjunganData.jam,
         catatan: kunjunganData.catatan,
         jenis_pelayanan_ids: kunjunganData.jenis_pelayanan_ids || [],
-        dicatat_oleh: kunjunganData.petugas_id
+        jenis_pelayanan: kunjunganData.jenis_pelayanan || [],
+        dicatat_oleh: kunjunganData.petugas_id,
+        status_kehadiran: kunjunganData.status_kehadiran || 'hadir'
       });
     } catch (err) {
       console.warn('Gagal simpan kunjungan ke Supabase:', err);
@@ -42,7 +45,7 @@ export const registrasiService = {
 
     if (kunjunganData.peserta_id) {
       dataStoreService.updatePeserta(kunjunganData.peserta_id, {
-        status_kehadiran: 'Sudah Hadir',
+        status_kehadiran: kunjunganData.status_kehadiran || 'Hadir',
         waktu_hadir: kunjunganData.jam || '08.30'
       });
     }
