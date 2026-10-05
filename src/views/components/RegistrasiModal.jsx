@@ -137,10 +137,18 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit, onShowToast
                 onChange={(e) => setFormData({ ...formData, jenis_peserta: e.target.value })}
                 className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
               >
-                <option value="Balita">Balita</option>
-                <option value="Bayi">Bayi</option>
-                <option value="Ibu Hamil">Ibu Hamil</option>
-                <option value="Lansia">Lansia</option>
+                {tipeList.length > 0 ? (
+                  tipeList.map((t) => (
+                    <option key={t.id} value={t.nama}>{t.nama}</option>
+                  ))
+                ) : (
+                  <>
+                    <option value="Balita">Balita</option>
+                    <option value="Bayi">Bayi</option>
+                    <option value="Ibu Hamil">Ibu Hamil</option>
+                    <option value="Lansia">Lansia</option>
+                  </>
+                )}
               </select>
             </div>
 

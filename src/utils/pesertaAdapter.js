@@ -1,3 +1,5 @@
+import { toISODateString } from './dateUtils';
+
 /**
  * Normalizer untuk memetakan skema database Supabase tabel `peserta`
  * ke format standar yang digunakan oleh komponen antarmuka front-end SIKIA.
@@ -209,5 +211,63 @@ export function resolveTipeId(val) {
     if (lower.includes(key)) return uuid;
   }
   return null;
+}
+
+export const DUSUN_NAME_MAP = {
+  'fbe91bbd-c11a-4a19-90ba-ca78f929d791': 'Dusun 1',
+  '200a7c92-6671-4b31-a39f-0a03e1fb4a9f': 'Dusun 2',
+  '3250c081-51e4-44af-b2b6-5535c73f2c41': 'Dusun 3',
+};
+
+/**
+ * Konversi status kehadiran dari UI/Input ke format resmi database Supabase
+ * Nilai DB resmi: 'hadir' | 'tidak_hadir' | 'menunggu' | 'sudah_dilayani'
+ */
+export function toDbStatusKehadiran(statusUi) {
+  const s = String(statusUi || '').toLowerCase();
+  if (s.includes('tidak')) return 'tidak_hadir';
+  if (s.includes('dilayani') || s.includes('selesai')) return 'sudah_dilayani';
+  if (s.includes('tunggu')) return 'menunggu';
+  return 'hadir';
+}
+
+/**
+ * Konversi status kehadiran dari DB ke format ramah UI
+ * Label UI resmi: 'Hadir' | 'Tidak Hadir' | 'Menunggu' | 'Sudah dilayani'
+ */
+export function fromDbStatusKehadiran(statusDb) {
+  const s = String(statusDb || '').toLowerCase();
+  if (s.includes('tidak')) return 'Tidak Hadir';
+  if (s.includes('dilayani') || s.includes('selesai')) return 'Sudah dilayani';
+  if (s.includes('tunggu')) return 'Menunggu';
+  return 'Hadir';
+}
+
+/**
+ * Format payload bersih sebelum dikirim (insert/update) ke tabel `peserta` Supabase
+ */
+export function formatPesertaDbPayload(formData) {
+  if (!formData) return {};
+  const isIbu = (formData.jenis_peserta || '').toLowerCase().includes('ibu');
+  
+  const payload = {
+    nama: formData.nama?.trim() || 'Peserta',
+    nik: String(formData.nik || '').trim(),
+    no_kk: formData.no_kk ? String(formData.no_kk).trim() : null,
+    alamat: formData.alamat || null,
+    dusun_id: resolveDusunId(formData.dusun_id || formData.dusun),
+    tipe_id: resolveTipeId(formData.jenis_peserta) || resolveTipeId(formData.tipe_id),
+    status_ibu: isIbu ? 'hamil' : null,
+    tgl_lahir: formData.tgl_lahir || formData.tanggal_lahir || null,
+    no_wa: formData.telepon || formData.no_wa || null,
+    jenis_kelamin: formData.jenis_kelamin === 'Perempuan' ? 'P' : (formData.jenis_kelamin === 'Laki-laki' ? 'L' : (formData.jenis_kelamin || null)),
+    nama_suami: formData.nama_suami || null,
+    aktif: formData.aktif !== false,
+    is_suspended: Boolean(formData.is_suspended),
+  };
+
+  // Buang properti undefined agar tidak error di Supabase
+  Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+  return payload;
 }
 

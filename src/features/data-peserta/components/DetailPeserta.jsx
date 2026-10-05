@@ -10,6 +10,7 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
   const [isEditing, setIsEditing] = useState(isKaderOrBidan);
   const [showNik, setShowNik] = useState(true);
   const [dusunList, setDusunList] = useState([]);
+  const [tipeList, setTipeList] = useState([]);
   const [formData, setFormData] = useState({
     nama: peserta.nama || '',
     nik: peserta.nik || '',
@@ -28,8 +29,11 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
 
   useEffect(() => {
     let isMounted = true;
-    masterService.getDusunList().then((res) => {
-      if (isMounted && res) setDusunList(res);
+    Promise.all([masterService.getDusunList(), masterService.getTipePesertaList()]).then(([dusuns, tipes]) => {
+      if (isMounted) {
+        if (dusuns) setDusunList(dusuns);
+        if (tipes) setTipeList(tipes);
+      }
     });
     return () => {
       isMounted = false;
@@ -277,10 +281,18 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
                   onChange={(e) => handleChange('jenis_peserta', e.target.value)}
                   className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 appearance-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer"
                 >
-                  <option value="Ibu Hamil">Ibu Hamil</option>
-                  <option value="Balita">Balita</option>
-                  <option value="Bayi">Bayi</option>
-                  <option value="Lansia">Lansia</option>
+                  {tipeList.length > 0 ? (
+                    tipeList.map((t) => (
+                      <option key={t.id} value={t.nama}>{t.nama}</option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="Ibu Hamil">Ibu Hamil</option>
+                      <option value="Balita">Balita</option>
+                      <option value="Bayi">Bayi</option>
+                      <option value="Lansia">Lansia</option>
+                    </>
+                  )}
                 </select>
                 <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>

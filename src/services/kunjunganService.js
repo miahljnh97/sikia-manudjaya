@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../config/supabaseClient';
-import { normalizePeserta } from '../utils/pesertaAdapter';
+import { normalizePeserta, toDbStatusKehadiran, fromDbStatusKehadiran } from '../utils/schemaMapper';
 import { toISODateString } from '../utils/dateUtils';
 
 export const kunjunganService = {
@@ -81,28 +81,9 @@ export const kunjunganService = {
 
         const jamClean = item.jam_kedatangan ? item.jam_kedatangan.slice(0, 5) : '08:30';
 
-        const statusRaw = (item.status_kehadiran || '').toLowerCase();
-        let displayStatus = 'Selesai';
-        let displayStatusLengkap = 'Selesai Dilayani';
-        let displayStatusKehadiran = 'Hadir';
-
-        if (statusRaw.includes('tidak')) {
-          displayStatus = 'Tidak Hadir';
-          displayStatusLengkap = 'Tidak Hadir';
-          displayStatusKehadiran = 'Tidak Hadir';
-        } else if (statusRaw.includes('tunggu')) {
-          displayStatus = 'Menunggu';
-          displayStatusLengkap = 'Menunggu';
-          displayStatusKehadiran = 'Menunggu';
-        } else if (statusRaw.includes('dilayani') || statusRaw.includes('selesai')) {
-          displayStatus = 'Sudah Dilayani';
-          displayStatusLengkap = 'Selesai Dilayani';
-          displayStatusKehadiran = 'Sudah dilayani';
-        } else {
-          displayStatus = 'Hadir';
-          displayStatusLengkap = 'Hadir';
-          displayStatusKehadiran = 'Hadir';
-        }
+        const displayStatusKehadiran = fromDbStatusKehadiran(item.status_kehadiran);
+        const displayStatus = displayStatusKehadiran;
+        const displayStatusLengkap = displayStatusKehadiran === 'Sudah dilayani' ? 'Selesai Dilayani' : displayStatusKehadiran;
 
         const isHadir = displayStatusKehadiran === 'Hadir' || displayStatusKehadiran === 'Sudah dilayani';
         const isTidakHadir = displayStatusKehadiran === 'Tidak Hadir';
@@ -161,17 +142,13 @@ export const kunjunganService = {
     }
 
     try {
-      let statusDb = 'hadir';
-      const s = (status_kehadiran || '').toLowerCase();
-      if (s.includes('tidak')) statusDb = 'tidak_hadir';
-      else if (s.includes('tunggu')) statusDb = 'menunggu';
-      else statusDb = 'hadir';
+      const statusDb = toDbStatusKehadiran(status_kehadiran);
 
       const payloadKunjungan = {
         peserta_id,
         posyandu_id: posyandu_id || null,
         tanggal: toISODateString(tanggal),
-        jam_kedatangan: jam ? `${jam}:00` : '08:30:00',
+        jam_kedatangan: jam ? (jam.length === 5 ? `${jam}:00` : jam) : '08:30:00',
         status_kehadiran: statusDb,
         catatan: catatan || null,
         dicatat_oleh: dicatat_oleh || '5c69e5ca-ba37-41b5-964e-5ef2525ef36d',

@@ -1,7 +1,14 @@
 import { supabase, isSupabaseConfigured } from '../config/supabaseClient';
 import { INITIAL_DUMMY_PESERTA } from '../models/pesertaModel';
 import { dataStoreService } from './dataStoreService';
-import { normalizePeserta, resolveDusunId, resolveTipeId } from '../utils/pesertaAdapter';
+import { 
+  normalizePeserta, 
+  resolveDusunId, 
+  resolveTipeId, 
+  formatPesertaDbPayload, 
+  toDbStatusKehadiran, 
+  fromDbStatusKehadiran 
+} from '../utils/schemaMapper';
 import { toISODateString, getTodayISODate } from '../utils/dateUtils';
 
 export const pesertaService = {
@@ -45,18 +52,7 @@ export const pesertaService = {
               const norm = normalizePeserta(row);
               const kunj = kunjunganMap.get(row.id);
               if (kunj) {
-                const s = (kunj.status_kehadiran || '').toLowerCase();
-                if (s.includes('dilayani') || s.includes('selesai')) {
-                  norm.status_kehadiran = 'Sudah dilayani';
-                } else if (s.includes('tidak')) {
-                  norm.status_kehadiran = 'Tidak Hadir';
-                } else if (s.includes('tunggu')) {
-                  norm.status_kehadiran = 'Menunggu';
-                } else if (s.includes('hadir')) {
-                  norm.status_kehadiran = 'Hadir';
-                } else {
-                  norm.status_kehadiran = 'Menunggu';
-                }
+                norm.status_kehadiran = fromDbStatusKehadiran(kunj.status_kehadiran);
                 norm.waktu_hadir = kunj.jam_kedatangan ? kunj.jam_kedatangan.slice(0, 5).replace(':', '.') : '08.45';
               } else {
                 norm.status_kehadiran = 'Menunggu';
@@ -87,16 +83,7 @@ export const pesertaService = {
     const tglHariIni = getTodayISODate();
     const todayUTC = new Date().toISOString().split('T')[0];
     const targetDates = Array.from(new Set([tglHariIni, todayUTC]));
-
-    let statusDb = 'hadir';
-    const s = (statusKehadiran || '').toLowerCase();
-    if (s.includes('tidak')) {
-      statusDb = 'tidak_hadir';
-    } else if (s.includes('tunggu')) {
-      statusDb = 'menunggu';
-    } else {
-      statusDb = 'hadir';
-    }
+    const statusDb = toDbStatusKehadiran(statusKehadiran);
 
     if (isSupabaseConfigured && supabase) {
       try {
@@ -150,31 +137,7 @@ export const pesertaService = {
   async updatePeserta(id, updatedFields) {
     if (isSupabaseConfigured && supabase) {
       try {
-        const cleanPayload = { ...updatedFields };
-        if (cleanPayload.dusun_id) {
-          cleanPayload.dusun_id = resolveDusunId(cleanPayload.dusun_id);
-        }
-        if (cleanPayload.jenis_peserta && !cleanPayload.tipe_id) {
-          cleanPayload.tipe_id = resolveTipeId(cleanPayload.jenis_peserta);
-        }
-        if (cleanPayload.tipe_id) {
-          cleanPayload.tipe_id = resolveTipeId(cleanPayload.tipe_id);
-        }
-        if (cleanPayload.tgl_lahir) {
-          cleanPayload.tgl_lahir = toISODateString(cleanPayload.tgl_lahir);
-        }
-        // Buang properti virtual yang bukan kolom database
-        delete cleanPayload.jenis_peserta;
-        delete cleanPayload.dusun;
-        delete cleanPayload.tipe_peserta;
-        delete cleanPayload.usia;
-        delete cleanPayload.status;
-        delete cleanPayload.status_kehadiran;
-        delete cleanPayload.waktu_hadir;
-        delete cleanPayload.nik_lengkap;
-        delete cleanPayload.telepon;
-        delete cleanPayload.telepon_pj;
-        delete cleanPayload.catatan_observasi;
+        const cleanPayload = formatPesertaDbPayload(updatedFields);
 
         const { data, error } = await supabase
           .from('peserta')
@@ -188,6 +151,7 @@ export const pesertaService = {
           .single();
 
         if (!error && data) return normalizePeserta(data);
+        if (error) console.error('Error update peserta Supabase:', error);
       } catch (err) {
         console.warn('Gagal update data peserta di Supabase:', err);
       }
@@ -202,25 +166,7 @@ export const pesertaService = {
   async tambahPeserta(pesertaData) {
     if (isSupabaseConfigured && supabase) {
       try {
-        // Mapping payload untuk Supabase sesuai foreign keys
-        const payload = {
-          nama: pesertaData.nama,
-          nik: pesertaData.nik,
-          no_kk: pesertaData.no_kk || null,
-          alamat: pesertaData.alamat || null,
-          dusun_id: resolveDusunId(pesertaData.dusun_id),
-          tipe_id: resolveTipeId(pesertaData.tipe_id || pesertaData.jenis_peserta),
-          status_ibu: pesertaData.status_ibu || null,
-          tgl_lahir: pesertaData.tgl_lahir ? toISODateString(pesertaData.tgl_lahir) : null,
-          no_wa: pesertaData.telepon || pesertaData.no_wa || null,
-          jenis_kelamin: pesertaData.jenis_kelamin || null,
-          nama_suami: pesertaData.nama_suami || null,
-          aktif: true,
-          is_suspended: false,
-        };
-
-        // Buang key yang bernilai undefined
-        Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+        const payload = formatPesertaDbPayload(pesertaData);
 
         const { data, error } = await supabase
           .from('peserta')
