@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, RotateCcw, Plus, FileText, ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { Search, RotateCcw, Plus, FileText, ChevronLeft, ChevronRight, User, X } from 'lucide-react';
 import DetailPeserta from './components/DetailPeserta';
 import { dataStoreService } from '../../services/dataStoreService';
 import { pesertaService } from '../../services/pesertaService';
@@ -180,7 +180,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
       {/* Filter Card */}
       <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+          <label className="block text-xs font-bold text-slate-800 mb-1.5">
             Cari berdasarkan nama, NIK, atau nomor KK
           </label>
           <div className="relative">
@@ -189,9 +189,18 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari..."
-              className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800"
+              placeholder="Cari berdasarkan nama, NIK, atau nomor KK..."
+              className="w-full pl-10 pr-9 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -249,7 +258,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
           <div className="flex items-end">
             <button
               onClick={handleReset}
-              className="w-full p-2 text-xs font-semibold text-[#3B82F6] hover:text-[#2563EB] hover:underline inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer bg-transparent border-0"
+              className="w-full p-2 text-xs font-semibold text-[#3B82F6] bg-white border border-slate-200 hover:bg-slate-50 rounded-xl inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
             >
               <RotateCcw size={13} className="text-[#3B82F6]" />
               <span>Reset Filter</span>

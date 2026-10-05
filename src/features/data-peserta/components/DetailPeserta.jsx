@@ -6,7 +6,7 @@ import { masterService } from '../../../services/masterService';
 export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKaderOrBidan = true }) {
   if (!peserta) return null;
 
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(isKaderOrBidan);
   const [showNik, setShowNik] = useState(true);
   const [dusunList, setDusunList] = useState([]);
   const [formData, setFormData] = useState({
@@ -43,104 +43,40 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
     if (onSave) {
       onSave({ ...peserta, ...formData });
     }
-    setIsEditing(false);
   };
 
   const handleCancel = () => {
-    setFormData({
-      nama: peserta.nama || '',
-      nik: peserta.nik || '',
-      tanggal_lahir: peserta.tanggal_lahir || '',
-      alamat: peserta.alamat || '',
-      telepon: peserta.telepon || '',
-      email: peserta.email || '',
-      jenis_kelamin: peserta.jenis_kelamin || 'Perempuan',
-      jenis_peserta: peserta.jenis_peserta || 'Ibu Hamil',
-      telepon_pj: peserta.telepon_pj || '',
-      catatan_observasi: peserta.catatan_observasi || '',
-    });
-    setIsEditing(false);
+    if (onBack) {
+      onBack();
+    }
   };
 
   return (
     <form onSubmit={handleSave} className="space-y-6 max-w-5xl">
-      {/* Header & Back Button + Action Edit */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          {onBack && (
-            <button
-              type="button"
-              onClick={onBack}
-              className="text-xs font-semibold text-slate-500 hover:text-slate-800 inline-flex items-center gap-1.5 mb-2 transition-colors cursor-pointer"
-            >
-              <ArrowLeft size={14} />
-              <span>Kembali ke Daftar Peserta</span>
-            </button>
-          )}
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Data Peserta</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {isEditing ? 'Perbarui Data Peserta Posyandu' : 'Detail Data Peserta Posyandu'}
-          </p>
-        </div>
-
-        {/* Tombol Aksi Edit (Hanya untuk Kader / Bidan) */}
-        {isKaderOrBidan && (
-          <div className="flex items-center gap-2">
-            {isEditing ? (
-              <>
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition-all cursor-pointer"
-                >
-                  <X size={14} />
-                  <span>Batal</span>
-                </button>
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
-                >
-                  <Save size={14} />
-                  <span>Simpan Perubahan</span>
-                </button>
-              </>
-            ) : (
-              <div className="flex items-center gap-2">
-                {onDelete && (
-                  <button
-                    type="button"
-                    onClick={() => onDelete(peserta)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:border-red-300 hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
-                  >
-                    <Trash2 size={14} />
-                    <span>Hapus Peserta</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
-                >
-                  <Edit3 size={14} />
-                  <span>Edit Data Peserta</span>
-                </button>
-              </div>
-            )}
-          </div>
+      {/* Header & Back Button */}
+      <div>
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="text-xs font-semibold text-slate-500 hover:text-slate-800 inline-flex items-center gap-1.5 mb-2 transition-colors cursor-pointer"
+          >
+            <ArrowLeft size={14} />
+            <span>Kembali ke Daftar Peserta</span>
+          </button>
         )}
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Data Peserta</h1>
+        <p className="text-xs text-slate-500 mt-0.5">
+          Detail Data Peserta Posyandu
+        </p>
       </div>
 
       {/* Card Utama: Detail Pasien */}
       <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="border-b border-slate-100 pb-3">
           <h3 className="text-sm font-bold text-slate-900">
             Detail Pasien
           </h3>
-          {isEditing && (
-            <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full">
-              Mode Edit Aktif
-            </span>
-          )}
         </div>
 
         <div className="space-y-4 text-xs">
