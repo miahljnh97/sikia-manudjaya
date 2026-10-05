@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Edit3 } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import StatCards from '../components/StatCards';
@@ -179,7 +179,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
                 </div>
 
                 {/* Date Widget Pill */}
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center">
                   <div className="bg-white border border-slate-100 shadow-xs px-3.5 py-2 rounded-xl flex items-center gap-2.5">
                     <Calendar size={18} className="text-blue-500 shrink-0" />
                     <div className="text-left">
@@ -191,14 +191,6 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
                       </div>
                     </div>
                   </div>
-
-                  <button
-                    onClick={() => setToast({ show: true, message: 'Tanggal kegiatan mengikuti jadwal operasional resmi Posyandu hari ini.', type: 'info' })}
-                    className="bg-white border border-slate-200 shadow-xs px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Edit3 size={14} className="text-slate-500" />
-                    <span>Ubah Tanggal</span>
-                  </button>
                 </div>
               </div>
 
