@@ -2,14 +2,17 @@ import React from 'react';
 
 export default function LupaPasswordPage({ onBack }) {
   return (
-    <div 
-      className="min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat relative"
-      style={{
-        backgroundImage: "url('/bg-pwd.png'), linear-gradient(135deg, #e0f2fe 0%, #fef3c7 50%, #fce7f3 100%)",
-      }}
-    >
+    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-slate-50">
+      {/* Background Image Layer with Opacity */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60 pointer-events-none"
+        style={{
+          backgroundImage: "url('/background.png')",
+        }}
+      />
+
       {/* Kartu Lupa Password - Persis Gambar Figma media_1791133015318.jpg */}
-      <div className="relative z-10 w-full max-w-[480px] bg-white rounded-[28px] shadow-2xl p-8 sm:p-12 text-center border border-white/60">
+      <div className="relative z-10 w-full max-w-[480px] bg-white rounded-[28px] shadow-2xl p-8 sm:p-12 text-center border border-white/80">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">
           Lupa Password
         </h2>
