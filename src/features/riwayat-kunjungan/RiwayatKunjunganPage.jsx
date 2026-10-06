@@ -254,7 +254,7 @@ export default function RiwayatKunjunganPage({ currentUser }) {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200/70 text-[#4B5563] font-bold">
+              <tr className="bg-slate-50/80 border-b border-slate-200/70 text-[#4B5563] font-bold whitespace-nowrap">
                 <th className="py-3 px-4 w-12 text-center">No</th>
                 <th className="py-3 px-4">Nama</th>
                 <th className="py-3 px-4">Tanggal Kunjungan</th>
@@ -284,7 +284,7 @@ export default function RiwayatKunjunganPage({ currentUser }) {
                       <td className="py-3.5 px-4 text-center font-medium text-slate-500">
                         {(currentPage - 1) * itemsPerPage + idx + 1}
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <div className="flex items-center gap-2.5">
                           <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
                             isHamil 
@@ -306,8 +306,8 @@ export default function RiwayatKunjunganPage({ currentUser }) {
                       <td className="py-3.5 px-4 font-mono text-slate-600 font-medium whitespace-nowrap">
                         {maskNik(item.nik_lengkap || item.nik)}
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold inline-block ${
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap inline-block ${
                           isHamil 
                             ? 'bg-rose-50 text-rose-600 border border-rose-100' 
                             : isBayi 
@@ -344,8 +344,8 @@ export default function RiwayatKunjunganPage({ currentUser }) {
                           }
                           if (s.includes('dilayani') || s.includes('selesai')) {
                             return (
-                              <span className="px-2.5 py-1 bg-[#ECFDF3] border border-[#A6F4C5] text-[#12B76A] rounded-full text-[11px] font-semibold">
-                                Selesai Dilayani
+                              <span className="px-2.5 py-1 bg-[#ECFDF3] border border-[#A6F4C5] text-[#12B76A] rounded-full text-[11px] font-semibold whitespace-nowrap inline-block">
+                                Selesai
                               </span>
                             );
                           }

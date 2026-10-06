@@ -83,7 +83,7 @@ export default function Step1DataKunjungan({
               </span>
             </div>
 
-            {/* 3 Kolom: NIK, Tanggal Lahir, Alamat dengan ruang cukup */}
+            {/* 3 Kolom: NIK, Tanggal Lahir, Alamat */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-2 gap-x-5 text-xs">
               <div className="min-w-0">
                 <span className="text-slate-400 block font-normal">NIK</span>
@@ -132,18 +132,22 @@ export default function Step1DataKunjungan({
         </div>
       </div>
 
-      {/* 2. Informasi Kunjungan Form */}
+      {/* 2. Informasi Kunjungan Form Sesuai Gambar 1 */}
       <div>
         <h4 className="text-sm font-bold text-slate-900">Informasi Kunjungan</h4>
         <p className="text-xs text-slate-400 mt-0.5">Tanggal kunjungan dan petugas yang mencatat.</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-          {/* Tanggal Kunjungan dengan Date Picker */}
+          {/* Tanggal Kunjungan Sesuai Gambar 1 */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Tanggal Kunjungan <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
+              <div className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800 flex items-center justify-between">
+                <span>{kunjunganData.tanggal || '27 September 2026'}</span>
+                <Calendar size={16} className="text-slate-400 shrink-0" />
+              </div>
               <input
                 type="date"
                 value={kunjunganData.tanggalValue || getTodayISODate()}
@@ -157,24 +161,26 @@ export default function Step1DataKunjungan({
                     onChangeData('tanggal', dateFormatted);
                   }
                 }}
-                className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
-              <span className="text-[10px] text-slate-400 mt-1 block">
-                Terpilih: <strong>{kunjunganData.tanggal || 'Hari ini'}</strong>
-              </span>
             </div>
           </div>
 
+          {/* Jam Kedatangan Sesuai Gambar 1 */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Jam Kedatangan <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
+              <div className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800 flex items-center justify-between">
+                <span>{kunjunganData.jam || '08:30'}</span>
+                <Clock size={16} className="text-slate-400 shrink-0" />
+              </div>
               <input
                 type="time"
                 value={kunjunganData.jam || '08:30'}
                 onChange={(e) => onChangeData('jam', e.target.value)}
-                className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
             </div>
           </div>
@@ -207,6 +213,7 @@ export default function Step1DataKunjungan({
             </div>
           </div>
 
+          {/* Kader Pencatat */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Kader Pencatat
