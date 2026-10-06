@@ -1,11 +1,11 @@
-import React from 'react';
+import React from "react";
 
 export default function LupaPasswordPage({ onBack }) {
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-slate-50">
       {/* Background Image Layer with Opacity */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60 pointer-events-none"
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 pointer-events-none"
         style={{
           backgroundImage: "url('/background.png')",
         }}
