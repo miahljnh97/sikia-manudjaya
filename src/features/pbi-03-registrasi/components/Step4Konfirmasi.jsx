@@ -180,10 +180,10 @@ export default function Step4Konfirmasi({
             </div>
             <div>
               <div className="text-sm font-bold text-slate-900">
-                {peserta?.nama || 'Siti Aminah'}
+                {peserta?.nama || '-'}
               </div>
               <div className={`text-xs font-semibold ${avatarInfo.badgeColor} mt-0.5`}>
-                {peserta?.jenis_peserta || 'Ibu Hamil'}
+                {peserta?.jenis_peserta || '-'}
               </div>
             </div>
           </div>
@@ -193,19 +193,19 @@ export default function Step4Konfirmasi({
             <div>
               <span className="text-[11px] text-slate-400 block font-normal">NIK</span>
               <span className="text-xs font-bold text-slate-900 mt-0.5 block tracking-wide">
-                {formatMasked(peserta?.nik) || '3273••••••••0041'}
+                {formatMasked(peserta?.nik) || '-'}
               </span>
             </div>
             <div>
               <span className="text-[11px] text-slate-400 block font-normal">Tanggal Lahir</span>
               <span className="text-xs font-bold text-slate-900 mt-0.5 block">
-                {peserta?.tanggal_lahir || '12 Mei 1994'} {peserta?.usia ? `(${peserta.usia})` : '(32 tahun)'}
+                {peserta?.tanggal_lahir ? `${peserta.tanggal_lahir}${peserta?.usia && peserta?.usia !== '-' ? ` (${peserta.usia})` : ''}` : '-'}
               </span>
             </div>
             <div>
               <span className="text-[11px] text-slate-400 block font-normal">Alamat</span>
               <span className="text-xs font-bold text-slate-900 mt-0.5 block">
-                {peserta?.alamat || 'Dusun 3, Desa Manud Jaya'}
+                {peserta?.alamat || '-'}
               </span>
             </div>
           </div>
@@ -215,13 +215,13 @@ export default function Step4Konfirmasi({
             <div>
               <span className="text-[11px] text-slate-400 block font-normal">No. KK</span>
               <span className="text-xs font-bold text-slate-900 mt-0.5 block tracking-wide">
-                {formatMasked(peserta?.no_kk) || '3273••••••••1099'}
+                {formatMasked(peserta?.no_kk) || '-'}
               </span>
             </div>
             <div>
               <span className="text-[11px] text-slate-400 block font-normal">No. HP</span>
               <span className="text-xs font-bold text-slate-900 mt-0.5 block">
-                {peserta?.telepon || peserta?.no_wa || '0812-3456-7890'}
+                {peserta?.telepon && peserta.telepon !== '-' ? peserta.telepon : (peserta?.no_wa || '-')}
               </span>
             </div>
           </div>

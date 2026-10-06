@@ -30,7 +30,8 @@ export default function Step1DataKunjungan({
   }, []);
 
   const isIbuHamil = (peserta?.jenis_peserta || 'Ibu Hamil') === 'Ibu Hamil';
-  const isBayi = peserta?.jenis_peserta === 'Bayi' || peserta?.jenis_peserta === 'Balita';
+  const isBalita = peserta?.jenis_peserta === 'Balita';
+  const isBayi = peserta?.jenis_peserta === 'Bayi';
   const isLansia = peserta?.jenis_peserta === 'Lansia';
 
   return (
@@ -55,6 +56,8 @@ export default function Step1DataKunjungan({
           <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 ${
             isIbuHamil 
               ? 'bg-[#FFF1F2] text-[#E11D48]' 
+              : isBalita 
+              ? 'bg-[#DCFCE7] text-[#166534]' 
               : isBayi 
               ? 'bg-[#DBEAFE] text-[#1D4ED8]' 
               : isLansia 
@@ -68,18 +71,20 @@ export default function Step1DataKunjungan({
             {/* Nama & Badge */}
             <div className="flex items-center gap-2.5 flex-wrap">
               <h4 className="text-base font-bold text-slate-900 tracking-tight">
-                {peserta?.nama || 'Siti Aminah'}
+                {peserta?.nama || '-'}
               </h4>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+              <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold ${
                 isIbuHamil 
-                  ? 'bg-[#FFF1F2] text-[#E11D48]' 
+                  ? 'bg-[#FEE2E2] text-[#991B1B] border border-[#FECDD3]' 
+                  : isBalita
+                  ? 'bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]'
                   : isBayi 
-                  ? 'bg-[#DBEAFE] text-[#1D4ED8]' 
+                  ? 'bg-[#DBEAFE] text-[#1D4ED8] border border-[#BFDBFE]' 
                   : isLansia 
-                  ? 'bg-purple-100 text-purple-700' 
-                  : 'bg-[#DCFCE7] text-[#166534]'
+                  ? 'bg-purple-100 text-purple-700 border border-purple-200' 
+                  : 'bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]'
               }`}>
-                {peserta?.jenis_peserta || 'Ibu Hamil'}
+                {peserta?.jenis_peserta || '-'}
               </span>
             </div>
 
@@ -87,20 +92,20 @@ export default function Step1DataKunjungan({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-2 gap-x-5 text-xs">
               <div className="min-w-0">
                 <span className="text-slate-400 block font-normal">NIK</span>
-                <span className="font-bold text-slate-900 mt-0.5 block truncate" title={peserta?.nik}>
-                  {peserta?.nik || '3273055205940003'}
+                <span className="font-bold text-slate-900 mt-0.5 block truncate" title={peserta?.nik || '-'}>
+                  {peserta?.nik || '-'}
                 </span>
               </div>
               <div className="min-w-0">
                 <span className="text-slate-400 block font-normal">Tanggal Lahir</span>
                 <span className="font-bold text-slate-900 mt-0.5 block whitespace-nowrap">
-                  {peserta?.tanggal_lahir || '12 Mei 1994'} {peserta?.usia ? `(${peserta.usia})` : '(32 tahun)'}
+                  {peserta?.tanggal_lahir ? `${peserta.tanggal_lahir}${peserta?.usia && peserta?.usia !== '-' ? ` (${peserta.usia})` : ''}` : '-'}
                 </span>
               </div>
               <div className="min-w-0">
                 <span className="text-slate-400 block font-normal">Alamat</span>
-                <span className="font-bold text-slate-900 mt-0.5 block truncate" title={peserta?.alamat || 'Dusun 1, Desa Manud Jaya'}>
-                  {peserta?.alamat || 'Dusun 1, Desa Manud Jaya'}
+                <span className="font-bold text-slate-900 mt-0.5 block truncate" title={peserta?.alamat || '-'}>
+                  {peserta?.alamat || '-'}
                 </span>
               </div>
             </div>
@@ -113,19 +118,19 @@ export default function Step1DataKunjungan({
             <div>
               <span className="text-slate-400 block font-normal">Nama Suami</span>
               <span className="font-bold text-slate-900 mt-0.5 block truncate">
-                {peserta?.nama_suami || 'Budi Santoso'}
+                {peserta?.nama_suami || '-'}
               </span>
             </div>
             <div>
               <span className="text-slate-400 block font-normal">No. KK</span>
               <span className="font-bold text-slate-900 mt-0.5 block truncate">
-                {peserta?.no_kk || '3273 0501 0412'}
+                {peserta?.no_kk || '-'}
               </span>
             </div>
             <div className="col-span-2">
               <span className="text-slate-400 block font-normal">No. HP</span>
               <span className="font-bold text-slate-900 mt-0.5 block">
-                {peserta?.telepon || peserta?.no_wa || '0812 3456 7890'}
+                {peserta?.telepon && peserta.telepon !== '-' ? peserta.telepon : (peserta?.no_wa || '-')}
               </span>
             </div>
           </div>
@@ -144,9 +149,9 @@ export default function Step1DataKunjungan({
               Tanggal Kunjungan <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
-              <div className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800 flex items-center justify-between">
+              <div className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800 flex items-center justify-between">
                 <span>{kunjunganData.tanggal || '27 September 2026'}</span>
-                <Calendar size={16} className="text-slate-400 shrink-0" />
+                <Calendar size={15} className="text-slate-400 shrink-0" />
               </div>
               <input
                 type="date"
@@ -172,9 +177,9 @@ export default function Step1DataKunjungan({
               Jam Kedatangan <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
-              <div className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800 flex items-center justify-between">
+              <div className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800 flex items-center justify-between">
                 <span>{kunjunganData.jam || '08:30'}</span>
-                <Clock size={16} className="text-slate-400 shrink-0" />
+                <Clock size={15} className="text-slate-400 shrink-0" />
               </div>
               <input
                 type="time"

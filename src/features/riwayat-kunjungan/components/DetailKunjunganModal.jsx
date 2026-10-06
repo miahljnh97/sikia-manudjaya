@@ -33,7 +33,8 @@ export default function DetailKunjunganModal({ kunjungan, isOpen, onClose }) {
   };
 
   const isIbuHamil = kunjungan.jenis_peserta === 'Ibu Hamil';
-  const isBayi = kunjungan.jenis_peserta === 'Bayi' || kunjungan.jenis_peserta === 'Balita';
+  const isBalita = kunjungan.jenis_peserta === 'Balita';
+  const isBayi = kunjungan.jenis_peserta === 'Bayi';
   const isLansia = kunjungan.jenis_peserta === 'Lansia';
 
   const formatMasked = (val) => {
@@ -143,14 +144,16 @@ export default function DetailKunjunganModal({ kunjungan, isOpen, onClose }) {
                 <span className="font-bold text-slate-900 text-base sm:text-lg">
                   {kunjungan.nama}
                 </span>
-                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-semibold ${
                   isIbuHamil 
-                    ? 'bg-[#FFF1F2] text-[#E11D48]' 
+                    ? 'bg-[#FEE2E2] text-[#991B1B] border border-[#FECDD3]' 
+                    : isBalita
+                    ? 'bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]'
                     : isBayi
-                    ? 'bg-[#EFF6FF] text-[#2563EB]'
+                    ? 'bg-[#DBEAFE] text-[#1D4ED8] border border-[#BFDBFE]'
                     : isLansia
-                    ? 'bg-[#FDF4FF] text-[#A21CAF]'
-                    : 'bg-[#ECFDF5] text-[#059669]'
+                    ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                    : 'bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]'
                 }`}>
                   {kunjungan.jenis_peserta}
                 </span>
@@ -169,12 +172,12 @@ export default function DetailKunjunganModal({ kunjungan, isOpen, onClose }) {
           <div className="text-left sm:text-right shrink-0">
             <div className="text-[11px] text-slate-400 font-medium">Status Kunjungan</div>
             <div className="mt-1">
-              <span className={`px-3.5 py-1 rounded-full text-xs font-bold inline-block ${
+              <span className={`px-3 py-1 rounded-md text-xs font-semibold inline-block ${
                 (kunjungan.status_kehadiran || kunjungan.status_lengkap || '').toLowerCase().includes('tidak')
-                  ? 'bg-rose-50 text-rose-600 border border-rose-200'
+                  ? 'bg-[#FEE2E2] text-[#991B1B] border border-[#FECDD3]'
                   : (kunjungan.status_kehadiran || kunjungan.status_lengkap || '').toLowerCase().includes('tunggu')
-                  ? 'bg-slate-100 text-slate-700 border border-slate-200'
-                  : 'bg-[#ECFDF3] text-[#12B76A]'
+                  ? 'bg-[#F1F5F9] text-[#475569] border border-[#E2E8F0]'
+                  : 'bg-[#ECFDF3] text-[#12B76A] border border-[#A6F4C5]'
               }`}>
                 {kunjungan.status_lengkap || kunjungan.status_kehadiran || 'Selesai Dilayani'}
               </span>

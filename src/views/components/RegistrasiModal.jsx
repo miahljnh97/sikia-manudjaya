@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { masterService } from '../../services/masterService';
-import { resolveTipeId } from '../../utils/pesertaAdapter';
+import { resolveTipeId, hitungUsiaDariTglLahir } from '../../utils/pesertaAdapter';
 
 export default function RegistrasiModal({ isOpen, onClose, onSubmit, onShowToast }) {
   const [dusunList, setDusunList] = useState([]);
@@ -14,7 +14,7 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit, onShowToast
     jenis_peserta: 'Balita',
     dusun_id: '',
     tipe_id: '',
-    usia: '',
+    tanggal_lahir: '',
     alamat: 'Manud Jaya',
   });
 
@@ -64,9 +64,13 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit, onShowToast
     });
 
     const finalTipeId = matchedTipe ? matchedTipe.id : resolveTipeId(formData.jenis_peserta);
+    const usiaKalkulasi = formData.tanggal_lahir ? hitungUsiaDariTglLahir(formData.tanggal_lahir) : '';
 
     onSubmit({
       ...formData,
+      tgl_lahir: formData.tanggal_lahir || null,
+      tanggal_lahir: formData.tanggal_lahir || '',
+      usia: usiaKalkulasi,
       tipe_id: finalTipeId,
       status_ibu: isIbu ? 'hamil' : null,
     });
@@ -76,7 +80,7 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit, onShowToast
       jenis_peserta: 'Balita',
       dusun_id: dusunList[0]?.id || '',
       tipe_id: '',
-      usia: '',
+      tanggal_lahir: '',
       alamat: 'Manud Jaya',
     });
   };
@@ -153,12 +157,11 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit, onShowToast
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Usia</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Tanggal Lahir</label>
               <input
-                type="text"
-                placeholder="Contoh: 2 tahun / 28 tahun"
-                value={formData.usia}
-                onChange={(e) => setFormData({ ...formData, usia: e.target.value })}
+                type="date"
+                value={formData.tanggal_lahir}
+                onChange={(e) => setFormData({ ...formData, tanggal_lahir: e.target.value })}
                 className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
               />
             </div>
