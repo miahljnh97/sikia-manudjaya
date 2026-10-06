@@ -2,8 +2,19 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Menu, Bell, User, Check, Calendar, AlertCircle, Baby, LogOut, ChevronDown } from 'lucide-react';
 
 export default function Navbar({ user, onLogout, onToggleSidebar }) {
-  const displayName = user?.nama || 'Annisa Wati';
-  const roleName = user?.role ? (user.role === 'kader' ? 'Kader Posyandu' : user.role) : 'Kader Posyandu';
+  const getNormalizedRole = (role, email = '') => {
+    const e = (email || '').toLowerCase();
+    const r = (role || '').toLowerCase();
+    if (r.includes('admin') || e.includes('admin')) return 'Super Admin';
+    if (r.includes('bidan') || e.includes('bidan')) return 'Bidan Desa';
+    if (r.includes('ibu') || e.includes('ibu')) return 'Ibu Balita';
+    if (r.includes('kader') || e.includes('kader')) return 'Kader Posyandu';
+    return role || 'Kader Posyandu';
+  };
+
+  const userEmail = user?.user?.email || user?.email || '';
+  const displayName = user?.nama || (userEmail ? userEmail.split('@')[0] : 'Annisa Wati');
+  const roleName = getNormalizedRole(user?.role, userEmail);
 
   // State Notifikasi dengan LocalStorage Persistence
   const [isOpenNotif, setIsOpenNotif] = useState(false);
