@@ -13,7 +13,15 @@ import ConfirmModal from '../../views/components/ConfirmModal';
 // Master data peserta diambil 100% dari tabel `peserta` Supabase
 export const DUMMY_DATA_PESERTA = [];
 
-export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, initialSelectedId, onBackToDashboard, onShowToast }) {
+export default function DataPesertaPage({ 
+  currentUser, 
+  onTambahPesertaBaru, 
+  initialSelectedId, 
+  currentPath = '/data-peserta',
+  onNavigate,
+  onBackToDashboard, 
+  onShowToast 
+}) {
   const isIbuRole = currentUser?.role === 'Ibu Balita' || currentUser?.role === 'ibu';
 
   const [listPeserta, setListPeserta] = useState(() => dataStoreService.getPesertaList());
@@ -70,6 +78,13 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
     }
   }, [initialSelectedId, listPeserta, isIbuRole]);
 
+  // Sync saat URL berubah (misal tombol Back di browser atau klik menu sidebar)
+  useEffect(() => {
+    if (!isIbuRole && currentPath === '/data-peserta') {
+      setSelectedPeserta(null);
+    }
+  }, [currentPath, isIbuRole]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [jenisFilter, setJenisFilter] = useState('Semua');
   const [statusFilter, setStatusFilter] = useState('Semua');
@@ -113,6 +128,23 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
     setCurrentPage(1);
   };
 
+  const handleOpenDetail = (pesertaItem) => {
+    setSelectedPeserta(pesertaItem);
+    if (onNavigate) {
+      onNavigate('/data-peserta/detail');
+    }
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedPeserta(null);
+    if (onNavigate) {
+      onNavigate('/data-peserta');
+    }
+    if (initialSelectedId && onBackToDashboard) {
+      onBackToDashboard();
+    }
+  };
+
   const handleSavePeserta = async (updated) => {
     try {
       const saved = await pesertaService.updatePeserta(updated.id, updated);
@@ -125,20 +157,14 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
       notify(`Data peserta "${finalData.nama}" berhasil diperbarui!`, 'success');
 
       // 3. Otomatis kembali ke tampilan daftar peserta (tabel)
-      setSelectedPeserta(null);
-      if (onBackToDashboard && initialSelectedId) {
-        onBackToDashboard();
-      }
+      handleCloseDetail();
     } catch (e) {
       console.warn('Error update peserta:', e);
       const saved = dataStoreService.updatePeserta(updated.id, updated);
       const finalData = saved || updated;
       setListPeserta((prev) => prev.map((p) => (p.id === updated.id ? finalData : p)));
       notify(`Data peserta "${finalData.nama}" berhasil diperbarui!`, 'success');
-      setSelectedPeserta(null);
-      if (onBackToDashboard && initialSelectedId) {
-        onBackToDashboard();
-      }
+      handleCloseDetail();
     }
   };
 
@@ -151,7 +177,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
     try {
       await pesertaService.suspendPeserta(pesertaToDelete.id);
       setListPeserta((prev) => prev.filter((p) => p.id !== pesertaToDelete.id));
-      setSelectedPeserta(null);
+      handleCloseDetail();
       notify(`Peserta "${pesertaToDelete.nama}" berhasil dihapus dari sistem.`, 'success');
     } catch (err) {
       console.error('Gagal hapus peserta:', err);
@@ -182,12 +208,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
         isKaderOrBidan={true}
         onSave={handleSavePeserta}
         onDelete={handleDeletePeserta}
-        onBack={() => {
-          setSelectedPeserta(null);
-          if (initialSelectedId && onBackToDashboard) {
-            onBackToDashboard();
-          }
-        }}
+        onBack={handleCloseDetail}
       />
     );
   }
@@ -205,7 +226,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
 
         <button
           onClick={onTambahPesertaBaru}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98]"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98] cursor-pointer"
         >
           <Plus size={16} />
           <span>Tambah Peserta Baru</span>
@@ -376,28 +397,28 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
                       </span>
                     </td>
                     <td className="py-3.5 px-5 text-slate-500">{item.tanggal_lahir}</td>
-                  <td className="py-3.5 px-5 text-slate-600">{item.usia}</td>
-                  <td className="py-3.5 px-5 text-slate-600">{item.alamat}</td>
-                  <td className="py-3.5 px-5 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        onClick={() => setSelectedPeserta(item)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 shadow-xs transition-colors cursor-pointer"
-                        title="Detail & Edit Peserta"
-                      >
-                        <FileText size={13} className="text-slate-400" />
-                        <span>Detail</span>
-                      </button>
-                      <button
-                        onClick={() => handleDeletePeserta(item)}
-                        className="inline-flex items-center justify-center p-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded-lg text-xs transition-colors cursor-pointer shadow-xs"
-                        title="Hapus Peserta"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                    <td className="py-3.5 px-5 text-slate-600">{item.usia}</td>
+                    <td className="py-3.5 px-5 text-slate-600">{item.alamat}</td>
+                    <td className="py-3.5 px-5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleOpenDetail(item)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 shadow-xs transition-colors cursor-pointer"
+                          title="Detail & Edit Peserta"
+                        >
+                          <FileText size={13} className="text-slate-400" />
+                          <span>Detail</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeletePeserta(item)}
+                          className="inline-flex items-center justify-center p-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded-lg text-xs transition-colors cursor-pointer shadow-xs"
+                          title="Hapus Peserta"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 );
               })}
             </tbody>
@@ -452,7 +473,7 @@ export default function DataPesertaPage({ currentUser, onTambahPesertaBaru, init
         />
       )}
 
-      {/* Modal Konfirmasi Hapus Peserta (Tanpa Browser Popup) */}
+      {/* Modal Konfirmasi Hapus Peserta */}
       <ConfirmModal
         isOpen={Boolean(pesertaToDelete)}
         title="Hapus Data Peserta"
