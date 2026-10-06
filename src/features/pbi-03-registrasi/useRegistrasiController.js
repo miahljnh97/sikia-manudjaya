@@ -72,6 +72,34 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi, curren
   const [statusFilter, setStatusFilter] = useState('Semua');
   const [wilayahFilter, setWilayahFilter] = useState('Semua');
 
+  // Form State Kunjungan (PBI 03B, 03C, 03D)
+  const [kunjunganData, setKunjunganData] = useState({
+    tanggalValue: getTodayISODate(),
+    tanggal: getTanggalFormatStandar(),
+    jam: getJamMenitSekarang(),
+    posyandu: 'Posyandu Desa Manud Jaya',
+    kaderPencatat: currentUser?.nama || 'Annisa Wati',
+  });
+
+  const [selectedPelayanan, setSelectedPelayanan] = useState([]);
+  const [statusKehadiran, setStatusKehadiran] = useState('Hadir');
+  const [catatan, setCatatan] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  // Filter daftar peserta di pencarian
+  const filteredPeserta = useMemo(() => {
+    return rawPesertaList.filter((item) => {
+      const matchSearch =
+        (item.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.nik || '').includes(searchQuery) ||
+        (item.no_kk || '').includes(searchQuery);
+      const matchJenis = jenisFilter === 'Semua' || item.jenis_peserta === jenisFilter;
+      const matchStatus = statusFilter === 'Semua' || (item.status_kehadiran || 'Menunggu').toLowerCase().includes(statusFilter.toLowerCase());
+      const matchWilayah = wilayahFilter === 'Semua' || item.dusun === wilayahFilter || item.alamat?.includes(wilayahFilter);
+      return matchSearch && matchJenis && matchStatus && matchWilayah;
+    });
+  }, [rawPesertaList, searchQuery, jenisFilter, statusFilter, wilayahFilter]);
+
   // Sinkronisasi mode, step, dan peserta saat URL browser berganti atau pesertaList terisi
   useEffect(() => {
     if (!currentPath.startsWith('/registrasi-kunjungan')) return;
