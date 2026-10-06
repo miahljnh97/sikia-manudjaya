@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { User, Edit2, Calendar, Clock, Check, ChevronDown, Accessibility } from 'lucide-react';
 import { masterService } from '../../../services/masterService';
 import { getTodayISODate } from '../../../utils/dateUtils';
@@ -12,6 +12,8 @@ export default function Step1DataKunjungan({
   onBatal
 }) {
   const [posyanduList, setPosyanduList] = useState([]);
+  const dateInputRef = useRef(null);
+  const timeInputRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -152,19 +154,34 @@ export default function Step1DataKunjungan({
         <p className="text-xs text-slate-400 mt-0.5">Tanggal kunjungan dan petugas yang mencatat.</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-          {/* Tanggal Kunjungan Sesuai Gambar 1 */}
+          {/* Tanggal Kunjungan */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Tanggal Kunjungan <span className="text-rose-500">*</span>
             </label>
-            <div className="relative">
-              <div className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800 flex items-center justify-between">
-                <span>{kunjunganData.tanggal || '27 September 2026'}</span>
-                <Calendar size={15} className="text-slate-400 shrink-0" />
+            <div
+              onClick={() => {
+                try {
+                  dateInputRef.current?.showPicker();
+                } catch (e) {
+                  dateInputRef.current?.focus();
+                }
+              }}
+              className="relative cursor-pointer group"
+            >
+              <div className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 group-hover:border-slate-300 rounded-xl font-medium text-slate-800 flex items-center justify-between transition-colors shadow-xs">
+                <span>{kunjunganData.tanggal || '6 Oktober 2026'}</span>
+                <Calendar size={15} className="text-slate-400 group-hover:text-blue-600 transition-colors shrink-0 pointer-events-none" />
               </div>
               <input
+                ref={dateInputRef}
                 type="date"
                 value={kunjunganData.tanggalValue || getTodayISODate()}
+                onClick={(e) => {
+                  try {
+                    e.target.showPicker();
+                  } catch (err) {}
+                }}
                 onChange={(e) => {
                   const val = e.target.value;
                   onChangeData('tanggalValue', val);
@@ -180,19 +197,34 @@ export default function Step1DataKunjungan({
             </div>
           </div>
 
-          {/* Jam Kedatangan Sesuai Gambar 1 */}
+          {/* Jam Kedatangan */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Jam Kedatangan <span className="text-rose-500">*</span>
             </label>
-            <div className="relative">
-              <div className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl font-medium text-slate-800 flex items-center justify-between">
+            <div
+              onClick={() => {
+                try {
+                  timeInputRef.current?.showPicker();
+                } catch (e) {
+                  timeInputRef.current?.focus();
+                }
+              }}
+              className="relative cursor-pointer group"
+            >
+              <div className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 group-hover:border-slate-300 rounded-xl font-medium text-slate-800 flex items-center justify-between transition-colors shadow-xs">
                 <span>{kunjunganData.jam || '08:30'}</span>
-                <Clock size={15} className="text-slate-400 shrink-0" />
+                <Clock size={15} className="text-slate-400 group-hover:text-blue-600 transition-colors shrink-0 pointer-events-none" />
               </div>
               <input
+                ref={timeInputRef}
                 type="time"
                 value={kunjunganData.jam || '08:30'}
+                onClick={(e) => {
+                  try {
+                    e.target.showPicker();
+                  } catch (err) {}
+                }}
                 onChange={(e) => onChangeData('jam', e.target.value)}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
