@@ -7,12 +7,18 @@ import Step4Konfirmasi from './components/Step4Konfirmasi';
 import RiwayatKunjunganCard from './components/RiwayatKunjunganCard';
 import { useRegistrasiController } from './useRegistrasiController';
 
-export default function RegistrasiPage({ currentUser, onBackToDashboard, onTambahPesertaBaru }) {
+export default function RegistrasiPage({ 
+  currentUser, 
+  onBackToDashboard, 
+  onTambahPesertaBaru,
+  currentPath = '/registrasi-kunjungan',
+  onNavigate 
+}) {
   const {
     mode,
-    setMode,
     currentStep,
-    setCurrentStep,
+    goToStep,
+    goToPencarian,
     searchQuery,
     setSearchQuery,
     jenisFilter,
@@ -36,7 +42,7 @@ export default function RegistrasiPage({ currentUser, onBackToDashboard, onTamba
     setCatatan,
     submitting,
     handleSubmitRegistrasi
-  } = useRegistrasiController(currentUser, onBackToDashboard);
+  } = useRegistrasiController(currentUser, onBackToDashboard, currentPath, onNavigate);
 
   const steps = [
     { num: 1, label: 'Data Kunjungan' },
@@ -51,7 +57,13 @@ export default function RegistrasiPage({ currentUser, onBackToDashboard, onTamba
       <div>
         {mode === 'wizard' && (
           <div className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 mb-1">
-            <span>Registrasi Kunjungan</span>
+            <button
+              type="button"
+              onClick={goToPencarian}
+              className="hover:text-blue-600 transition-colors cursor-pointer"
+            >
+              Registrasi Kunjungan
+            </button>
             <span>›</span>
             <span className={currentStep === 1 ? 'text-slate-800 font-bold' : ''}>Data Kunjungan</span>
             {currentStep >= 2 && (
@@ -84,7 +96,7 @@ export default function RegistrasiPage({ currentUser, onBackToDashboard, onTamba
         </p>
       </div>
 
-      {/* Stepper Progress Bar Sesuai Gambar 2 */}
+      {/* Stepper Progress Bar */}
       {mode === 'wizard' && (
         <div className="py-2">
           <div className="flex items-center justify-between max-w-2xl mx-auto relative">
@@ -95,15 +107,21 @@ export default function RegistrasiPage({ currentUser, onBackToDashboard, onTamba
               const isActive = currentStep === st.num;
               return (
                 <div key={st.num} className="relative z-10 flex flex-col items-center">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (st.num <= currentStep) {
+                        goToStep(st.num);
+                      }
+                    }}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
                       isActive
                         ? 'bg-[#2563EB] text-white shadow-md ring-4 ring-blue-100'
-                        : 'bg-white border-2 border-slate-200 text-slate-400'
+                        : 'bg-white border-2 border-slate-200 text-slate-400 hover:border-slate-300'
                     }`}
                   >
                     {st.num}
-                  </div>
+                  </button>
                   <span
                     className={`text-xs mt-2 font-medium ${
                       isActive ? 'text-[#2563EB] font-bold' : 'text-slate-500'
@@ -143,9 +161,9 @@ export default function RegistrasiPage({ currentUser, onBackToDashboard, onTamba
                 peserta={selectedPeserta}
                 kunjunganData={kunjunganData}
                 onChangeData={handleChangeKunjungan}
-                onUbahPeserta={() => setMode('pencarian')}
-                onNext={() => setCurrentStep(2)}
-                onBatal={() => setMode('pencarian')}
+                onUbahPeserta={goToPencarian}
+                onNext={() => goToStep(2)}
+                onBatal={goToPencarian}
               />
             )}
 
@@ -154,8 +172,8 @@ export default function RegistrasiPage({ currentUser, onBackToDashboard, onTamba
                 peserta={selectedPeserta}
                 selectedPelayanan={selectedPelayanan}
                 onTogglePelayanan={handleTogglePelayanan}
-                onBack={() => setCurrentStep(1)}
-                onNext={() => setCurrentStep(3)}
+                onBack={() => goToStep(1)}
+                onNext={() => goToStep(3)}
               />
             )}
 
@@ -165,8 +183,8 @@ export default function RegistrasiPage({ currentUser, onBackToDashboard, onTamba
                 onChangeStatus={setStatusKehadiran}
                 catatan={catatan}
                 onChangeCatatan={setCatatan}
-                onBack={() => setCurrentStep(2)}
-                onNext={() => setCurrentStep(4)}
+                onBack={() => goToStep(2)}
+                onNext={() => goToStep(4)}
               />
             )}
 
@@ -177,8 +195,8 @@ export default function RegistrasiPage({ currentUser, onBackToDashboard, onTamba
                 selectedPelayanan={selectedPelayanan}
                 statusKehadiran={statusKehadiran}
                 catatan={catatan}
-                onGoToStep={(stepNum) => setCurrentStep(stepNum)}
-                onBack={() => setCurrentStep(3)}
+                onGoToStep={(stepNum) => goToStep(stepNum)}
+                onBack={() => goToStep(3)}
                 onSubmit={handleSubmitRegistrasi}
                 loading={submitting}
               />

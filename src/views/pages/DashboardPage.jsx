@@ -15,14 +15,14 @@ import Toast from '../../shared/components/Toast';
 import { useDashboardController } from '../../controllers/useDashboardController';
 
 export default function DashboardPage({ currentUser, onLogout, currentPath = '/dashboard', onNavigate }) {
-  // Mapping URL path ke menu id
-  const pathToMenu = {
-    '/dashboard': 'Dashboard',
-    '/registrasi-kunjungan': 'Registrasi Kunjungan',
-    '/data-peserta': 'Data Peserta',
-    '/riwayat-kunjungan': 'Riwayat Kunjungan',
-    '/kelola-kader': 'Kelola Kader',
-    '/laporan': 'Laporan',
+  const getMenuFromPath = (path) => {
+    if (!path) return 'Dashboard';
+    if (path.startsWith('/registrasi-kunjungan')) return 'Registrasi Kunjungan';
+    if (path.startsWith('/data-peserta')) return 'Data Peserta';
+    if (path.startsWith('/riwayat-kunjungan')) return 'Riwayat Kunjungan';
+    if (path.startsWith('/kelola-kader')) return 'Kelola Kader';
+    if (path.startsWith('/laporan')) return 'Laporan';
+    return 'Dashboard';
   };
 
   const menuToPath = {
@@ -34,18 +34,19 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
     'Laporan': '/laporan',
   };
 
-  const initialMenu = pathToMenu[currentPath] || 'Dashboard';
-  const [activeMenu, setActiveMenu] = useState(initialMenu);
+  const [activeMenu, setActiveMenu] = useState(() => getMenuFromPath(currentPath));
 
   // Sinkronkan saat URL browser berubah (misal tombol Back/Forward)
   useEffect(() => {
-    if (pathToMenu[currentPath] && pathToMenu[currentPath] !== activeMenu) {
-      setActiveMenu(pathToMenu[currentPath]);
+    const matched = getMenuFromPath(currentPath);
+    if (matched && matched !== activeMenu) {
+      setActiveMenu(matched);
     }
   }, [currentPath]);
 
   const handleMenuChange = (menu) => {
     setActiveMenu(menu);
+    setSelectedPesertaIdForDetail(null);
     if (onNavigate && menuToPath[menu]) {
       onNavigate(menuToPath[menu]);
     }
@@ -97,7 +98,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
   };
 
   const handleRegistrasiSuccess = (suksesMsg) => {
-    setActiveMenu('Dashboard');
+    handleMenuChange('Dashboard');
     setToast({
       show: true,
       message: suksesMsg || 'Registrasi kunjungan berhasil disimpan!',
@@ -107,6 +108,9 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
 
   const handleLihatDetailDariDashboard = (peserta) => {
     setSelectedPesertaIdForDetail(peserta.id);
+    if (onNavigate) {
+      onNavigate('/data-peserta/detail');
+    }
     setActiveMenu('Data Peserta');
   };
 
@@ -116,7 +120,6 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
       <Sidebar 
         activeMenu={activeMenu} 
         onMenuClick={(menu) => {
-          setSelectedPesertaIdForDetail(null);
           handleMenuChange(menu);
         }} 
         isOpen={isSidebarOpen}
@@ -137,9 +140,11 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
             <DataPesertaPage
               currentUser={currentUser}
               initialSelectedId={selectedPesertaIdForDetail}
+              currentPath={currentPath}
+              onNavigate={onNavigate}
               onBackToDashboard={() => {
                 setSelectedPesertaIdForDetail(null);
-                setActiveMenu('Dashboard');
+                handleMenuChange('Dashboard');
               }}
               onTambahPesertaBaru={() => setIsModalOpen(true)}
               onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
@@ -159,6 +164,8 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
           ) : activeMenu === 'Registrasi Kunjungan' ? (
             <RegistrasiPage 
               currentUser={currentUser} 
+              currentPath={currentPath}
+              onNavigate={onNavigate}
               onBackToDashboard={handleRegistrasiSuccess} 
               onTambahPesertaBaru={() => setIsModalOpen(true)}
               onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
@@ -166,7 +173,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
           ) : activeMenu !== 'Dashboard' ? (
             <UnderDevelopmentPage
               featureName={activeMenu}
-              onBackToDashboard={() => setActiveMenu('Dashboard')}
+              onBackToDashboard={() => handleMenuChange('Dashboard')}
             />
           ) : (
             <>
@@ -184,7 +191,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
               <StatCards stats={stats} />
 
               {/* Banner Jadwal Hari Ini & CTA Registrasi */}
-              <ScheduleBanner onRegistrasiClick={() => setActiveMenu('Registrasi Kunjungan')} />
+              <ScheduleBanner onRegistrasiClick={() => handleMenuChange('Registrasi Kunjungan')} />
 
               {/* Tabel Peserta Hari Ini */}
               <ParticipantTable

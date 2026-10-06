@@ -88,12 +88,14 @@ export default function Step3StatusKehadiran({
         })}
       </div>
 
-      {/* Info Banner Hijau Terpilih Sesuai Gambar 1 */}
-      <div className="p-3.5 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl flex items-center gap-2.5">
-        <CheckCircle2 size={18} className="text-[#16A34A] shrink-0" />
+      {/* Info Banner Hijau Terpilih Sesuai Gambar 3 dengan New Line */}
+      <div className="p-3.5 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl flex items-start gap-2.5">
+        <CheckCircle2 size={18} className="text-[#16A34A] shrink-0 mt-0.5" />
         <div className="text-xs">
-          <span className="font-bold text-[#166534]">Status "{statusKehadiran}" dipilih.</span>
-          <span className="text-slate-600 font-normal ml-1.5">Lanjutkan ke tahap Konfirmasi untuk menyimpan registrasi kunjungan.</span>
+          <div className="font-bold text-[#166534]">Status "{statusKehadiran}" dipilih.</div>
+          <div className="text-slate-600 font-normal mt-0.5">
+            Lanjutkan ke tahap Konfirmasi untuk menyimpan registrasi kunjungan.
+          </div>
         </div>
       </div>
 
@@ -114,7 +116,7 @@ export default function Step3StatusKehadiran({
         </div>
       </div>
 
-      {/* Navigation Buttons Sesuai Gambar 1 */}
+      {/* Navigation Buttons */}
       <div className="pt-2 flex items-center justify-between border-t border-slate-100">
         <button
           type="button"
@@ -129,7 +131,7 @@ export default function Step3StatusKehadiran({
           onClick={onNext}
           className="px-6 py-2.5 text-xs font-bold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-xl shadow-xs cursor-pointer transition-colors"
         >
-          Lanjut ke Status Kehadiran →
+          Lanjut ke Konfirmasi →
         </button>
       </div>
     </div>
