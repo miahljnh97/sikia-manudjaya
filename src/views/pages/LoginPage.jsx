@@ -44,7 +44,7 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-slate-50">
       {/* Background Image Layer with Opacity */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60 pointer-events-none"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 pointer-events-none"
         style={{
           backgroundImage: "url('/background.png')",
         }}
