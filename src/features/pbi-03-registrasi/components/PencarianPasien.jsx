@@ -191,8 +191,8 @@ export default function PencarianPasien({
               }}
               className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none cursor-pointer"
             >
-              <option value="Nama A-Z">Nama A-Z ∨</option>
-              <option value="Nama Z-A">Nama Z-A ∨</option>
+              <option value="Nama A-Z">Nama A-Z</option>
+              <option value="Nama Z-A">Nama Z-A</option>
             </select>
           </div>
         </div>

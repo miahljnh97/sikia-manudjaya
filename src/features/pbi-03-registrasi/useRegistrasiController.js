@@ -4,22 +4,47 @@ import { pesertaService } from '../../services/pesertaService';
 import { dataStoreService } from '../../services/dataStoreService';
 import { getTanggalFormatStandar, getJamMenitSekarang, getTodayISODate } from '../../utils/dateUtils';
 
+// Helper untuk parsing path registrasi kunjungan (misal /registrasi-kunjungan/:uuid/data-kunjungan)
+export const parseRegistrasiPath = (path = '') => {
+  let step = 1;
+  let pesertaId = null;
+
+  if (path.includes('/data-kunjungan')) step = 1;
+  else if (path.includes('/jenis-pelayanan')) step = 2;
+  else if (path.includes('/status-kehadiran')) step = 3;
+  else if (path.includes('/konfirmasi')) step = 4;
+
+  if (path.includes('?')) {
+    const sp = new URLSearchParams(path.split('?')[1]);
+    if (sp.get('id')) pesertaId = sp.get('id');
+    if (sp.get('peserta_id')) pesertaId = sp.get('peserta_id');
+  }
+
+  const clean = path.split('?')[0];
+  const segments = clean.split('/').filter(Boolean);
+  const stepKeywords = ['registrasi-kunjungan', 'data-kunjungan', 'jenis-pelayanan', 'status-kehadiran', 'konfirmasi'];
+  for (const seg of segments) {
+    if (!stepKeywords.includes(seg)) {
+      pesertaId = seg;
+      break;
+    }
+  }
+
+  const isWizard = (clean.startsWith('/registrasi-kunjungan/') && clean !== '/registrasi-kunjungan/') || !!pesertaId;
+  return { isWizard, step, pesertaId };
+};
+
 export function useRegistrasiController(currentUser, onSuccessRegistrasi, currentPath = '/registrasi-kunjungan', onNavigate) {
+  const initialParsed = parseRegistrasiPath(currentPath);
+
   // Mode: 'pencarian' | 'wizard'
-  const [mode, setMode] = useState(() => {
-    return currentPath.includes('/registrasi-kunjungan/') ? 'wizard' : 'pencarian';
-  });
-
-  const getStepFromPath = (path) => {
-    if (path.includes('/data-kunjungan')) return 1;
-    if (path.includes('/jenis-pelayanan')) return 2;
-    if (path.includes('/status-kehadiran')) return 3;
-    if (path.includes('/konfirmasi')) return 4;
-    return 1;
-  };
-
-  const [currentStep, setCurrentStep] = useState(() => getStepFromPath(currentPath));
+  const [mode, setMode] = useState(() => initialParsed.isWizard ? 'wizard' : 'pencarian');
+  const [currentStep, setCurrentStep] = useState(() => initialParsed.step);
   const [rawPesertaList, setRawPesertaList] = useState([]);
+
+  // Selected Peserta & Riwayat
+  const [selectedPeserta, setSelectedPeserta] = useState(null);
+  const [riwayatList, setRiwayatList] = useState([]);
 
   // Load peserta dari pesertaService (Supabase / local fallback)
   useEffect(() => {
@@ -47,75 +72,64 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi, curren
   const [statusFilter, setStatusFilter] = useState('Semua');
   const [wilayahFilter, setWilayahFilter] = useState('Semua');
 
-  // Selected Peserta & Riwayat
-  const [selectedPeserta, setSelectedPeserta] = useState(null);
-  const [riwayatList, setRiwayatList] = useState([]);
-
-  // Fallback selectedPeserta jika user me-refresh di halaman wizard
-  useEffect(() => {
-    if (mode === 'wizard' && !selectedPeserta && rawPesertaList.length > 0) {
-      setSelectedPeserta(rawPesertaList[0]);
-    }
-  }, [mode, selectedPeserta, rawPesertaList]);
-
-  // Sinkronisasi mode & step saat URL browser berganti (misal browser back/forward atau klik menu sidebar)
+  // Sinkronisasi mode, step, dan peserta saat URL browser berganti atau pesertaList terisi
   useEffect(() => {
     if (!currentPath.startsWith('/registrasi-kunjungan')) return;
 
-    if (currentPath === '/registrasi-kunjungan' || currentPath === '/registrasi-kunjungan/') {
+    const parsed = parseRegistrasiPath(currentPath);
+    if (!parsed.isWizard) {
       setMode('pencarian');
+      setSelectedPeserta(null);
+      setRiwayatList([]);
     } else {
       setMode('wizard');
-      const step = getStepFromPath(currentPath);
-      setCurrentStep(step);
+      setCurrentStep(parsed.step);
+
+      if (parsed.pesertaId && rawPesertaList.length > 0) {
+        const found = rawPesertaList.find(
+          (p) => String(p.id) === String(parsed.pesertaId) || String(p.nik) === String(parsed.pesertaId)
+        );
+        if (found && (!selectedPeserta || selectedPeserta.id !== found.id)) {
+          setSelectedPeserta(found);
+          if (found.status_kehadiran) {
+            setStatusKehadiran(found.status_kehadiran);
+          }
+          registrasiService.getRiwayatKunjungan(found.id).then((res) => {
+            if (res) setRiwayatList(res);
+          });
+        }
+      } else if (!parsed.pesertaId && !selectedPeserta && rawPesertaList.length > 0) {
+        setSelectedPeserta(rawPesertaList[0]);
+      }
     }
-  }, [currentPath]);
+  }, [currentPath, rawPesertaList, selectedPeserta]);
 
-  // Form State Kunjungan (PBI 03B, 03C, 03D)
-  const [kunjunganData, setKunjunganData] = useState({
-    tanggalValue: getTodayISODate(),
-    tanggal: getTanggalFormatStandar(),
-    jam: getJamMenitSekarang(),
-    posyandu: 'Posyandu Desa Manud Jaya',
-    kaderPencatat: currentUser?.nama || 'Annisa Wati',
-  });
-
-  const [selectedPelayanan, setSelectedPelayanan] = useState([]);
-  const [statusKehadiran, setStatusKehadiran] = useState('Hadir');
-  const [catatan, setCatatan] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  // Filter daftar peserta di pencarian
-  const filteredPeserta = useMemo(() => {
-    return rawPesertaList.filter((item) => {
-      const matchSearch =
-        (item.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.nik || '').includes(searchQuery) ||
-        (item.no_kk || '').includes(searchQuery);
-      const matchJenis = jenisFilter === 'Semua' || item.jenis_peserta === jenisFilter;
-      const matchStatus = statusFilter === 'Semua' || (item.status_kehadiran || 'Menunggu').toLowerCase().includes(statusFilter.toLowerCase());
-      const matchWilayah = wilayahFilter === 'Semua' || item.dusun === wilayahFilter || item.alamat?.includes(wilayahFilter);
-      return matchSearch && matchJenis && matchStatus && matchWilayah;
-    });
-  }, [rawPesertaList, searchQuery, jenisFilter, statusFilter, wilayahFilter]);
-
-  const stepPaths = {
-    1: '/registrasi-kunjungan/data-kunjungan',
-    2: '/registrasi-kunjungan/jenis-pelayanan',
-    3: '/registrasi-kunjungan/status-kehadiran',
-    4: '/registrasi-kunjungan/konfirmasi',
+  // Helper membuat path dengan ID peserta
+  const getStepPath = (stepNum, targetId) => {
+    const stepNames = {
+      1: 'data-kunjungan',
+      2: 'jenis-pelayanan',
+      3: 'status-kehadiran',
+      4: 'konfirmasi',
+    };
+    const stepName = stepNames[stepNum] || 'data-kunjungan';
+    const id = targetId || selectedPeserta?.id || initialParsed.pesertaId;
+    return id ? `/registrasi-kunjungan/${id}/${stepName}` : `/registrasi-kunjungan/${stepName}`;
   };
 
-  const goToStep = (stepNum) => {
+  const goToStep = (stepNum, targetId) => {
     setCurrentStep(stepNum);
     setMode('wizard');
-    if (onNavigate && stepPaths[stepNum]) {
-      onNavigate(stepPaths[stepNum]);
+    const path = getStepPath(stepNum, targetId);
+    if (onNavigate) {
+      onNavigate(path);
     }
   };
 
   const goToPencarian = () => {
     setMode('pencarian');
+    setSelectedPeserta(null);
+    setRiwayatList([]);
     if (onNavigate) {
       onNavigate('/registrasi-kunjungan');
     }
@@ -129,7 +143,7 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi, curren
     }
     const riwayat = await registrasiService.getRiwayatKunjungan(peserta.id);
     setRiwayatList(riwayat);
-    goToStep(1);
+    goToStep(1, peserta.id);
   };
 
   const handleResetFilter = () => {

@@ -63,27 +63,35 @@ export default function DataPesertaPage({
   // Jika user adalah Ibu Balita, ambil data pribadinya dari database Supabase
   const ibuSelfData = listPeserta.find((p) => p.user_id === currentUser?.user?.id || p.nama.toLowerCase().includes('aminah')) || listPeserta[0] || null;
 
+  // Ekstrak ID dari path jika URL berbentuk /data-peserta/detail/:id
+  const getPesertaIdFromPath = (path) => {
+    if (!path || !path.startsWith('/data-peserta/detail')) return null;
+    const parts = path.split('?')[0].split('/').filter(Boolean);
+    // e.g. ['data-peserta', 'detail', 'uuid']
+    return parts.length >= 3 ? parts[2] : null;
+  };
+
+  const pathPesertaId = getPesertaIdFromPath(currentPath);
+
   const [selectedPeserta, setSelectedPeserta] = useState(() => {
     if (isIbuRole) return ibuSelfData;
-    if (initialSelectedId) {
-      return listPeserta.find((p) => p.id === initialSelectedId) || listPeserta[0] || null;
+    const targetId = initialSelectedId || pathPesertaId;
+    if (targetId) {
+      return listPeserta.find((p) => String(p.id) === String(targetId) || String(p.nik) === String(targetId)) || null;
     }
     return null;
   });
 
   useEffect(() => {
-    if (!isIbuRole && initialSelectedId && listPeserta.length > 0) {
-      const found = listPeserta.find((p) => p.id === initialSelectedId);
+    if (isIbuRole) return;
+    const targetId = initialSelectedId || getPesertaIdFromPath(currentPath);
+    if (targetId && listPeserta.length > 0) {
+      const found = listPeserta.find((p) => String(p.id) === String(targetId) || String(p.nik) === String(targetId));
       if (found) setSelectedPeserta(found);
-    }
-  }, [initialSelectedId, listPeserta, isIbuRole]);
-
-  // Sync saat URL berubah (misal tombol Back di browser atau klik menu sidebar)
-  useEffect(() => {
-    if (!isIbuRole && currentPath === '/data-peserta') {
+    } else if (currentPath === '/data-peserta' || currentPath === '/data-peserta/') {
       setSelectedPeserta(null);
     }
-  }, [currentPath, isIbuRole]);
+  }, [currentPath, listPeserta, initialSelectedId, isIbuRole]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [jenisFilter, setJenisFilter] = useState('Semua');
@@ -131,7 +139,7 @@ export default function DataPesertaPage({
   const handleOpenDetail = (pesertaItem) => {
     setSelectedPeserta(pesertaItem);
     if (onNavigate) {
-      onNavigate('/data-peserta/detail');
+      onNavigate(`/data-peserta/detail/${pesertaItem.id}`);
     }
   };
 

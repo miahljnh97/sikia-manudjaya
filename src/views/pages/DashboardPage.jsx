@@ -109,7 +109,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
   const handleLihatDetailDariDashboard = (peserta) => {
     setSelectedPesertaIdForDetail(peserta.id);
     if (onNavigate) {
-      onNavigate('/data-peserta/detail');
+      onNavigate(`/data-peserta/detail/${peserta.id}`);
     }
     setActiveMenu('Data Peserta');
   };
