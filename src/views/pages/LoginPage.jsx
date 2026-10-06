@@ -1,60 +1,64 @@
-import React, { useState } from 'react';
-import { ShieldAlert } from 'lucide-react';
-import { DUMMY_ACCOUNTS } from '../../models/pesertaModel';
+import React, { useState } from "react";
+import { ShieldAlert } from "lucide-react";
+import { DUMMY_ACCOUNTS } from "../../models/pesertaModel";
 
 export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState("");
   const [showQuickFill, setShowQuickFill] = useState(false);
 
   const handleQuickFill = (type) => {
-    if (type === 'kader') {
+    if (type === "kader") {
       setEmail(DUMMY_ACCOUNTS.kader.email);
-      setPassword('Kader123!');
-    } else if (type === 'bidan') {
+      setPassword("Kader123!");
+    } else if (type === "bidan") {
       setEmail(DUMMY_ACCOUNTS.bidan.email);
-      setPassword('Bidan123!');
-    } else if (type === 'ibu') {
+      setPassword("Bidan123!");
+    } else if (type === "ibu") {
       setEmail(DUMMY_ACCOUNTS.ibu.email);
-      setPassword('Ibu123!');
-    } else if (type === 'admin') {
+      setPassword("Ibu123!");
+    } else if (type === "admin") {
       setEmail(DUMMY_ACCOUNTS.admin.email);
-      setPassword('Admin123!');
+      setPassword("Admin123!");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setErrorMsg('');
+    setErrorMsg("");
 
     try {
       await onLoginSuccess(email, password);
     } catch (err) {
-      setErrorMsg(err.message || 'Login gagal, periksa email & password.');
+      setErrorMsg(err.message || "Login gagal, periksa email & password.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div 
-      className="min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat relative"
-      style={{
-        backgroundImage: "url('/background.png'), linear-gradient(135deg, #e0f2fe 0%, #fef3c7 50%, #fce7f3 100%)",
-      }}
-    >
+    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-slate-50">
+      {/* Background Image Layer with Opacity */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60 pointer-events-none"
+        style={{
+          backgroundImage: "url('/background.png')",
+        }}
+      />
+
       {/* Main Login Card - Persis Figma media_1791133015258.jpg */}
-      <div className="relative z-10 w-full max-w-[480px] sm:max-w-[500px] bg-white rounded-[28px] shadow-2xl p-8 sm:p-12 border border-white/60">
+      <div className="relative z-10 w-full max-w-[480px] sm:max-w-[500px] bg-white rounded-[28px] shadow-2xl p-8 sm:p-12 border border-white/80">
         <div className="text-center mb-8">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             Masuk ke Akun Anda
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-2.5 leading-relaxed max-w-xs mx-auto">
-            Akses informasi medis, hasil pemeriksaan, dan layanan kesehatan anda dengan aman
+            Akses informasi medis, hasil pemeriksaan, dan layanan kesehatan anda
+            dengan aman
           </p>
         </div>
 
@@ -108,7 +112,7 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
               />
               <span>Ingat saya</span>
             </label>
-            <button 
+            <button
               type="button"
               onClick={onGoToLupaPassword}
               className="text-slate-600 hover:text-[#FF7893] transition-colors cursor-pointer bg-transparent border-none p-0 text-xs"
@@ -123,7 +127,7 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
             disabled={loading}
             className="w-full py-3.5 px-4 bg-[#FF7893] hover:bg-[#ff6180] active:bg-[#f15072] disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-[#FF7893]/25 transition-all active:scale-[0.99] cursor-pointer"
           >
-            {loading ? 'Memproses...' : 'Masuk'}
+            {loading ? "Memproses..." : "Masuk"}
           </button>
         </form>
       </div>
@@ -141,7 +145,9 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
         ) : (
           <div className="bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl p-3 shadow-2xl text-xs space-y-2 w-64 animate-in fade-in duration-150">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-[11px] text-slate-700">Pilih Akun Demo:</span>
+              <span className="font-bold text-[11px] text-slate-700">
+                Pilih Akun Demo:
+              </span>
               <button
                 type="button"
                 onClick={() => setShowQuickFill(false)}
@@ -153,28 +159,28 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
             <div className="grid grid-cols-2 gap-1.5">
               <button
                 type="button"
-                onClick={() => handleQuickFill('kader')}
+                onClick={() => handleQuickFill("kader")}
                 className="py-1 px-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[11px] font-medium text-left truncate"
               >
                 Kader Posyandu
               </button>
               <button
                 type="button"
-                onClick={() => handleQuickFill('bidan')}
+                onClick={() => handleQuickFill("bidan")}
                 className="py-1 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-[11px] font-medium text-left truncate"
               >
                 Bidan Desa
               </button>
               <button
                 type="button"
-                onClick={() => handleQuickFill('ibu')}
+                onClick={() => handleQuickFill("ibu")}
                 className="py-1 px-2 bg-pink-50 hover:bg-pink-100 text-pink-700 rounded text-[11px] font-medium text-left truncate"
               >
                 Ibu Balita
               </button>
               <button
                 type="button"
-                onClick={() => handleQuickFill('admin')}
+                onClick={() => handleQuickFill("admin")}
                 className="py-1 px-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded text-[11px] font-bold text-left truncate"
               >
                 Super Admin
