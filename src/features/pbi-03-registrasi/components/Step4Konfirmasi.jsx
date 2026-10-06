@@ -198,13 +198,22 @@ export default function Step4Konfirmasi({
             </div>
             <div>
               <span className="text-[11px] text-slate-400 block font-normal">Tanggal Lahir</span>
-              <span className="text-xs font-bold text-slate-900 mt-0.5 block">
-                {peserta?.tanggal_lahir ? `${peserta.tanggal_lahir}${peserta?.usia && peserta?.usia !== '-' ? ` (${peserta.usia})` : ''}` : '-'}
-              </span>
+              <div className="text-xs font-bold text-slate-900 mt-0.5 leading-tight break-words">
+                {peserta?.tanggal_lahir ? (
+                  <>
+                    <span>{peserta.tanggal_lahir}</span>
+                    {peserta?.usia && peserta?.usia !== '-' && (
+                      <span className="text-[11px] text-slate-500 font-medium block mt-0.5">
+                        ({peserta.usia})
+                      </span>
+                    )}
+                  </>
+                ) : '-'}
+              </div>
             </div>
             <div>
               <span className="text-[11px] text-slate-400 block font-normal">Alamat</span>
-              <span className="text-xs font-bold text-slate-900 mt-0.5 block">
+              <span className="text-xs font-bold text-slate-900 mt-0.5 block break-words">
                 {peserta?.alamat || '-'}
               </span>
             </div>
