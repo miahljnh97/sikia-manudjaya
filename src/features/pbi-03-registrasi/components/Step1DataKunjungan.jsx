@@ -89,7 +89,7 @@ export default function Step1DataKunjungan({
             </div>
 
             {/* 3 Kolom: NIK, Tanggal Lahir, Alamat */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-2 gap-x-5 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-2 gap-x-4 text-xs">
               <div className="min-w-0">
                 <span className="text-slate-400 block font-normal">NIK</span>
                 <span className="font-bold text-slate-900 mt-0.5 block truncate" title={peserta?.nik || '-'}>
@@ -98,13 +98,22 @@ export default function Step1DataKunjungan({
               </div>
               <div className="min-w-0">
                 <span className="text-slate-400 block font-normal">Tanggal Lahir</span>
-                <span className="font-bold text-slate-900 mt-0.5 block whitespace-nowrap">
-                  {peserta?.tanggal_lahir ? `${peserta.tanggal_lahir}${peserta?.usia && peserta?.usia !== '-' ? ` (${peserta.usia})` : ''}` : '-'}
-                </span>
+                <div className="font-bold text-slate-900 mt-0.5 leading-tight break-words">
+                  {peserta?.tanggal_lahir ? (
+                    <>
+                      <span>{peserta.tanggal_lahir}</span>
+                      {peserta?.usia && peserta?.usia !== '-' && (
+                        <span className="text-[11px] text-slate-500 font-medium block mt-0.5">
+                          ({peserta.usia})
+                        </span>
+                      )}
+                    </>
+                  ) : '-'}
+                </div>
               </div>
               <div className="min-w-0">
                 <span className="text-slate-400 block font-normal">Alamat</span>
-                <span className="font-bold text-slate-900 mt-0.5 block truncate" title={peserta?.alamat || '-'}>
+                <span className="font-bold text-slate-900 mt-0.5 block break-words" title={peserta?.alamat || '-'}>
                   {peserta?.alamat || '-'}
                 </span>
               </div>
