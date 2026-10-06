@@ -477,7 +477,7 @@ export default function DataPesertaPage({
       <ConfirmModal
         isOpen={Boolean(pesertaToDelete)}
         title="Hapus Data Peserta"
-        message={`Apakah Anda yakin ingin menghapus data peserta "${pesertaToDelete?.nama}"?\n\nCatatan: Data akan disuspend (soft delete) sehingga tidak akan muncul di daftar peserta aktif.`}
+        message={`Apakah Anda yakin ingin menghapus data peserta "${pesertaToDelete?.nama}"?`}
         confirmLabel="Hapus Peserta"
         onConfirm={confirmDeletePeserta}
         onClose={() => setPesertaToDelete(null)}

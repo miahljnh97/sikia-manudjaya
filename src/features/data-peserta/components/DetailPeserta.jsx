@@ -116,47 +116,21 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
               <span>Kembali ke Daftar Peserta</span>
             </button>
           )}
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Data Peserta</h1>
-            {isEditing && (
-              <span className="px-2.5 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
-                Mode Edit
-              </span>
-            )}
-          </div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Data Peserta</h1>
           <p className="text-xs text-slate-500 mt-0.5">
             {isEditing 
               ? 'Silakan perbarui formulir data peserta di bawah ini, lalu klik Simpan Data Peserta.' 
               : 'Detail Data Peserta Posyandu'}
           </p>
         </div>
-
-        {/* Tombol Ubah di Header Kanan Atas saat View Mode */}
-        {!isEditing && isKaderOrBidan && (
-          <button
-            type="button"
-            onClick={() => setIsEditing(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98] cursor-pointer"
-          >
-            <Edit3 size={15} />
-            <span>Ubah Data Peserta</span>
-          </button>
-        )}
       </div>
 
       {/* Card Utama: Detail Pasien */}
       <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
         <div className="border-b border-slate-100 pb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <h3 className="text-sm font-bold text-slate-900">
-              {isEditing ? 'Formulir Ubah Data Pasien' : 'Detail Pasien'}
-            </h3>
-            <span className={`px-2 py-0.5 text-[11px] font-semibold rounded-md ${
-              isEditing ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-600'
-            }`}>
-              {isEditing ? 'Editing' : 'Mode Lihat'}
-            </span>
-          </div>
+          <h3 className="text-sm font-bold text-slate-900">
+            {isEditing ? 'Formulir Ubah Data Pasien' : 'Detail Pasien'}
+          </h3>
 
           {/* Tombol Ubah / Batal di Pojok Card */}
           {isKaderOrBidan && (
@@ -255,8 +229,7 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
             <label className="block text-slate-500 font-semibold mb-1.5">Tanggal Lahir</label>
             {isEditing ? (
               <input
-                type="text"
-                placeholder="DD/MM/YYYY atau DD Month YYYY"
+                type="date"
                 value={formData.tanggal_lahir}
                 onChange={(e) => handleChange('tanggal_lahir', e.target.value)}
                 className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
@@ -435,63 +408,25 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
         )}
       </div>
 
-      {/* Tombol Aksi di Bawah Form */}
-      <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-        {/* Tombol Hapus (selalu ada untuk kader/bidan) */}
-        {onDelete && isKaderOrBidan && (
+      {/* Tombol Aksi Simpan / Batal saat Mode Edit */}
+      {isEditing && (
+        <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
           <button
             type="button"
-            onClick={() => onDelete(peserta)}
-            className="px-5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+            onClick={handleCancelEdit}
+            className="px-6 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
-            <Trash2 size={14} />
-            <span>Hapus Peserta</span>
+            Batal
           </button>
-        )}
-
-        {/* JIKA MODE EDIT: Tampilkan Batal Edit & Simpan Data Peserta */}
-        {isEditing ? (
-          <>
-            <button
-              type="button"
-              onClick={handleCancelEdit}
-              className="px-6 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] text-white rounded-xl text-xs font-bold shadow-xs inline-flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
-            >
-              <Save size={15} />
-              <span>Simpan Data Peserta</span>
-            </button>
-          </>
-        ) : (
-          /* JIKA MODE VIEW: Tampilkan Kembali & Ubah Data Peserta */
-          <>
-            {onBack && (
-              <button
-                type="button"
-                onClick={onBack}
-                className="px-6 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-              >
-                Kembali ke Daftar Peserta
-              </button>
-            )}
-            {isKaderOrBidan && (
-              <button
-                type="button"
-                onClick={() => setIsEditing(true)}
-                className="px-6 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs font-bold shadow-xs inline-flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
-              >
-                <Edit3 size={15} />
-                <span>Ubah Data Peserta</span>
-              </button>
-            )}
-          </>
-        )}
-      </div>
+          <button
+            type="submit"
+            className="px-6 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] text-white rounded-xl text-xs font-bold shadow-xs inline-flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <Save size={15} />
+            <span>Simpan Data Peserta</span>
+          </button>
+        </div>
+      )}
     </form>
   );
 }
