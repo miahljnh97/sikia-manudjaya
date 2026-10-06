@@ -127,7 +127,8 @@ export function normalizePeserta(row) {
   if (!row) return null;
 
   const jenisPeserta = tentukanJenisPeserta(row);
-  const usia = row.usia || hitungUsiaDariTglLahir(row.tgl_lahir);
+  const tglLahir = row.tgl_lahir || row.tanggal_lahir || '';
+  const usia = tglLahir ? hitungUsiaDariTglLahir(tglLahir) : (row.usia && row.usia !== '-' ? row.usia : '-');
 
   // Ambil nama dusun dari relasi dusun_id (objek relasi dusun) atau fallback ke kolom dusun
   const namaDusun = row.dusun?.nama || row.dusun || 'Dusun 1';
@@ -157,7 +158,8 @@ export function normalizePeserta(row) {
     usia: usia,
     alamat: row.alamat || namaDusun || 'Desa Manud Jaya',
     dusun: namaDusun,
-    tanggal_lahir: row.tgl_lahir || row.tanggal_lahir || '',
+    tgl_lahir: tglLahir,
+    tanggal_lahir: tglLahir,
     telepon: row.no_wa || row.telepon || '-',
     jenis_kelamin: jenisKelamin,
     nama_suami: row.nama_suami || null,

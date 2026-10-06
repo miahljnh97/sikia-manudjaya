@@ -151,7 +151,11 @@ export const pesertaService = {
           `)
           .single();
 
-        if (!error && data) return normalizePeserta(data);
+        if (!error && data) {
+          const norm = normalizePeserta(data);
+          dataStoreService.updatePeserta(id, norm);
+          return norm;
+        }
         if (error) console.error('Error update peserta Supabase:', error);
       } catch (err) {
         console.warn('Gagal update data peserta di Supabase:', err);
