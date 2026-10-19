@@ -7,7 +7,7 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
     const r = (role || '').toLowerCase();
     if (r.includes('admin') || e.includes('admin')) return 'Super Admin';
     if (r.includes('bidan') || e.includes('bidan')) return 'Bidan Desa';
-    if (r.includes('ibu') || e.includes('ibu')) return 'Ibu Hamil & Balita';
+    if (r.includes('ibu') || e.includes('ibu')) return 'Ibu Hamil';
     if (r.includes('kader') || e.includes('kader')) return 'Kader Posyandu';
     return role || 'Kader Posyandu';
   };
@@ -211,7 +211,9 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
                 {displayName}
                 <ChevronDown size={14} className="text-slate-400" />
               </h4>
-              <p className="text-[11px] text-slate-400 font-medium">{roleName}</p>
+              <p className={`text-[11px] font-medium ${isIbuRole ? 'text-rose-500 font-semibold' : 'text-slate-400'}`}>
+                {roleName}
+              </p>
             </div>
           </button>
 
