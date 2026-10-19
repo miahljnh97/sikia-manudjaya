@@ -7,13 +7,14 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
     const r = (role || '').toLowerCase();
     if (r.includes('admin') || e.includes('admin')) return 'Super Admin';
     if (r.includes('bidan') || e.includes('bidan')) return 'Bidan Desa';
-    if (r.includes('ibu') || e.includes('ibu')) return 'Ibu Balita';
+    if (r.includes('ibu') || e.includes('ibu')) return 'Ibu Hamil & Balita';
     if (r.includes('kader') || e.includes('kader')) return 'Kader Posyandu';
     return role || 'Kader Posyandu';
   };
 
   const userEmail = user?.user?.email || user?.email || '';
-  const displayName = user?.nama || (userEmail ? userEmail.split('@')[0] : 'Annisa Wati');
+  const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || userEmail.toLowerCase().includes('ibu');
+  const displayName = isIbuRole ? (user?.nama || 'Siti Aminah') : (user?.nama || (userEmail ? userEmail.split('@')[0] : 'Annisa Wati'));
   const roleName = getNormalizedRole(user?.role, userEmail);
 
   // State Notifikasi dengan LocalStorage Persistence
@@ -193,8 +194,17 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
             onClick={() => setIsOpenProfile((prev) => !prev)}
             className="flex items-center gap-2.5 sm:gap-3 pl-1 sm:pl-2 p-1.5 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer text-left border border-transparent hover:border-slate-100"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-500 font-semibold shrink-0">
-              <User size={18} />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-500 font-semibold shrink-0 overflow-hidden">
+              {isIbuRole ? (
+                <img 
+                  src="/images/siti-aminah-avatar.png" 
+                  alt={displayName} 
+                  className="w-full h-full object-cover" 
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              ) : (
+                <User size={18} />
+              )}
             </div>
             <div className="text-left hidden sm:block">
               <h4 className="text-xs sm:text-sm font-semibold text-slate-800 leading-tight flex items-center gap-1">
