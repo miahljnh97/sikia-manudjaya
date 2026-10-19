@@ -619,15 +619,194 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
       )}
 
       {/* =====================================================================
-          SUB-PAGE 3 & 4: IMUNISASI & PEMERIKSAAN
+          SUB-PAGE 3: IMUNISASI (Image 3)
       ====================================================================== */}
-      {(activeSub === 'Imunisasi' || activeSub === 'Pemeriksaan' || activeSub === 'Pemeriksaan Anak') && (
+      {activeSub === 'Imunisasi' && (
         <div className="space-y-6">
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900">
-                {activeSub.includes('Imunisasi') ? 'Riwayat Imunisasi Wajib' : 'Riwayat Pemeriksaan Rutin Anak'}
-              </h3>
+          {/* Top Card: Profil Anak Farhan */}
+          <div className="bg-gradient-to-r from-[#FFF0F4] via-[#FFE4EC] to-[#FFD6E4] border border-pink-200/70 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-white shadow-xs overflow-hidden shrink-0">
+                <img 
+                  src="/images/farhan-avatar.png" 
+                  alt="Farhan" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              </div>
+
+              <div>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                  Farhan
+                </h2>
+                <p className="text-xs font-bold text-[#E11D48] mt-0.5">
+                  1 Tahun 2 bulan
+                </p>
+                <p className="text-[11px] text-slate-500 font-medium mt-1">
+                  Laki – Laki &nbsp;20 Desember 2026
+                </p>
+              </div>
+            </div>
+
+            {/* 2 Quick Cards di Kanan */}
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              {/* Card 1: Imunisasi Selesai */}
+              <div className="bg-white/90 rounded-2xl p-3.5 px-4 border border-pink-100 flex items-center gap-3 flex-1 sm:flex-none">
+                <Syringe size={18} className="text-[#E11D48]" />
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Imunisasi Selesai</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900">7 / 9</span>
+                </div>
+              </div>
+
+              {/* Card 2: Status Imunisasi */}
+              <div className="bg-white/90 rounded-2xl p-3.5 px-4 border border-pink-100 flex items-center gap-3 flex-1 sm:flex-none">
+                <CheckCircle2 size={18} className="text-emerald-500" />
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Status Imunisasi</span>
+                  <span className="text-xs sm:text-sm font-bold text-emerald-600">Sesuai Jadwal</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Baris Tengah: Jadwal Imunisasi Sesuai Usia & Tips Imunisasi */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Kolom Kiri: Jadwal Imunisasi Sesuai Usia */}
+            <div className="lg:col-span-5 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-slate-900">Jadwal Imunisasi Sesuai Usia</h3>
+                <button 
+                  type="button"
+                  onClick={() => onShowToast && onShowToast('Membuka jadwal imunisasi lengkap...', 'info')}
+                  className="text-xs font-semibold text-[#FF4D80] hover:text-[#E11D48] cursor-pointer"
+                >
+                  Lihat Semua
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {[
+                  { title: 'Hepatitis B', usia: 'Usia 0–7 Hari', tanggal: '20 Feb 2026' },
+                  { title: 'BCG', usia: 'Usia 1 Bulan', tanggal: '20 Feb 2026' },
+                  { title: 'Polio 1', usia: 'Usia 0–7 Hari', tanggal: '20 Feb 2026' },
+                  { title: 'Polio 2', usia: 'Usia 0–7 Hari', tanggal: '20 Feb 2026' },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/70 border border-slate-100 group hover:border-pink-200 transition-all cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 size={18} className="text-emerald-500 fill-emerald-100 shrink-0" />
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">{item.title}</h4>
+                        <span className="text-[10px] text-slate-400 font-medium">{item.usia}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#DCFCE7] text-[#15803D]">
+                        Selesai
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-medium">{item.tanggal}</span>
+                      <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Kolom Kanan: Detail Campak Rubella & Tips Setelah Imunisasi */}
+            <div className="lg:col-span-7 space-y-4">
+              {/* 2 Kartu Atas: Jadwal Campak & Manfaat */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex items-start gap-3.5">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                    <Calendar size={18} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-medium block">Campak Rubella</span>
+                    <span className="text-xs sm:text-sm font-bold text-[#E11D48] leading-tight block mt-0.5">
+                      20 Desember 2026
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex items-start gap-3.5">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                    <Heart size={18} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-medium block">Manfaat</span>
+                    <p className="text-[11px] text-slate-600 leading-snug mt-0.5">
+                      Melindungi anak dari penyakit campak dan rubella yang dapat menyebabkan komplikasi serius
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tips Setelah Imunisasi */}
+              <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-900">Tips Setelah Imunisasi</h3>
+                  <button 
+                    type="button"
+                    onClick={() => onShowToast && onShowToast('Membuka panduan KIPI Buku KIA...', 'info')}
+                    className="text-xs font-semibold text-[#FF4D80] hover:text-[#E11D48] cursor-pointer"
+                  >
+                    Lihat Semua
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Tip 1 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-pink-50 text-[#FF4D80] flex items-center justify-center shrink-0 mt-0.5">
+                      <Zap size={14} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">Berikan ASI lebih sering</h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">Membantu menenangkan anak.</p>
+                    </div>
+                  </div>
+
+                  {/* Tip 2 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-pink-50 text-[#FF4D80] flex items-center justify-center shrink-0 mt-0.5">
+                      <Zap size={14} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">Segera ke Faskes</h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">Jika demam tinggi, kejang atau reaksi berat lainnya</p>
+                    </div>
+                  </div>
+
+                  {/* Tip 3 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-pink-50 text-[#FF4D80] flex items-center justify-center shrink-0 mt-0.5">
+                      <Zap size={14} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">Kompres hangat jika demam</h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">Rekomendasi pemberian makan sesuai usia anak</p>
+                    </div>
+                  </div>
+
+                  {/* Tip 4 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-pink-50 text-[#FF4D80] flex items-center justify-center shrink-0 mt-0.5">
+                      <Zap size={14} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">Pantau Suhu tubuh Anak</h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">Demam ringan adalah hal yang umum setelah imunisasi</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabel: Riwayat Imunisasi */}
+          <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-xs">
+            <div className="p-6 border-b border-slate-50">
+              <h3 className="text-sm font-bold text-slate-900">Riwayat Imunisasi</h3>
             </div>
 
             <div className="overflow-x-auto">
@@ -635,9 +814,71 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
                 <thead>
                   <tr className="bg-[#FFE4EC]/70 text-slate-800 font-bold border-b border-pink-100">
                     <th className="py-3 px-4 w-12 text-center">No</th>
-                    <th className="py-3 px-4">Nama Vaksin / Layanan</th>
-                    <th className="py-3 px-4">Jadwal Usia</th>
-                    <th className="py-3 px-4">Tanggal Diberikan</th>
+                    <th className="py-3 px-4 w-32">Tanggal</th>
+                    <th className="py-3 px-4 w-28">Usia</th>
+                    <th className="py-3 px-4">Jenis Imunisasi</th>
+                    <th className="py-3 px-4">Lokasi</th>
+                    <th className="py-3 px-4">Petugas</th>
+                    <th className="py-3 px-4 w-20 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700">
+                  <tr className="hover:bg-slate-50/60 transition-colors">
+                    <td className="py-3.5 px-4 text-center font-medium">1</td>
+                    <td className="py-3.5 px-4 font-semibold text-slate-900">12 Sep 2026</td>
+                    <td className="py-3.5 px-4 text-slate-600">14 Bulan</td>
+                    <td className="py-3.5 px-4 font-bold text-slate-900">DPT-HB-Hb 3</td>
+                    <td className="py-3.5 px-4 text-slate-600">Puskesmas Maju Jaya</td>
+                    <td className="py-3.5 px-4 text-slate-600">Bidan Sari</td>
+                    <td className="py-3.5 px-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => onShowToast && onShowToast('Detail vaksin: DPT-HB-Hib 3 No. Batch V-9821, kondisi anak sehat pasca vaksinasi.', 'info')}
+                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
+                      >
+                        Detail
+                      </button>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-slate-50/60 transition-colors">
+                    <td className="py-3.5 px-4 text-center font-medium">1</td>
+                    <td className="py-3.5 px-4 font-semibold text-slate-900">12 Sep 2026</td>
+                    <td className="py-3.5 px-4 text-slate-600">14 Bulan</td>
+                    <td className="py-3.5 px-4 font-bold text-slate-900">DPT-HB-Hb 3</td>
+                    <td className="py-3.5 px-4 text-slate-600">Puskesmas Maju Jaya</td>
+                    <td className="py-3.5 px-4 text-slate-600">Bidan Sari</td>
+                    <td className="py-3.5 px-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => onShowToast && onShowToast('Detail vaksin: DPT-HB-Hib 3 No. Batch V-9821, kondisi anak sehat pasca vaksinasi.', 'info')}
+                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
+                      >
+                        Detail
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          SUB-PAGE 4: PEMERIKSAAN ANAK
+      ====================================================================== */}
+      {(activeSub === 'Pemeriksaan' || activeSub === 'Pemeriksaan Anak') && (
+        <div className="space-y-6">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
+            <h3 className="text-sm font-bold text-slate-900">Riwayat Pemeriksaan Rutin Anak</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-[#FFE4EC]/70 text-slate-800 font-bold border-b border-pink-100">
+                    <th className="py-3 px-4 w-12 text-center">No</th>
+                    <th className="py-3 px-4">Layanan</th>
+                    <th className="py-3 px-4">Usia</th>
+                    <th className="py-3 px-4">Tanggal</th>
                     <th className="py-3 px-4">Faskes / Posyandu</th>
                     <th className="py-3 px-4 text-center">Status</th>
                   </tr>
@@ -645,33 +886,9 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   <tr className="hover:bg-slate-50/60 transition-colors">
                     <td className="py-3.5 px-4 text-center font-medium">1</td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900">Hepatitis B0</td>
-                    <td className="py-3.5 px-4 text-slate-600">&lt; 24 Jam</td>
-                    <td className="py-3.5 px-4 text-slate-600">20 Des 2026</td>
-                    <td className="py-3.5 px-4 text-slate-600">Puskesmas Manud Jaya</td>
-                    <td className="py-3.5 px-4 text-center">
-                      <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#DCFCE7] text-[#15803D]">
-                        Sudah
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-slate-50/60 transition-colors">
-                    <td className="py-3.5 px-4 text-center font-medium">2</td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900">BCG &amp; Polio 1</td>
-                    <td className="py-3.5 px-4 text-slate-600">1 Bulan</td>
-                    <td className="py-3.5 px-4 text-slate-600">20 Jan 2027</td>
-                    <td className="py-3.5 px-4 text-slate-600">Puskesmas Manud Jaya</td>
-                    <td className="py-3.5 px-4 text-center">
-                      <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#DCFCE7] text-[#15803D]">
-                        Sudah
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-slate-50/60 transition-colors">
-                    <td className="py-3.5 px-4 text-center font-medium">3</td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900">DPT-HB-Hib 1, Polio 2, PCV 1</td>
-                    <td className="py-3.5 px-4 text-slate-600">2 Bulan</td>
-                    <td className="py-3.5 px-4 text-slate-600">20 Feb 2027</td>
+                    <td className="py-3.5 px-4 font-bold text-slate-900">Vitamin A (Kapsul Biru)</td>
+                    <td className="py-3.5 px-4 text-slate-600">6 Bulan</td>
+                    <td className="py-3.5 px-4 text-slate-600">20 Jun 2027</td>
                     <td className="py-3.5 px-4 text-slate-600">Posyandu Mawar</td>
                     <td className="py-3.5 px-4 text-center">
                       <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#DCFCE7] text-[#15803D]">
