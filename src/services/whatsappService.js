@@ -119,11 +119,33 @@ export const getReminderStatus = (targetDateStr) => {
 };
 
 /**
+ * Format tanggal ke format standar Indonesia DD-MM-YYYY (misal: 26-10-2026)
+ * Menghilangkan embel-embel timezone ISO (T00:00:00.000Z) agar bersih diterima n8n & WhatsApp
+ */
+export const formatDateDMY = (dateInput) => {
+  if (!dateInput) return '';
+  try {
+    if (typeof dateInput === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(dateInput.trim())) {
+      return dateInput.trim();
+    }
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return String(dateInput);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  } catch {
+    return String(dateInput);
+  }
+};
+
+/**
  * Format template pesan pengingat resmi WhatsApp sesuai PBI-01 AC 2
  */
 export const generateWhatsAppReminderMessage = (jadwal, namaIbu = 'Siti Aminah') => {
   const statusInfo = getReminderStatus(jadwal?.tanggal);
   const tagH = statusInfo.selisihHari === 1 ? 'PENGINGAT H-1' : (statusInfo.selisihHari === 3 ? 'PENGINGAT H-3' : 'PENGINGAT JADWAL');
+  const tanggalBersih = formatDateDMY(jadwal?.tanggal) || 'Sesuai Jadwal';
 
   return `🔔 *${tagH} - LAYANAN KESEHATAN IBU & ANAK (SIKIA)* 🔔
 
@@ -131,7 +153,7 @@ Yth. Ibu *${namaIbu}*,
 Mengingatkan kembali jadwal kegiatan Posyandu/Kesehatan Anda di Desa Manud Jaya:
 
 📌 *Kegiatan:* ${jadwal?.jenis || jadwal?.jenis_kegiatan || 'Pemeriksaan Kesehatan ANC'}
-🗓️ *Tanggal:* ${jadwal?.tanggal || 'Sesuai Jadwal'}
+🗓️ *Tanggal:* ${tanggalBersih}
 ⏰ *Waktu:* ${jadwal?.waktu || '09:00 - 10:00'} WIB
 📍 *Lokasi:* ${jadwal?.lokasi || 'Puskesmas Manud Jaya'}
 👩‍⚕️ *Petugas:* ${jadwal?.petugas || 'Bidan Siti, S.Tr.Keb'}
@@ -158,6 +180,8 @@ export const sendWhatsAppReminder = async ({ phone, jadwal, namaIbu = 'Siti Amin
   // 1. Prioritas Utama: Kirim via Webhook n8n (Sesuai Product Brief Tim)
   if (n8nUrl) {
     try {
+      const formattedDate = formatDateDMY(jadwal?.tanggal) || '26-10-2026';
+
       const response = await fetch(n8nUrl, {
         method: 'POST',
         headers: { 
@@ -172,7 +196,10 @@ export const sendWhatsAppReminder = async ({ phone, jadwal, namaIbu = 'Siti Amin
           target: cleanPhone,
           kegiatan: jadwal?.jenis || jadwal?.jenis_kegiatan || 'Pemeriksaan Kehamilan ANC',
           jenis_kegiatan: jadwal?.jenis || jadwal?.jenis_kegiatan || 'Pemeriksaan Kehamilan ANC',
-          tanggal: jadwal?.tanggal || '2026-09-24',
+          tanggal: formattedDate, // Format DD-MM-YYYY (misal: 26-10-2026) tanpa embel-embel timezone
+          tanggal_dmy: formattedDate,
+          tanggal_raw: jadwal?.tanggal || '2026-09-24',
+          waktu_pengingat: formattedDate,
           waktu: jadwal?.waktu || '09:00 - 10:00',
           lokasi: jadwal?.lokasi || 'Puskesmas Manud Jaya',
           petugas: jadwal?.petugas || 'dr. Haryono, Sp.OG',
