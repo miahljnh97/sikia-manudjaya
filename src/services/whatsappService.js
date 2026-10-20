@@ -1,3 +1,22 @@
+// Baca URL Webhook n8n dari Environment Variable atau LocalStorage
+export const getN8nWebhookUrl = () => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('sikia_n8n_webhook_url');
+    if (saved && saved.trim()) return saved.trim();
+  }
+  return import.meta.env.VITE_N8N_WEBHOOK_URL || '';
+};
+
+export const setN8nWebhookUrl = (url) => {
+  if (typeof window !== 'undefined') {
+    if (url) {
+      localStorage.setItem('sikia_n8n_webhook_url', url.trim());
+    } else {
+      localStorage.removeItem('sikia_n8n_webhook_url');
+    }
+  }
+};
+
 /**
  * WhatsApp Reminder Service via Fonnte API & Direct wa.me Fallback
  * Sesuai Product Brief SIKIA & PBI-01 (Pengingat Jadwal Kunjungan via WhatsApp & Notifikasi)
@@ -105,11 +124,46 @@ _Salam Sehat,_
 export const sendWhatsAppReminder = async ({ phone, jadwal, namaIbu = 'Siti Aminah' }) => {
   const cleanPhone = normalizePhoneForWhatsApp(phone);
   const message = generateWhatsAppReminderMessage(jadwal, namaIbu);
+  const n8nUrl = getN8nWebhookUrl();
   const fonnteToken = getFonnteToken();
 
   const directWaUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 
-  // Jika token Fonnte tersedia, kirim via API Fonnte
+  // 1. Jika URL Webhook n8n tersedia, tembak webhook n8n
+  if (n8nUrl) {
+    try {
+      const response = await fetch(n8nUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jadwal_id: jadwal?.id || null,
+          peserta_id: jadwal?.peserta_id || '55af67c9-6695-4435-b4ea-2720efd73c92',
+          nama_ibu: namaIbu,
+          phone: cleanPhone,
+          kegiatan: jadwal?.jenis || jadwal?.jenis_kegiatan,
+          tanggal: jadwal?.tanggal,
+          waktu: jadwal?.waktu,
+          lokasi: jadwal?.lokasi,
+          catatan: jadwal?.keterangan || jadwal?.catatan,
+          pesan_lengkap: message,
+          timestamp: new Date().toISOString()
+        })
+      });
+
+      if (response.ok) {
+        return {
+          success: true,
+          method: 'n8n',
+          message: 'Trigger pengingat WhatsApp berhasil dikirim ke n8n iPaaS!',
+          waUrl: directWaUrl
+        };
+      }
+    } catch (err) {
+      console.warn('n8n webhook error, fallbacking:', err);
+    }
+  }
+
+  // 2. Jika token Fonnte tersedia, kirim via API Fonnte
   if (fonnteToken) {
     try {
       const formData = new FormData();

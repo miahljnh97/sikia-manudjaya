@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, User, Bell, Lock, Shield, Phone, MessageCircle, Send, CheckCircle2 } from 'lucide-react';
-import { getFonnteToken, setFonnteToken, sendWhatsAppReminder } from '../../services/whatsappService';
+import { getFonnteToken, setFonnteToken, getN8nWebhookUrl, setN8nWebhookUrl, sendWhatsAppReminder } from '../../services/whatsappService';
 
 export default function PengaturanView({ user, onShowToast }) {
   const [tokenInput, setTokenInput] = useState('');
@@ -125,7 +125,7 @@ export default function PengaturanView({ user, onShowToast }) {
           </div>
         </div>
 
-        {/* Card 2: Pengaturan Fonnte WhatsApp Gateway (PBI 01) */}
+        {/* Card 2: Pengaturan Fonnte & n8n WhatsApp Gateway (PBI 01) */}
         <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-7 shadow-xs space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
             <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
@@ -165,7 +165,7 @@ export default function PengaturanView({ user, onShowToast }) {
                 onClick={handleSaveToken}
                 className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
               >
-                Simpan Token Fonnte
+                Simpan Konfigurasi WA
               </button>
 
               <button
