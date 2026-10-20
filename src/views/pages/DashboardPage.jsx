@@ -212,24 +212,28 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
           ) : activeMenu === 'Kehamilan' ? (
             <KehamilanView 
               user={currentUser} 
+              currentPath={currentPath} 
               onNavigate={handleMenuChangeByPath} 
               onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
             />
           ) : activeMenu === 'Pemeriksaan Ibu' ? (
             <PemeriksaanIbuView 
               user={currentUser} 
+              currentPath={currentPath} 
               onNavigate={handleMenuChangeByPath} 
               onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
             />
           ) : activeMenu === 'Persalinan' ? (
             <PersalinanView 
               user={currentUser} 
+              currentPath={currentPath} 
               onNavigate={handleMenuChangeByPath} 
               onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
             />
           ) : activeMenu === 'Nifas & Menyusui' ? (
             <NifasMenyusuiView 
               user={currentUser} 
+              currentPath={currentPath} 
               onNavigate={handleMenuChangeByPath} 
               onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
             />
@@ -237,6 +241,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
             <KesehatanAnakView 
               subFeature={activeMenu}
               user={currentUser} 
+              currentPath={currentPath} 
               onNavigate={handleMenuChangeByPath} 
               onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
             />

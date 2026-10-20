@@ -47,14 +47,17 @@ export default function JadwalSayaView({ onNavigate, onShowToast }) {
   const handleKirimWhatsApp = async (item) => {
     setIsSendingWa(true);
     try {
+      const savedPhone = typeof window !== 'undefined' ? localStorage.getItem('sikia_user_phone') : null;
       const res = await sendWhatsAppReminder({
-        phone: '081234567890',
+        phone: savedPhone || '081234567890',
         jadwal: item,
         namaIbu: 'Siti Aminah'
       });
 
       if (res.success) {
-        if (res.method === 'fonnte') {
+        if (res.method === 'n8n') {
+          onShowToast && onShowToast('Trigger pengingat jadwal berhasil dikirim ke n8n iPaaS!', 'success');
+        } else if (res.method === 'fonnte') {
           onShowToast && onShowToast('Notifikasi pengingat WhatsApp berhasil dikirim via Fonnte Gateway!', 'success');
         } else {
           onShowToast && onShowToast('Membuka WhatsApp dengan pesan pengingat resmi yang telah diformat...', 'info');
@@ -63,7 +66,7 @@ export default function JadwalSayaView({ onNavigate, onShowToast }) {
           }
         }
       } else {
-        onShowToast && onShowToast(res.message || 'Gagal mengirim pengingat WhatsApp', 'error');
+        onShowToast && onShowToast(res.message || 'Gagal mengirim pengingat WhatsApp, membuka WhatsApp...', 'warning');
         if (res.waUrl && typeof window !== 'undefined') {
           window.open(res.waUrl, '_blank');
         }

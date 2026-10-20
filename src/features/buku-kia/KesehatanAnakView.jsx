@@ -16,19 +16,78 @@ import {
   Boxes,
   Syringe,
   Activity,
-  X
+  X,
+  Users,
+  Plus
 } from 'lucide-react';
+import { bukuKiaService } from '../../services/bukuKiaService';
+import { pesertaService } from '../../services/pesertaService';
+import { maskNik } from '../../utils/nikUtils';
 
-export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNavigate, onShowToast }) {
+export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, currentPath = '', onNavigate, onShowToast }) {
+  const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || (user?.email || '').toLowerCase().includes('ibu');
+
+  // Helper ekstrak anak_id dari URL query string (?anak_id=... atau path segment)
+  const extractAnakId = () => {
+    if (typeof window !== 'undefined' && window.location.search) {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get('anak_id')) return sp.get('anak_id');
+      if (sp.get('id')) return sp.get('id');
+    }
+    if (currentPath && currentPath.includes('?')) {
+      const sp = new URLSearchParams(currentPath.split('?')[1]);
+      if (sp.get('anak_id')) return sp.get('anak_id');
+      if (sp.get('id')) return sp.get('id');
+    }
+    if (currentPath) {
+      const segments = currentPath.split('?')[0].split('/').filter(Boolean);
+      const last = segments[segments.length - 1];
+      if (last && last.includes('-') && last.length >= 20) return last;
+    }
+    return 'b2222222-2222-2222-2222-222222222222'; // default Farhan
+  };
+
   const [activeSub, setActiveSub] = useState(subFeature);
   const [activeChartTab, setActiveChartTab] = useState('Berat Badan');
   const [selectedStimulasi, setSelectedStimulasi] = useState(null);
+  const [daftarAnak, setDaftarAnak] = useState([]);
+  const [activeAnakId, setActiveAnakId] = useState(extractAnakId);
+  const [activeAnak, setActiveAnak] = useState(null);
 
   useEffect(() => {
     if (subFeature) {
       setActiveSub(subFeature);
     }
   }, [subFeature]);
+
+  // Sinkronkan saat URL berubah (Back/Forward browser)
+  useEffect(() => {
+    const urlId = extractAnakId();
+    if (urlId && urlId !== activeAnakId) {
+      setActiveAnakId(urlId);
+    }
+  }, [currentPath]);
+
+  // Load daftar anak untuk dropdown selector Bidan/Kader
+  useEffect(() => {
+    bukuKiaService.getDaftarAnak().then(list => {
+      if (list && list.length > 0) {
+        setDaftarAnak(list);
+        const cur = list.find(a => a.id === activeAnakId) || list[0];
+        setActiveAnak(cur);
+      }
+    });
+  }, []);
+
+  // Handler pergantian anak oleh Bidan/Kader
+  const handleSwitchAnak = (newId) => {
+    setActiveAnakId(newId);
+    const found = daftarAnak.find(a => a.id === newId);
+    if (found) setActiveAnak(found);
+    if (onNavigate) {
+      onNavigate(`/kesehatan-anak/${activeSub.toLowerCase()}?anak_id=${newId}`);
+    }
+  };
 
   // Data Pencapaian Perkembangan (Image 1)
   const pencapaianMilestones = [
@@ -81,7 +140,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
   ]);
 
   useEffect(() => {
-    bukuKiaService.getPertumbuhanAnakList().then((res) => {
+    if (!activeAnakId) return;
+    bukuKiaService.getPertumbuhanAnakList(activeAnakId).then((res) => {
       if (res && res.length > 0) {
         const formatted = res.map((r, idx) => ({
           no: idx + 1,
@@ -94,16 +154,18 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
           status: r.status_gizi || 'Normal'
         }));
         setRiwayatPertumbuhan(formatted);
+      } else {
+        setRiwayatPertumbuhan([]);
       }
     });
-  }, []);
+  }, [activeAnakId]);
 
   const handleSimpanKms = async (e) => {
     e.preventDefault();
     setIsSubmittingKms(true);
     try {
       const payload = {
-        anak_id: 'b2222222-2222-2222-2222-222222222222',
+        anak_id: activeAnakId,
         tanggal_ukur: formKms.tanggal_ukur,
         usia_bulan: parseInt(formKms.usia_bulan) || 14,
         berat_badan: parseFloat(formKms.berat_badan) || 9.8,
@@ -128,7 +190,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
 
       setRiwayatPertumbuhan(prev => [...prev, newItem]);
       setIsModalKmsOpen(false);
-      onShowToast && onShowToast('Hasil penimbangan KMS anak berhasil disimpan ke database!', 'success');
+      onShowToast && onShowToast(`Hasil penimbangan KMS untuk ${activeAnak?.nama || 'anak'} berhasil disimpan!`, 'success');
     } catch (err) {
       console.error(err);
       onShowToast && onShowToast('Gagal menyimpan penimbangan anak', 'error');
@@ -139,16 +201,39 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
 
   return (
     <div className="space-y-6">
-      {/* 1. Header Halaman */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-          Kesehatan Anak / {activeSub}
-        </h1>
-        <p className="text-xs text-slate-500 font-medium mt-1">
-          {activeSub === 'Perkembangan'
-            ? 'Pantau tumbuh kembang anak sesuai tahap usianya dengan panduan buku KIA'
-            : 'Pantau pertumbuhan dan perkembangan anak sesuai panduan buku KIA'}
-        </p>
+      {/* 1. Header Halaman & Patient Child Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Kesehatan Anak / {activeSub}
+          </h1>
+          <p className="text-xs text-slate-500 font-medium mt-1">
+            {activeSub === 'Perkembangan'
+              ? 'Pantau tumbuh kembang anak sesuai tahap usianya dengan panduan buku KIA'
+              : 'Pantau pertumbuhan dan perkembangan anak sesuai panduan buku KIA'}
+          </p>
+        </div>
+
+        {/* Patient Child Switcher untuk Bidan / Kader */}
+        {!isIbuRole && daftarAnak.length > 0 && (
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-3 py-2 shadow-xs">
+            <Users size={16} className="text-pink-600 shrink-0" />
+            <div className="text-[11px]">
+              <span className="text-slate-400 block font-medium">Pilih Pasien Anak:</span>
+              <select
+                value={activeAnakId}
+                onChange={(e) => handleSwitchAnak(e.target.value)}
+                className="font-bold text-slate-900 bg-transparent focus:outline-none cursor-pointer text-xs pr-2"
+              >
+                {daftarAnak.map((anak) => (
+                  <option key={anak.id} value={anak.id}>
+                    {anak.nama} ({anak.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* =====================================================================
@@ -163,9 +248,9 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
                 <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Usia Anak</span>
                 <div className="flex items-baseline gap-2 mt-0.5">
                   <h2 className="text-2xl sm:text-3xl font-extrabold text-[#E11D48] tracking-tight">
-                    1 Tahun 2 Bulan
+                    {activeAnak?.nama || 'Farhan'}
                   </h2>
-                  <span className="text-xs font-semibold text-slate-500">150 Hari</span>
+                  <span className="text-xs font-semibold text-slate-500">1 Tahun 2 Bulan</span>
                 </div>
               </div>
 
@@ -174,7 +259,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
                   <Calendar size={16} className="text-[#E11D48]" />
                   <div>
                     <span className="text-[10px] text-slate-400 block">Tanggal lahir</span>
-                    <span className="font-bold text-slate-900">20 Desember 2026</span>
+                    <span className="font-bold text-slate-900">{activeAnak?.tgl_lahir || '20 Desember 2024'}</span>
                   </div>
                 </div>
 
@@ -182,7 +267,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
                   <Smile size={16} className="text-[#E11D48]" />
                   <div>
                     <span className="text-[10px] text-slate-400 block">Jenis Kelamin</span>
-                    <span className="font-bold text-[#E11D48]">Laki–Laki</span>
+                    <span className="font-bold text-[#E11D48]">{activeAnak?.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki–Laki'}</span>
                   </div>
                 </div>
               </div>
@@ -481,13 +566,13 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
 
               <div>
                 <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-                  Farhan
+                  {activeAnak?.nama || 'Farhan'}
                 </h2>
                 <p className="text-xs font-bold text-[#E11D48] mt-0.5">
                   1 Tahun 2 bulan
                 </p>
                 <p className="text-[11px] text-slate-500 font-medium mt-1">
-                  Laki – Laki &nbsp;20 Desember 2026
+                  {activeAnak?.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki – Laki'} &nbsp;{activeAnak?.tgl_lahir || '20 Desember 2024'}
                 </p>
               </div>
             </div>
@@ -520,7 +605,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
             <div className="md:col-span-6 bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-center space-y-1">
               <h3 className="text-base sm:text-lg font-bold text-emerald-600">Sesuai Usia</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Perkembangan Farhan sesuai dengan tahapan usianya. Terus berikan stimulasi secara rutin
+                Perkembangan {activeAnak?.nama || 'Farhan'} sesuai dengan tahapan usianya. Terus berikan stimulasi secara rutin
               </p>
             </div>
 
@@ -719,13 +804,13 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
 
               <div>
                 <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-                  Farhan
+                  {activeAnak?.nama || 'Farhan'}
                 </h2>
                 <p className="text-xs font-bold text-[#E11D48] mt-0.5">
                   1 Tahun 2 bulan
                 </p>
                 <p className="text-[11px] text-slate-500 font-medium mt-1">
-                  Laki – Laki &nbsp;20 Desember 2026
+                  {activeAnak?.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki – Laki'} &nbsp;{activeAnak?.tgl_lahir || '20 Desember 2024'}
                 </p>
               </div>
             </div>
@@ -1025,8 +1110,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
                   <Scale size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-bold text-slate-900">Catat Penimbangan KMS Anak</h3>
-                  <p className="text-[11px] text-slate-400">Pencatatan hasil penimbangan berat & tinggi badan balita Farhan</p>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900">Catat Penimbangan KMS Anak ({activeAnak?.nama || 'Farhan'})</h3>
+                  <p className="text-[11px] text-slate-400">Pencatatan hasil penimbangan berat & tinggi badan balita {activeAnak?.nama || 'Farhan'}</p>
                 </div>
               </div>
               <button 
