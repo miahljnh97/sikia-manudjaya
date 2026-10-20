@@ -15,13 +15,66 @@ import {
 export default function JadwalSayaView({ onNavigate, onShowToast }) {
   const [selectedDate, setSelectedDate] = useState(15);
   const [selectedJadwal, setSelectedJadwal] = useState(null);
+  const [isSendingWa, setIsSendingWa] = useState(false);
 
-  const jadwalList = [
-    { no: 1, tanggal: '12 Sep 2026', waktu: '09:00 - 10:00', jenis: 'Pemeriksaan Kehamilan ANC', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Siti Nurhayati', keterangan: 'Pemeriksaan ANC Trimester 3 rutin dan USG dasar.' },
-    { no: 2, tanggal: '17 Sep 2026', waktu: '09:00 - 10:00', jenis: 'Konseling Gizi', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Ahli Gizi Puskesmas', keterangan: 'Evaluasi pola makan, asupan zat besi, dan pencegahan anemia.' },
-    { no: 3, tanggal: '24 Sep 2026', waktu: '09:00 - 10:00', jenis: 'Pemeriksaan Kehamilan ANC', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'dr. Haryono, Sp.OG', keterangan: 'Kontrol berkala pemantauan posisi janin dan DJJ.' },
-    { no: 4, tanggal: '10 Okt 2026', waktu: '09:00 - 10:00', jenis: 'Kelas Ibu Hamil', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Koordinator', keterangan: 'Edukasi persiapan persalinan, senam hamil, dan IMD.' },
-  ];
+  const [jadwalList, setJadwalList] = useState([
+    { no: 1, tanggal: '2026-09-12', displayTanggal: '12 Sep 2026', waktu: '09:00 - 10:00', jenis: 'Pemeriksaan Kehamilan ANC', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Siti Nurhayati', keterangan: 'Pemeriksaan ANC Trimester 3 rutin dan USG dasar.' },
+    { no: 2, tanggal: '2026-09-17', displayTanggal: '17 Sep 2026', waktu: '09:00 - 10:00', jenis: 'Konseling Gizi', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Ahli Gizi Puskesmas', keterangan: 'Evaluasi pola makan, asupan zat besi, dan pencegahan anemia.' },
+    { no: 3, tanggal: '2026-09-24', displayTanggal: '24 Sep 2026', waktu: '09:00 - 10:00', jenis: 'Pemeriksaan Kehamilan ANC', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'dr. Haryono, Sp.OG', keterangan: 'Kontrol berkala pemantauan posisi janin dan DJJ.' },
+    { no: 4, tanggal: '2026-10-10', displayTanggal: '10 Okt 2026', waktu: '09:00 - 10:00', jenis: 'Kelas Ibu Hamil', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Koordinator', keterangan: 'Edukasi persiapan persalinan, senam hamil, dan IMD.' },
+  ]);
+
+  useEffect(() => {
+    bukuKiaService.getJadwalPesertaList().then((res) => {
+      if (res && res.length > 0) {
+        const mapped = res.map((j, idx) => ({
+          no: idx + 1,
+          id: j.id,
+          tanggal: j.tanggal,
+          displayTanggal: j.tanggal,
+          waktu: j.waktu || '09:00 - 10:00',
+          jenis: j.jenis_kegiatan || 'Pemeriksaan Kesehatan',
+          lokasi: j.lokasi || 'Puskesmas Manud Jaya',
+          status: j.status || 'Akan Datang',
+          petugas: j.petugas || 'Bidan Siti, S.Tr.Keb',
+          keterangan: j.catatan || 'Pemeriksaan rutin posyandu.'
+        }));
+        setJadwalList(mapped);
+      }
+    });
+  }, []);
+
+  const handleKirimWhatsApp = async (item) => {
+    setIsSendingWa(true);
+    try {
+      const res = await sendWhatsAppReminder({
+        phone: '081234567890',
+        jadwal: item,
+        namaIbu: 'Siti Aminah'
+      });
+
+      if (res.success) {
+        if (res.method === 'fonnte') {
+          onShowToast && onShowToast('Notifikasi pengingat WhatsApp berhasil dikirim via Fonnte Gateway!', 'success');
+        } else {
+          onShowToast && onShowToast('Membuka WhatsApp dengan pesan pengingat resmi yang telah diformat...', 'info');
+          if (res.waUrl && typeof window !== 'undefined') {
+            window.open(res.waUrl, '_blank');
+          }
+        }
+      } else {
+        onShowToast && onShowToast(res.message || 'Gagal mengirim pengingat WhatsApp', 'error');
+        if (res.waUrl && typeof window !== 'undefined') {
+          window.open(res.waUrl, '_blank');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      onShowToast && onShowToast('Terjadi kesalahan saat memproses WhatsApp', 'error');
+    } finally {
+      setIsSendingWa(false);
+    }
+  };
 
   const calendarDays = [
     { day: 31, isPrev: true },
@@ -244,30 +297,50 @@ export default function JadwalSayaView({ onNavigate, onShowToast }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {jadwalList.map((row) => (
-                <tr key={row.no} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="py-3.5 px-4 text-center font-medium">{row.no}</td>
-                  <td className="py-3.5 px-4 font-semibold text-slate-900">{row.tanggal}</td>
-                  <td className="py-3.5 px-4 text-slate-600">{row.waktu}</td>
-                  <td className="py-3.5 px-4 font-medium text-slate-800">{row.jenis}</td>
-                  <td className="py-3.5 px-4 text-slate-600">{row.lokasi}</td>
-                  <td className="py-3.5 px-4 text-center">
-                    <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#EDE9FE] text-[#6D28D9]">
-                      {row.status}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-4 text-center">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedJadwal(row)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-                      title="Lihat Detail Jadwal"
-                    >
-                      <Eye size={15} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {jadwalList.map((row) => {
+                const reminder = getReminderStatus(row.tanggal);
+                return (
+                  <tr key={row.no} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="py-3.5 px-4 text-center font-medium">{row.no}</td>
+                    <td className="py-3.5 px-4 font-semibold text-slate-900">
+                      <div>{row.displayTanggal || row.tanggal}</div>
+                      <span className={`inline-block mt-0.5 px-2 py-0.5 rounded text-[9px] font-bold border ${reminder.badgeColor}`}>
+                        {reminder.label}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-600">{row.waktu}</td>
+                    <td className="py-3.5 px-4 font-medium text-slate-800">{row.jenis}</td>
+                    <td className="py-3.5 px-4 text-slate-600">{row.lokasi}</td>
+                    <td className="py-3.5 px-4 text-center">
+                      <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#EDE9FE] text-[#6D28D9]">
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleKirimWhatsApp(row)}
+                          disabled={isSendingWa}
+                          className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-50"
+                          title="Kirim Pengingat WhatsApp Resmi (Fonnte / wa.me)"
+                        >
+                          <MessageCircle size={13} className="text-emerald-600" />
+                          <span>Kirim WA</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedJadwal(row)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                          title="Lihat Detail Jadwal"
+                        >
+                          <Eye size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

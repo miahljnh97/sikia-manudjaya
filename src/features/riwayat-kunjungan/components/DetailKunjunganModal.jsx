@@ -289,7 +289,7 @@ export default function DetailKunjunganModal({ kunjungan, isOpen, onClose }) {
                     </div>
                     <div>
                       <div className="text-[10px] text-slate-400 font-medium print:text-[9px]">Jenis Layanan</div>
-                      <div className="font-bold text-slate-900 mt-0.5 print:text-[11px]">{kunjungan.jenis_peserta || 'Ibu Hamil'}</div>
+                      <div className="font-bold text-slate-900 mt-0.5 print:text-[11px]">{Array.isArray(kunjungan.jenis_pelayanan) ? kunjungan.jenis_pelayanan.join(', ') : (kunjungan.jenis_pelayanan || kunjungan.layanan || kunjungan.jenis_peserta || 'Pemeriksaan Rutin')}</div>
                     </div>
                   </div>
 

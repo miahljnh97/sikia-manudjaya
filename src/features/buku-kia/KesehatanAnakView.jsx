@@ -60,11 +60,82 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
     }
   ];
 
-  // Data Riwayat Pertumbuhan (Image 4)
-  const riwayatPertumbuhan = [
+  // State & Data Riwayat Pertumbuhan (PBI 02C & AC 1)
+  const [isModalKmsOpen, setIsModalKmsOpen] = useState(false);
+  const [isSubmittingKms, setIsSubmittingKms] = useState(false);
+
+  const [formKms, setFormKms] = useState({
+    tanggal_ukur: new Date().toISOString().split('T')[0],
+    usia_bulan: 14,
+    berat_badan: '9.8',
+    tinggi_badan: '75.0',
+    lingkar_kepala: '46.0',
+    status_gizi: 'Gizi Baik (Normal)',
+    faskes_posyandu: 'Posyandu Anggrek',
+    catatan: 'Pertumbuhan anak normal dan aktif.'
+  });
+
+  const [riwayatPertumbuhan, setRiwayatPertumbuhan] = useState([
     { no: 1, tanggal: '12 Sep 2026', usia: '14 Bulan', bb: '9,8 Kg', tb: '75 Cm', lk: '46 Cm', status: 'Normal' },
-    { no: 2, tanggal: '12 Sep 2026', usia: '14 Bulan', bb: '9,8 Kg', tb: '75 Cm', lk: '46 Cm', status: 'Normal' },
-  ];
+    { no: 2, tanggal: '15 Agu 2026', usia: '13 Bulan', bb: '9,4 Kg', tb: '73 Cm', lk: '45,5 Cm', status: 'Normal' },
+  ]);
+
+  useEffect(() => {
+    bukuKiaService.getPertumbuhanAnakList().then((res) => {
+      if (res && res.length > 0) {
+        const formatted = res.map((r, idx) => ({
+          no: idx + 1,
+          id: r.id,
+          tanggal: r.tanggal_ukur || '12 Sep 2026',
+          usia: (r.usia_bulan || 14) + ' Bulan',
+          bb: (r.berat_badan || '9.8').toString().replace('.', ',') + ' Kg',
+          tb: (r.tinggi_badan || '75').toString().replace('.', ',') + ' Cm',
+          lk: (r.lingkar_kepala || '46').toString().replace('.', ',') + ' Cm',
+          status: r.status_gizi || 'Normal'
+        }));
+        setRiwayatPertumbuhan(formatted);
+      }
+    });
+  }, []);
+
+  const handleSimpanKms = async (e) => {
+    e.preventDefault();
+    setIsSubmittingKms(true);
+    try {
+      const payload = {
+        anak_id: 'b2222222-2222-2222-2222-222222222222',
+        tanggal_ukur: formKms.tanggal_ukur,
+        usia_bulan: parseInt(formKms.usia_bulan) || 14,
+        berat_badan: parseFloat(formKms.berat_badan) || 9.8,
+        tinggi_badan: parseFloat(formKms.tinggi_badan) || 75.0,
+        lingkar_kepala: parseFloat(formKms.lingkar_kepala) || 46.0,
+        status_gizi: formKms.status_gizi,
+        faskes_posyandu: formKms.faskes_posyandu,
+        catatan: formKms.catatan
+      };
+
+      await bukuKiaService.tambahPertumbuhanAnak(payload);
+
+      const newItem = {
+        no: riwayatPertumbuhan.length + 1,
+        tanggal: formKms.tanggal_ukur,
+        usia: formKms.usia_bulan + ' Bulan',
+        bb: formKms.berat_badan.toString().replace('.', ',') + ' Kg',
+        tb: formKms.tinggi_badan.toString().replace('.', ',') + ' Cm',
+        lk: formKms.lingkar_kepala.toString().replace('.', ',') + ' Cm',
+        status: formKms.status_gizi.includes('Normal') ? 'Normal' : formKms.status_gizi
+      };
+
+      setRiwayatPertumbuhan(prev => [...prev, newItem]);
+      setIsModalKmsOpen(false);
+      onShowToast && onShowToast('Hasil penimbangan KMS anak berhasil disimpan ke database!', 'success');
+    } catch (err) {
+      console.error(err);
+      onShowToast && onShowToast('Gagal menyimpan penimbangan anak', 'error');
+    } finally {
+      setIsSubmittingKms(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -340,8 +411,19 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
 
           {/* Tabel: Riwayat Pertumbuhan */}
           <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-xs">
-            <div className="p-6 border-b border-slate-50">
-              <h3 className="text-sm font-bold text-slate-900">Riwayat Pertumbuhan</h3>
+            <div className="p-5 sm:p-6 border-b border-slate-50 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Riwayat Pertumbuhan</h3>
+                <p className="text-[11px] text-slate-400 mt-0.5">Pencatatan penimbangan berat, tinggi badan & lingkar kepala (KMS Digital)</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsModalKmsOpen(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
+              >
+                <Plus size={15} />
+                <span>Catat Penimbangan KMS</span>
+              </button>
             </div>
 
             <div className="overflow-x-auto">
@@ -929,6 +1011,153 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', onNaviga
                 Tutup
               </button>
             </div>
+          </div>
+        </div>
+      )}
+    
+      {/* Modal Input Penimbangan KMS Baru (PBI 02C) */}
+      {isModalKmsOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center font-bold">
+                  <Scale size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900">Catat Penimbangan KMS Anak</h3>
+                  <p className="text-[11px] text-slate-400">Pencatatan hasil penimbangan berat & tinggi badan balita Farhan</p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setIsModalKmsOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSimpanKms} className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Tanggal Pengukuran *</label>
+                  <input 
+                    type="date"
+                    required
+                    value={formKms.tanggal_ukur}
+                    onChange={(e) => setFormKms({...formKms, tanggal_ukur: e.target.value})}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Usia Anak (Bulan) *</label>
+                  <input 
+                    type="number"
+                    required
+                    placeholder="14"
+                    value={formKms.usia_bulan}
+                    onChange={(e) => setFormKms({...formKms, usia_bulan: e.target.value})}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Berat Badan (kg) *</label>
+                  <input 
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="9.8"
+                    value={formKms.berat_badan}
+                    onChange={(e) => setFormKms({...formKms, berat_badan: e.target.value})}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Tinggi Badan (cm) *</label>
+                  <input 
+                    type="number"
+                    step="0.1"
+                    required
+                    placeholder="75.0"
+                    value={formKms.tinggi_badan}
+                    onChange={(e) => setFormKms({...formKms, tinggi_badan: e.target.value})}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Lingkar Kepala (cm) *</label>
+                  <input 
+                    type="number"
+                    step="0.1"
+                    required
+                    placeholder="46.0"
+                    value={formKms.lingkar_kepala}
+                    onChange={(e) => setFormKms({...formKms, lingkar_kepala: e.target.value})}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Status Gizi (KMS)</label>
+                  <select 
+                    value={formKms.status_gizi}
+                    onChange={(e) => setFormKms({...formKms, status_gizi: e.target.value})}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                  >
+                    <option value="Gizi Baik (Normal)">Gizi Baik (Normal)</option>
+                    <option value="Gizi Kurang">Gizi Kurang</option>
+                    <option value="Risiko Gizi Lebih">Risiko Gizi Lebih</option>
+                    <option value="Stunting">Indikasi Stunting</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Lokasi Posyandu / Faskes</label>
+                  <input 
+                    type="text"
+                    value={formKms.faskes_posyandu}
+                    onChange={(e) => setFormKms({...formKms, faskes_posyandu: e.target.value})}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1">Catatan Tambahan Kader</label>
+                <textarea 
+                  rows={2}
+                  value={formKms.catatan}
+                  onChange={(e) => setFormKms({...formKms, catatan: e.target.value})}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsModalKmsOpen(false)}
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingKms}
+                  className="px-5 py-2.5 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  {isSubmittingKms ? 'Menyimpan...' : 'Simpan Penimbangan'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

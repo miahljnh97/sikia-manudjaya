@@ -16,6 +16,7 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit, onShowToast
     tipe_id: '',
     tanggal_lahir: '',
     alamat: 'Manud Jaya',
+    status: 'Aktif',
   });
 
   useEffect(() => {
@@ -73,6 +74,9 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit, onShowToast
       usia: usiaKalkulasi,
       tipe_id: finalTipeId,
       status_ibu: isIbu ? 'hamil' : null,
+      status: formData.status || 'Aktif',
+      aktif: (formData.status || 'Aktif') === 'Aktif',
+      is_suspended: (formData.status || 'Aktif') !== 'Aktif',
     });
     setFormData({
       nama: '',
@@ -82,6 +86,7 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit, onShowToast
       tipe_id: '',
       tanggal_lahir: '',
       alamat: 'Manud Jaya',
+      status: 'Aktif',
     });
   };
 
@@ -202,6 +207,19 @@ export default function RegistrasiModal({ isOpen, onClose, onSubmit, onShowToast
                 className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
               />
             </div>
+          </div>
+
+          {/* Status Peserta (IMP S1C) */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Status Peserta</label>
+            <select
+              value={formData.status || 'Aktif'}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+            >
+              <option value="Aktif">Aktif</option>
+              <option value="Tidak Aktif">Tidak Aktif</option>
+            </select>
           </div>
 
           <div className="pt-2 flex justify-end gap-2">
