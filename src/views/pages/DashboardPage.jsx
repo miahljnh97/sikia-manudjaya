@@ -11,6 +11,13 @@ import RiwayatKunjunganPage from '../../features/riwayat-kunjungan/RiwayatKunjun
 import KelolaKaderPage from '../../features/super-admin/KelolaKaderPage';
 import UnderDevelopmentPage from '../../shared/components/UnderDevelopmentPage';
 import IbuDashboardView from '../../features/dashboard/components/IbuDashboardView';
+import KehamilanView from '../../features/buku-kia/KehamilanView';
+import PemeriksaanIbuView from '../../features/buku-kia/PemeriksaanIbuView';
+import JadwalSayaView from '../../features/buku-kia/JadwalSayaView';
+import PersalinanView from '../../features/buku-kia/PersalinanView';
+import NifasMenyusuiView from '../../features/buku-kia/NifasMenyusuiView';
+import KesehatanAnakView from '../../features/buku-kia/KesehatanAnakView';
+import PengaturanView from '../../features/buku-kia/PengaturanView';
 import Toast from '../../shared/components/Toast';
 import { useDashboardController } from '../../controllers/useDashboardController';
 
@@ -22,6 +29,19 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
     if (path.startsWith('/riwayat-kunjungan')) return 'Riwayat Kunjungan';
     if (path.startsWith('/kelola-kader')) return 'Kelola Kader';
     if (path.startsWith('/laporan')) return 'Laporan';
+    // Buku KIA - Kesehatan Ibu
+    if (path.startsWith('/kesehatan-ibu/kehamilan')) return 'Kehamilan';
+    if (path.startsWith('/kesehatan-ibu/pemeriksaan')) return 'Pemeriksaan Ibu';
+    if (path.startsWith('/kesehatan-ibu/persalinan')) return 'Persalinan';
+    if (path.startsWith('/kesehatan-ibu/nifas-menyusui')) return 'Nifas & Menyusui';
+    // Buku KIA - Kesehatan Anak
+    if (path.startsWith('/kesehatan-anak/pertumbuhan')) return 'Pertumbuhan';
+    if (path.startsWith('/kesehatan-anak/perkembangan')) return 'Perkembangan';
+    if (path.startsWith('/kesehatan-anak/imunisasi')) return 'Imunisasi';
+    if (path.startsWith('/kesehatan-anak/pemeriksaan')) return 'Pemeriksaan Anak';
+    // Jadwal Saya & Pengaturan
+    if (path.startsWith('/jadwal-saya')) return 'Jadwal Saya';
+    if (path.startsWith('/pengaturan')) return 'Pengaturan';
     return 'Dashboard';
   };
 
@@ -32,6 +52,16 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
     'Riwayat Kunjungan': '/riwayat-kunjungan',
     'Kelola Kader': '/kelola-kader',
     'Laporan': '/laporan',
+    'Kehamilan': '/kesehatan-ibu/kehamilan',
+    'Pemeriksaan Ibu': '/kesehatan-ibu/pemeriksaan',
+    'Persalinan': '/kesehatan-ibu/persalinan',
+    'Nifas & Menyusui': '/kesehatan-ibu/nifas-menyusui',
+    'Pertumbuhan': '/kesehatan-anak/pertumbuhan',
+    'Perkembangan': '/kesehatan-anak/perkembangan',
+    'Imunisasi': '/kesehatan-anak/imunisasi',
+    'Pemeriksaan Anak': '/kesehatan-anak/pemeriksaan',
+    'Jadwal Saya': '/jadwal-saya',
+    'Pengaturan': '/pengaturan',
   };
 
   const [activeMenu, setActiveMenu] = useState(() => getMenuFromPath(currentPath));
@@ -52,9 +82,23 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
     }
   };
 
+  const handleMenuChangeByPath = (pathOrMenu) => {
+    if (typeof pathOrMenu === 'string' && pathOrMenu.startsWith('/')) {
+      const menu = getMenuFromPath(pathOrMenu);
+      setActiveMenu(menu);
+      setSelectedPesertaIdForDetail(null);
+      if (onNavigate) {
+        onNavigate(pathOrMenu);
+      }
+    } else {
+      handleMenuChange(pathOrMenu);
+    }
+  };
+
   const [selectedPesertaIdForDetail, setSelectedPesertaIdForDetail] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-  const isIbuRole = currentUser?.role === 'Ibu Balita' || currentUser?.role === 'ibu';
+  const userEmail = currentUser?.user?.email || currentUser?.email || '';
+  const isIbuRole = (currentUser?.role || '').toLowerCase().includes('ibu') || userEmail.toLowerCase().includes('ibu');
 
   // Di desktop default terbuka, di HP default tertutup
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
@@ -156,11 +200,6 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
               currentUser={currentUser}
               onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
             />
-          ) : isIbuRole ? (
-            <IbuDashboardView 
-              user={currentUser} 
-              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
-            />
           ) : activeMenu === 'Registrasi Kunjungan' ? (
             <RegistrasiPage 
               currentUser={currentUser} 
@@ -168,6 +207,55 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
               onNavigate={onNavigate}
               onBackToDashboard={handleRegistrasiSuccess} 
               onTambahPesertaBaru={() => setIsModalOpen(true)}
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
+            />
+          ) : activeMenu === 'Kehamilan' ? (
+            <KehamilanView 
+              user={currentUser} 
+              onNavigate={handleMenuChangeByPath} 
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
+            />
+          ) : activeMenu === 'Pemeriksaan Ibu' ? (
+            <PemeriksaanIbuView 
+              user={currentUser} 
+              onNavigate={handleMenuChangeByPath} 
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
+            />
+          ) : activeMenu === 'Persalinan' ? (
+            <PersalinanView 
+              user={currentUser} 
+              onNavigate={handleMenuChangeByPath} 
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
+            />
+          ) : activeMenu === 'Nifas & Menyusui' ? (
+            <NifasMenyusuiView 
+              user={currentUser} 
+              onNavigate={handleMenuChangeByPath} 
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
+            />
+          ) : ['Pertumbuhan', 'Perkembangan', 'Imunisasi', 'Pemeriksaan Anak'].includes(activeMenu) ? (
+            <KesehatanAnakView 
+              subFeature={activeMenu}
+              user={currentUser} 
+              onNavigate={handleMenuChangeByPath} 
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
+            />
+          ) : activeMenu === 'Jadwal Saya' ? (
+            <JadwalSayaView 
+              user={currentUser} 
+              onNavigate={handleMenuChangeByPath} 
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
+            />
+          ) : activeMenu === 'Pengaturan' ? (
+            <PengaturanView 
+              user={currentUser} 
+              onNavigate={handleMenuChangeByPath} 
+              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
+            />
+          ) : isIbuRole ? (
+            <IbuDashboardView 
+              user={currentUser} 
+              onNavigate={handleMenuChangeByPath}
               onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
             />
           ) : activeMenu !== 'Dashboard' ? (

@@ -25,6 +25,7 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
     jenis_peserta: peserta.jenis_peserta || 'Ibu Hamil',
     tipe_id: peserta.tipe_id || resolveTipeId(peserta.jenis_peserta),
     telepon_pj: peserta.telepon_pj || '',
+    status: peserta.status || (peserta.aktif === false ? 'Tidak Aktif' : 'Aktif'),
     catatan_observasi: peserta.catatan_observasi || '',
   });
 
@@ -43,6 +44,7 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
         jenis_peserta: peserta.jenis_peserta || 'Ibu Hamil',
         tipe_id: peserta.tipe_id || resolveTipeId(peserta.jenis_peserta),
         telepon_pj: peserta.telepon_pj || '',
+        status: peserta.status || (peserta.aktif === false ? 'Tidak Aktif' : 'Aktif'),
         catatan_observasi: peserta.catatan_observasi || '',
       });
       setIsEditing(false);
@@ -76,7 +78,10 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
       onSave({
         ...peserta,
         ...formData,
-        tipe_id: resolveTipeId(formData.jenis_peserta) || formData.tipe_id || peserta.tipe_id
+        tipe_id: resolveTipeId(formData.jenis_peserta) || formData.tipe_id || peserta.tipe_id,
+        status: formData.status || 'Aktif',
+        aktif: formData.status === 'Aktif',
+        is_suspended: formData.status !== 'Aktif'
       });
     }
   };
@@ -96,6 +101,7 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
       jenis_peserta: peserta.jenis_peserta || 'Ibu Hamil',
       tipe_id: peserta.tipe_id || resolveTipeId(peserta.jenis_peserta),
       telepon_pj: peserta.telepon_pj || '',
+      status: peserta.status || (peserta.aktif === false ? 'Tidak Aktif' : 'Aktif'),
       catatan_observasi: peserta.catatan_observasi || '',
     });
     setIsEditing(false);
@@ -382,6 +388,34 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
             ) : (
               <div className="w-full px-4 py-3 bg-slate-50/70 border border-slate-200/80 rounded-xl font-medium text-slate-800">
                 {formData.telepon_pj || '-'}
+              </div>
+            )}
+          </div>
+
+          {/* Status Peserta (IMP S1C) */}
+          <div>
+            <label className="block text-slate-500 font-semibold mb-1.5">Status Peserta</label>
+            {isEditing ? (
+              <div className="relative">
+                <select
+                  value={formData.status || 'Aktif'}
+                  onChange={(e) => handleChange('status', e.target.value)}
+                  className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-900 appearance-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer"
+                >
+                  <option value="Aktif">Aktif</option>
+                  <option value="Tidak Aktif">Tidak Aktif</option>
+                </select>
+                <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
+            ) : (
+              <div className="w-full px-4 py-3 bg-slate-50/70 border border-slate-200/80 rounded-xl flex items-center gap-2">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                  (formData.status || 'Aktif') === 'Aktif' 
+                    ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
+                    : 'bg-rose-100 text-rose-700 border border-rose-200'
+                }`}>
+                  {formData.status || 'Aktif'}
+                </span>
               </div>
             )}
           </div>
