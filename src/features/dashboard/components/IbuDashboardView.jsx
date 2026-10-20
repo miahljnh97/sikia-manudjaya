@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { bukuKiaService } from '../../../services/bukuKiaService';
+import { getReminderStatus } from '../../../services/whatsappService';
 import { 
   Calendar, 
   Bell, 
@@ -15,6 +17,43 @@ import {
 } from 'lucide-react';
 
 export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
+  const [kehamilan, setKehamilan] = useState(null);
+  const [jadwalTerdekat, setJadwalTerdekat] = useState({
+    day: '20',
+    month: 'Okt',
+    title: 'Pemeriksaan Kehamilan',
+    location: 'Puskesmas Manud Jaya',
+    tanggal: '2026-10-20'
+  });
+
+  useEffect(() => {
+    bukuKiaService.getKehamilanIbu().then(res => {
+      if (res) setKehamilan(res);
+    });
+
+    bukuKiaService.getJadwalPesertaList().then(res => {
+      if (res && res.length > 0) {
+        const first = res[0];
+        try {
+          const d = new Date(first.tanggal);
+          const day = String(d.getDate()).padStart(2, '0');
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+          const month = months[d.getMonth()] || 'Okt';
+
+          setJadwalTerdekat({
+            day,
+            month,
+            title: first.jenis_kegiatan || 'Pemeriksaan Kehamilan',
+            location: first.lokasi || 'Puskesmas Manud Jaya',
+            tanggal: first.tanggal
+          });
+        } catch {
+          // fallback
+        }
+      }
+    });
+  }, []);
+
   const handleNav = (path) => {
     if (onNavigate) {
       onNavigate(path);
@@ -48,7 +87,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                 Siti Aminah
               </h2>
               <p className="text-xs text-slate-600 font-medium mt-1">
-                Usia Kehamilan: <strong className="text-slate-900 font-bold">28 Minggu</strong> · Trimester 3
+                Usia Kehamilan: <strong className="text-slate-900 font-bold">{kehamilan?.usia_kehamilan_minggu || 28} Minggu</strong> · Trimester {kehamilan?.trimester || 3}
               </p>
             </div>
 
@@ -128,27 +167,37 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
           <div className="space-y-3">
             {/* Item 1: Pemeriksaan Kehamilan */}
-            <div 
-              onClick={() => handleNav('/jadwal-saya')}
-              className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-pink-50 border border-pink-100 flex flex-col items-center justify-center text-[#E11D48] shrink-0 font-bold leading-tight">
-                  <span className="text-base font-extrabold">20</span>
-                  <span className="text-[10px] uppercase font-semibold">Okt</span>
-                </div>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
-                    Pemeriksaan Kehamilan
-                  </h4>
-                  <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
-                    <MapPin size={12} className="text-slate-400" />
-                    <span>Puskesmas Manud Jaya</span>
+            {(() => {
+              const reminder = getReminderStatus(jadwalTerdekat.tanggal);
+              return (
+                <div 
+                  onClick={() => handleNav('/jadwal-saya')}
+                  className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-pink-50 border border-pink-100 flex flex-col items-center justify-center text-[#E11D48] shrink-0 font-bold leading-tight">
+                      <span className="text-base font-extrabold">{jadwalTerdekat.day}</span>
+                      <span className="text-[10px] uppercase font-semibold">{jadwalTerdekat.month}</span>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
+                          {jadwalTerdekat.title}
+                        </h4>
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold border ${reminder.badgeColor}`}>
+                          {reminder.label}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
+                        <MapPin size={12} className="text-slate-400" />
+                        <span>{jadwalTerdekat.location}</span>
+                      </div>
+                    </div>
                   </div>
+                  <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
                 </div>
-              </div>
-              <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
-            </div>
+              );
+            })()}
           </div>
         </div>
 

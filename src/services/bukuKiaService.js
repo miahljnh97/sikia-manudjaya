@@ -2,7 +2,7 @@
  * Service Layer untuk Buku KIA Digital (Sprint 2 & 3)
  * Menghubungkan modul Kesehatan Ibu, Kesehatan Anak, dan Jadwal ke Supabase
  */
-import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { supabase, isSupabaseConfigured } from '../config/supabaseClient';
 
 export const bukuKiaService = {
   // ==========================================
