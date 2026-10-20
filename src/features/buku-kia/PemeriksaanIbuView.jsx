@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calendar, 
   UserCheck, 
@@ -9,14 +9,52 @@ import {
   FileText, 
   ChevronRight,
   X,
-  Heart
+  Heart,
+  Plus,
+  Users,
+  User,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
+import { bukuKiaService } from '../../services/bukuKiaService';
+import { pesertaService } from '../../services/pesertaService';
+import { maskNik } from '../../utils/nikUtils';
 
-export default function PemeriksaanIbuView({ onShowToast }) {
+export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate, onShowToast }) {
+  const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || (user?.email || '').toLowerCase().includes('ibu');
+
+  // Helper ekstrak ID dari URL path atau query string (?peserta_id=... atau /pemeriksaan/:id)
+  const extractPesertaId = () => {
+    if (typeof window !== 'undefined' && window.location.search) {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get('peserta_id')) return sp.get('peserta_id');
+      if (sp.get('id')) return sp.get('id');
+    }
+    if (currentPath && currentPath.includes('?')) {
+      const sp = new URLSearchParams(currentPath.split('?')[1]);
+      if (sp.get('peserta_id')) return sp.get('peserta_id');
+      if (sp.get('id')) return sp.get('id');
+    }
+    if (currentPath) {
+      const segments = currentPath.split('?')[0].split('/').filter(Boolean);
+      const last = segments[segments.length - 1];
+      if (last && last.includes('-') && last.length >= 20) return last;
+    }
+    return isIbuRole ? '55af67c9-6695-4435-b4ea-2720efd73c92' : null;
+  };
+
+  const [daftarIbu, setDaftarIbu] = useState([]);
+  const [activePesertaId, setActivePesertaId] = useState(() => extractPesertaId() || '55af67c9-6695-4435-b4ea-2720efd73c92');
+  const [peserta, setPeserta] = useState(null);
+  const [kehamilan, setKehamilan] = useState(null);
+  const [riwayatList, setRiwayatList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [selectedPemeriksaan, setSelectedPemeriksaan] = useState(null);
   const [isModalTambahOpen, setIsModalTambahOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Form input ANC baru (Default tanggal = hari ini - User Review #181)
   const [formAnc, setFormAnc] = useState({
     kunjungan_ke: 'ANC 6',
     tanggal_pemeriksaan: new Date().toISOString().split('T')[0],
@@ -27,79 +65,148 @@ export default function PemeriksaanIbuView({ onShowToast }) {
     tinggi_fundus: '28.0',
     djj: '142',
     hemoglobin: '12.0',
-    pemeriksa: 'Bidan Siti, S.Tr.Keb',
+    pemeriksa: user?.nama || 'Bidan Siti, S.Tr.Keb',
     faskes: 'Puskesmas Manud Jaya',
     status_hasil: 'Normal',
     catatan_tindak_lanjut: 'Kondisi ibu dan janin sehat optimal. Persiapan persalinan P4K.'
   });
 
-  const [riwayatList, setRiwayatList] = useState([
-    {
-      no: 1,
-      tanggal: '15 Jan 2026',
-      usiaKehamilan: '8 Minggu',
-      jenis: 'ANC 1',
-      hasil: 'Normal',
-      catatan: 'Keluhan mual, diberikan edukasi gizi dan vitamin B6',
-      tekananDarah: '110/70 mmHg',
-      beratBadan: '54 kg',
-      tinggiFundus: 'Belum teraba',
-      djj: '-',
-      petugas: 'Bidan Siti, S.Tr.Keb'
-    },
-    {
-      no: 2,
-      tanggal: '12 Feb 2026',
-      usiaKehamilan: '12 Minggu',
-      jenis: 'ANC 2',
-      hasil: 'Normal',
-      catatan: 'Tidak ada keluhan khusus, kondisi ibu dan janin sehat',
-      tekananDarah: '110/70 mmHg',
-      beratBadan: '57 kg',
-      tinggiFundus: '3 jari di atas simfisis',
-      djj: '142 x/menit',
-      petugas: 'Bidan Siti, S.Tr.Keb'
-    },
-    {
-      no: 3,
-      tanggal: '14 Apr 2026',
-      usiaKehamilan: '20 Minggu',
-      jenis: 'ANC 3',
-      hasil: 'Normal',
-      catatan: 'Janin aktif bergerak, USG trimester 2 konfirmasi normal',
-      tekananDarah: '115/75 mmHg',
-      beratBadan: '59 kg',
-      tinggiFundus: '20 cm',
-      djj: '144 x/menit',
-      petugas: 'Bidan Siti, S.Tr.Keb'
-    },
-    {
-      no: 4,
-      tanggal: '10 Jul 2026',
-      usiaKehamilan: '24 Minggu',
-      jenis: 'ANC 4',
-      hasil: 'Normal',
-      catatan: 'TD Sedikit tinggi, observasi dan edukasi diet rendah garam',
-      tekananDarah: '125/80 mmHg',
-      beratBadan: '60 kg',
-      tinggiFundus: '24 cm',
-      djj: '140 x/menit',
-      petugas: 'Bidan Siti, S.Tr.Keb'
-    },
-    {
-      no: 5,
-      tanggal: '12 Sep 2026',
-      usiaKehamilan: '28 Minggu',
-      jenis: 'ANC 5',
-      hasil: 'Normal',
-      catatan: 'Pertumbuhan janin baik, kepala janin sudah berada di bawah',
-      tekananDarah: '110/70 mmHg',
-      beratBadan: '62 kg',
-      tinggiFundus: '26 cm',
-      djj: '138 x/menit',
-      petugas: 'Bidan Siti, S.Tr.Keb'
+  // Sinkronkan saat URL berubah (Back/Forward browser)
+  useEffect(() => {
+    const urlId = extractPesertaId();
+    if (urlId && urlId !== activePesertaId) {
+      setActivePesertaId(urlId);
     }
-  ]);
+  }, [currentPath]);
+
+  // Load daftar ibu hamil untuk dropdown selector Bidan/Kader
+  useEffect(() => {
+    bukuKiaService.getDaftarIbuHamil().then(list => {
+      if (list && list.length > 0) {
+        setDaftarIbu(list);
+        if (!activePesertaId) {
+          setActivePesertaId(list[0].id);
+        }
+      }
+    });
+  }, []);
+
+  // Fetch data spesifik untuk ibu yang dipilih (Terisolasi per ID)
+  useEffect(() => {
+    let isMounted = true;
+    const fetchIbuData = async () => {
+      if (!activePesertaId) return;
+      setIsLoading(true);
+
+      try {
+        // 1. Data Peserta
+        const pData = await pesertaService.getPesertaById(activePesertaId);
+        if (isMounted) setPeserta(pData);
+
+        // 2. Data Kehamilan Ibu
+        const khData = await bukuKiaService.getKehamilanIbu(activePesertaId);
+        if (isMounted) setKehamilan(khData);
+
+        // 3. Riwayat Pemeriksaan ANC TERISOLASI per kehamilanId
+        if (khData?.id) {
+          const ancRows = await bukuKiaService.getPemeriksaanAncList(khData.id);
+          if (isMounted) {
+            if (ancRows && ancRows.length > 0) {
+              setRiwayatList(ancRows.map((item, idx) => ({
+                no: idx + 1,
+                id: item.id,
+                tanggal: item.tanggal_pemeriksaan,
+                usiaKehamilan: item.usia_kehamilan || `${item.usia_kehamilan_minggu || 28} Minggu`,
+                jenis: item.kunjungan_ke,
+                hasil: item.status_hasil || 'Normal',
+                catatan: item.catatan_tindak_lanjut || item.catatan || 'Kondisi normal',
+                tekananDarah: item.tekanan_darah ? `${item.tekanan_darah} mmHg` : '110/70 mmHg',
+                beratBadan: item.berat_badan ? `${item.berat_badan} kg` : '60 kg',
+                tinggiFundus: item.tinggi_fundus ? `${item.tinggi_fundus} cm` : '24 cm',
+                djj: item.djj ? `${item.djj} x/menit` : '140 x/menit',
+                petugas: item.pemeriksa || 'Bidan Siti, S.Tr.Keb'
+              })));
+            } else {
+              setRiwayatList([]);
+            }
+          }
+        } else {
+          if (isMounted) setRiwayatList([]);
+        }
+      } catch (err) {
+        console.error('Error fetching ANC data for mother:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchIbuData();
+    return () => { isMounted = false; };
+  }, [activePesertaId]);
+
+  // Handler pergantian pasien oleh Bidan/Kader
+  const handleSwitchPasien = (newPesertaId) => {
+    setActivePesertaId(newPesertaId);
+    if (onNavigate) {
+      onNavigate(`/kesehatan-ibu/pemeriksaan?peserta_id=${newPesertaId}`);
+    }
+  };
+
+  // Handler Submit Tambah Pemeriksaan ANC Baru
+  const handleSimpanAnc = async (e) => {
+    e.preventDefault();
+    if (!kehamilan?.id) {
+      onShowToast && onShowToast('Data kehamilan belum terdaftar untuk pasien ini.', 'error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        kehamilan_id: kehamilan.id,
+        kunjungan_ke: formAnc.kunjungan_ke,
+        tanggal_pemeriksaan: formAnc.tanggal_pemeriksaan,
+        usia_kehamilan: formAnc.usia_kehamilan,
+        berat_badan: parseFloat(formAnc.berat_badan) || null,
+        tekanan_darah: formAnc.tekanan_darah,
+        lila: parseFloat(formAnc.lila) || null,
+        tinggi_fundus: parseFloat(formAnc.tinggi_fundus) || null,
+        djj: parseInt(formAnc.djj) || null,
+        hemoglobin: parseFloat(formAnc.hemoglobin) || null,
+        pemeriksa: formAnc.pemeriksa,
+        faskes: formAnc.faskes,
+        status_hasil: formAnc.status_hasil,
+        catatan_tindak_lanjut: formAnc.catatan_tindak_lanjut
+      };
+
+      const saved = await bukuKiaService.tambahPemeriksaanAnc(payload);
+
+      // Perbarui UI langsung tanpa refresh manual (User Review #192)
+      const newItem = {
+        no: riwayatList.length + 1,
+        id: saved.id,
+        tanggal: formAnc.tanggal_pemeriksaan,
+        usiaKehamilan: formAnc.usia_kehamilan,
+        jenis: formAnc.kunjungan_ke,
+        hasil: formAnc.status_hasil,
+        catatan: formAnc.catatan_tindak_lanjut,
+        tekananDarah: `${formAnc.tekanan_darah} mmHg`,
+        beratBadan: `${formAnc.berat_badan} kg`,
+        tinggiFundus: `${formAnc.tinggi_fundus} cm`,
+        djj: `${formAnc.djj} x/menit`,
+        petugas: formAnc.pemeriksa
+      };
+
+      setRiwayatList(prev => [...prev, newItem]);
+      setIsModalTambahOpen(false);
+      onShowToast && onShowToast(`Pemeriksaan ${formAnc.kunjungan_ke} berhasil dicatat ke rekam medis!`, 'success');
+    } catch (err) {
+      console.error(err);
+      onShowToast && onShowToast('Gagal menyimpan pemeriksaan: ' + err.message, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleDownload = (filename) => {
     if (onShowToast) {
@@ -107,26 +214,57 @@ export default function PemeriksaanIbuView({ onShowToast }) {
     }
   };
 
+  const namaPasien = peserta?.nama || 'Siti Aminah';
+  const nikPasien = peserta?.nik ? maskNik(peserta.nik) : '3201234567890001';
+  const usiaKehamilanStr = kehamilan?.usia_kehamilan_minggu 
+    ? `${kehamilan.usia_kehamilan_minggu} Minggu` 
+    : '28 Minggu';
+  const hplStr = kehamilan?.hpl || '20 Desember 2026';
+  const hphtStr = kehamilan?.hpht || '12 Februari 2026';
+
   return (
     <div className="space-y-6">
-      {/* 1. Header */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-          Kesehatan Ibu / Pemeriksaan
-        </h1>
-        <p className="text-xs text-slate-500 font-medium mt-1">
-          Pantau riwayat pemeriksaan kehamilan dan kondisi ibu secara menyeluruh
-        </p>
+      {/* 1. Header & Patient Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Kesehatan Ibu / Pemeriksaan (ANC)
+          </h1>
+          <p className="text-xs text-slate-500 font-medium mt-1">
+            Pantau rekam medis pemeriksaan kehamilan berkala sesuai Buku KIA
+          </p>
+        </div>
+
+        {/* Patient Switcher Dropdown untuk Bidan / Kader (Mencegah Data Kecampur) */}
+        {!isIbuRole && daftarIbu.length > 0 && (
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-3 py-2 shadow-xs">
+            <Users size={16} className="text-pink-600 shrink-0" />
+            <div className="text-[11px]">
+              <span className="text-slate-400 block font-medium">Pilih Pasien Ibu Hamil:</span>
+              <select
+                value={activePesertaId}
+                onChange={(e) => handleSwitchPasien(e.target.value)}
+                className="font-bold text-slate-900 bg-transparent focus:outline-none cursor-pointer text-xs pr-2"
+              >
+                {daftarIbu.map((ibu) => (
+                  <option key={ibu.id} value={ibu.id}>
+                    {ibu.nama} (NIK: {maskNik(ibu.nik)})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* 2. Top Patient Card (Siti Aminah) */}
+      {/* 2. Top Patient Card (Profil Terisolasi per ID) */}
       <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div className="flex items-center gap-4.5">
             <div className="w-16 h-16 rounded-full overflow-hidden bg-pink-100 border-2 border-pink-200 shrink-0">
               <img 
                 src="/images/siti-aminah-avatar.png" 
-                alt="Siti Aminah" 
+                alt={namaPasien} 
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -134,28 +272,30 @@ export default function PemeriksaanIbuView({ onShowToast }) {
               />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900">Siti Aminah</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 mt-1 text-xs text-slate-600">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900">{namaPasien}</h2>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-pink-50 text-pink-700 border border-pink-200">
+                  Ibu Hamil
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 mt-1.5 text-xs text-slate-600">
                 <div>
-                  <span className="text-slate-400">Nama:</span> <span className="font-semibold text-slate-800">Siti Aminah</span>
+                  <span className="text-slate-400">Nama:</span> <span className="font-semibold text-slate-800">{namaPasien}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400">Usia Kehamilan:</span> <span className="font-semibold text-slate-800">28 Minggu 3 hari</span>
+                  <span className="text-slate-400">Usia Kehamilan:</span> <span className="font-semibold text-slate-800">{usiaKehamilanStr}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400">NIK:</span> <span className="font-semibold text-slate-800">293920102029029</span>
+                  <span className="text-slate-400">NIK:</span> <span className="font-semibold text-slate-800 font-mono">{nikPasien}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400">HPHT:</span> <span className="font-semibold text-slate-800">12 Februari 2026</span>
+                  <span className="text-slate-400">HPHT:</span> <span className="font-semibold text-slate-800">{hphtStr}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400">No Rekam Medis:</span> <span className="font-semibold text-slate-800">293920102029029</span>
+                  <span className="text-slate-400">ID Pasien:</span> <span className="font-semibold text-slate-800 font-mono text-[10px]">{activePesertaId.slice(0, 13)}...</span>
                 </div>
                 <div>
-                  <span className="text-slate-400">Taksiran Persalinan:</span> <span className="font-semibold text-slate-800">20 Desember 2026</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">Usia:</span> <span className="font-semibold text-slate-800">27 Tahun</span>
+                  <span className="text-slate-400">Taksiran Persalinan:</span> <span className="font-semibold text-slate-800">{hplStr}</span>
                 </div>
               </div>
             </div>
@@ -163,10 +303,16 @@ export default function PemeriksaanIbuView({ onShowToast }) {
 
           <button
             type="button"
-            onClick={() => onShowToast && onShowToast('Melihat detail profil Siti Aminah', 'info')}
-            className="px-4 py-2 bg-[#F5F3FF] hover:bg-[#EDE9FE] text-[#6D28D9] rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-colors self-start lg:self-center cursor-pointer"
+            onClick={() => {
+              if (onNavigate) {
+                onNavigate(`/data-peserta/detail/${activePesertaId}`);
+              } else {
+                onShowToast && onShowToast(`Membuka profil lengkap ${namaPasien}`, 'info');
+              }
+            }}
+            className="px-4 py-2 bg-[#F5F3FF] hover:bg-[#EDE9FE] text-[#6D28D9] rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-colors self-start lg:self-center cursor-pointer active:scale-95"
           >
-            <span>Lihat Profil</span>
+            <span>Lihat Profil Peserta</span>
             <ChevronRight size={14} />
           </button>
         </div>
@@ -180,7 +326,7 @@ export default function PemeriksaanIbuView({ onShowToast }) {
           </div>
           <div>
             <span className="text-[11px] text-slate-400 font-medium block">Jumlah Kunjungan</span>
-            <span className="text-sm font-bold text-slate-900 mt-0.5 block">5 Kali</span>
+            <span className="text-sm font-bold text-slate-900 mt-0.5 block">{riwayatList.length} Kali</span>
           </div>
         </div>
 
@@ -190,7 +336,9 @@ export default function PemeriksaanIbuView({ onShowToast }) {
           </div>
           <div>
             <span className="text-[11px] text-slate-400 font-medium block">Kunjungan Terakhir</span>
-            <span className="text-sm font-bold text-slate-900 mt-0.5 block">12 Sep 2026</span>
+            <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+              {riwayatList.length > 0 ? riwayatList[riwayatList.length - 1].tanggal : '-'}
+            </span>
           </div>
         </div>
 
@@ -199,8 +347,8 @@ export default function PemeriksaanIbuView({ onShowToast }) {
             <FastForward size={18} />
           </div>
           <div>
-            <span className="text-[11px] text-slate-400 font-medium block">Kunjungan Berikutnya</span>
-            <span className="text-sm font-bold text-slate-900 mt-0.5 block">10 Okt 2026</span>
+            <span className="text-[11px] text-slate-400 font-medium block">Target ANC Terpenuhi</span>
+            <span className="text-sm font-bold text-slate-900 mt-0.5 block">{riwayatList.length} dari 6 Standar Kemenkes</span>
           </div>
         </div>
 
@@ -210,17 +358,21 @@ export default function PemeriksaanIbuView({ onShowToast }) {
           </div>
           <div>
             <span className="text-[11px] text-slate-400 font-medium block">Status Pemeriksaan</span>
-            <span className="text-sm font-bold text-slate-900 mt-0.5 block">Rutin</span>
+            <span className="text-sm font-bold text-emerald-600 mt-0.5 block">
+              {riwayatList.length >= 6 ? 'Lengkap (Optimal)' : 'Pemeriksaan Rutin'}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* 4. Table Riwayat Pemeriksaan */}
+      {/* 4. Table Riwayat Pemeriksaan Terisolasi */}
       <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-xs">
         <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Riwayat Pemeriksaan</h3>
-            <p className="text-[11px] text-slate-400 mt-0.5">Daftar rekam medis pemeriksaan kehamilan berkala (ANC)</p>
+            <h3 className="text-sm font-bold text-slate-900">Riwayat Pemeriksaan ANC ({namaPasien})</h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Daftar rekam medis kehamilan khusus untuk <strong>{namaPasien}</strong> (ID: {activePesertaId.slice(0, 8)}...)
+            </p>
           </div>
           <button
             type="button"
@@ -228,7 +380,7 @@ export default function PemeriksaanIbuView({ onShowToast }) {
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
           >
             <Plus size={15} />
-            <span>Input Pemeriksaan ANC</span>
+            <span>+ Input Pemeriksaan ANC</span>
           </button>
         </div>
 
@@ -246,156 +398,104 @@ export default function PemeriksaanIbuView({ onShowToast }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {riwayatList.map((item) => (
-                <tr key={item.no} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="py-3.5 px-5 font-medium">{item.no}</td>
-                  <td className="py-3.5 px-5 whitespace-nowrap font-medium text-slate-900">{item.tanggal}</td>
-                  <td className="py-3.5 px-5 whitespace-nowrap text-slate-600">{item.usiaKehamilan}</td>
-                  <td className="py-3.5 px-5 font-semibold text-slate-900">{item.jenis}</td>
-                  <td className="py-3.5 px-5">
-                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      {item.hasil}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-5 text-slate-600 max-w-xs">{item.catatan}</td>
-                  <td className="py-3.5 px-5 text-center">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPemeriksaan(item)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
-                      title="Lihat Detail Pemeriksaan"
-                    >
-                      <Eye size={16} />
-                    </button>
+              {riwayatList.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-slate-400">
+                    Belum ada rekam medis ANC untuk <strong>{namaPasien}</strong>. Klik tombol <strong>"+ Input Pemeriksaan ANC"</strong> untuk menambahkan.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                riwayatList.map((item) => (
+                  <tr key={item.id || item.no} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="py-3.5 px-5 font-medium">{item.no}</td>
+                    <td className="py-3.5 px-5 whitespace-nowrap font-medium text-slate-900">{item.tanggal}</td>
+                    <td className="py-3.5 px-5 whitespace-nowrap text-slate-600">{item.usiaKehamilan}</td>
+                    <td className="py-3.5 px-5 font-semibold text-slate-900">{item.jenis}</td>
+                    <td className="py-3.5 px-5">
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {item.hasil}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-5 text-slate-600 max-w-xs">{item.catatan}</td>
+                    <td className="py-3.5 px-5 text-center">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPemeriksaan(item)}
+                        className="p-1.5 text-slate-400 hover:text-[#E11D48] hover:bg-pink-50 rounded-lg transition-colors cursor-pointer"
+                        title="Lihat Detail Hasil Pemeriksaan"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* 5. Bottom Two Columns: Catatan & Tindak Lanjut + Dokumen Pendukung */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Catatan & Tindak Lanjut */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-          <h3 className="text-sm font-bold text-slate-900">Catatan & Tindak lanjut</h3>
-          <ul className="space-y-2.5 text-xs text-slate-700">
-            <li className="flex items-start gap-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0" />
-              <span>Lanjutkan konsumsi tablet Fe dan asam folat</span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0" />
-              <span>Jaga pola makan bergizi dan istirahat cukup</span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0" />
-              <span>Kontrol kembali pada 10 Oktober 2026</span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0" />
-              <span>Segera ke fasilitas kesehatan jika ada keluhan</span>
-            </li>
-          </ul>
-        </div>
-
-        {/* Dokumen Pendukung */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-          <h3 className="text-sm font-bold text-slate-900">Dokumen Pendukung</h3>
-          <div className="space-y-3">
-            {[
-              'USH_12Sep2026.pdf',
-              'Hasil laboratorium.pdf',
-              'USH_10Jul2026.pdf'
-            ].map((docName, idx) => (
-              <div 
-                key={idx} 
-                className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/70 border border-slate-100"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
-                    <FileText size={16} />
-                  </div>
-                  <span className="text-xs font-medium text-slate-800">{docName}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleDownload(docName)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
-                    title="Unduh Dokumen"
-                  >
-                    <Download size={15} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onShowToast && onShowToast(`Membuka pratinjau "${docName}"`, 'info')}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
-                    title="Pratinjau Dokumen"
-                  >
-                    <Eye size={15} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Modal Detail Pemeriksaan */}
+      {/* 5. Modal Detail Pemeriksaan */}
       {selectedPemeriksaan && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-pink-50 text-rose-500 flex items-center justify-center">
-                  <Heart size={18} />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">
-                    Detail Pemeriksaan {selectedPemeriksaan.jenis}
-                  </h3>
-                  <span className="text-xs text-slate-400">{selectedPemeriksaan.tanggal}</span>
-                </div>
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                <Heart size={16} className="text-[#E11D48]" />
+                <span>Detail {selectedPemeriksaan.jenis} ({namaPasien})</span>
               </div>
               <button 
                 type="button" 
                 onClick={() => setSelectedPemeriksaan(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3.5 mt-5 text-xs">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-slate-400 block font-normal text-[11px]">Usia Kehamilan</span>
-                <span className="font-bold text-slate-900 mt-0.5 block">{selectedPemeriksaan.usiaKehamilan}</span>
+            <div className="space-y-3 text-xs text-slate-600">
+              <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-2xl">
+                <div>
+                  <span className="text-slate-400 block text-[10px]">Tanggal:</span>
+                  <span className="font-bold text-slate-800">{selectedPemeriksaan.tanggal}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px]">Usia Kehamilan:</span>
+                  <span className="font-bold text-slate-800">{selectedPemeriksaan.usiaKehamilan}</span>
+                </div>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-slate-400 block font-normal text-[11px]">Tekanan Darah</span>
-                <span className="font-bold text-slate-900 mt-0.5 block">{selectedPemeriksaan.tekananDarah}</span>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-3 bg-white border border-slate-100 rounded-xl">
+                  <span className="text-slate-400 block text-[10px]">Tekanan Darah:</span>
+                  <span className="font-bold text-slate-800">{selectedPemeriksaan.tekananDarah}</span>
+                </div>
+                <div className="p-3 bg-white border border-slate-100 rounded-xl">
+                  <span className="text-slate-400 block text-[10px]">Berat Badan:</span>
+                  <span className="font-bold text-slate-800">{selectedPemeriksaan.beratBadan}</span>
+                </div>
+                <div className="p-3 bg-white border border-slate-100 rounded-xl">
+                  <span className="text-slate-400 block text-[10px]">Tinggi Fundus:</span>
+                  <span className="font-bold text-slate-800">{selectedPemeriksaan.tinggiFundus}</span>
+                </div>
+                <div className="p-3 bg-white border border-slate-100 rounded-xl">
+                  <span className="text-slate-400 block text-[10px]">Detak Jantung Janin:</span>
+                  <span className="font-bold text-slate-800">{selectedPemeriksaan.djj}</span>
+                </div>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-slate-400 block font-normal text-[11px]">Berat Badan</span>
-                <span className="font-bold text-slate-900 mt-0.5 block">{selectedPemeriksaan.beratBadan}</span>
+
+              <div className="p-3 bg-slate-50 rounded-2xl space-y-1">
+                <span className="text-slate-400 block text-[10px]">Pemeriksa / Bidan:</span>
+                <span className="font-bold text-slate-800">{selectedPemeriksaan.petugas}</span>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-slate-400 block font-normal text-[11px]">Detak Jantung Janin (DJJ)</span>
-                <span className="font-bold text-slate-900 mt-0.5 block">{selectedPemeriksaan.djj}</span>
-              </div>
-              <div className="col-span-2 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-slate-400 block font-normal text-[11px]">Tinggi Fundus Uteri</span>
-                <span className="font-bold text-slate-900 mt-0.5 block">{selectedPemeriksaan.tinggiFundus}</span>
-              </div>
-              <div className="col-span-2 p-3 rounded-xl bg-rose-50/50 border border-rose-100">
-                <span className="text-rose-500 block font-semibold text-[11px]">Catatan Bidan</span>
-                <span className="font-medium text-slate-800 mt-0.5 block">{selectedPemeriksaan.catatan}</span>
+
+              <div className="p-3 bg-slate-50 rounded-2xl space-y-1">
+                <span className="text-slate-400 block text-[10px]">Catatan Klinis:</span>
+                <span className="font-medium text-slate-800 leading-relaxed">{selectedPemeriksaan.catatan}</span>
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+            <div className="pt-2 flex justify-end">
               <button
                 type="button"
                 onClick={() => setSelectedPemeriksaan(null)}
@@ -407,8 +507,8 @@ export default function PemeriksaanIbuView({ onShowToast }) {
           </div>
         </div>
       )}
-    
-      {/* Modal Input Pemeriksaan ANC Baru (PBI 02C) */}
+
+      {/* 6. Modal Input Pemeriksaan ANC Baru (PBI 02C) */}
       {isModalTambahOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
@@ -418,7 +518,9 @@ export default function PemeriksaanIbuView({ onShowToast }) {
                   <Plus size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-bold text-slate-900">Input Pemeriksaan ANC Baru</h3>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                    Input Pemeriksaan ANC Baru ({namaPasien})
+                  </h3>
                   <p className="text-[11px] text-slate-400">Pencatatan rekam medis pemeriksaan harian oleh Bidan / Kader</p>
                 </div>
               </div>
@@ -457,7 +559,8 @@ export default function PemeriksaanIbuView({ onShowToast }) {
                     value={formAnc.tanggal_pemeriksaan}
                     onChange={(e) => setFormAnc({...formAnc, tanggal_pemeriksaan: e.target.value})}
                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                  />
+                  >
+                  </input>
                 </div>
               </div>
 
@@ -491,10 +594,10 @@ export default function PemeriksaanIbuView({ onShowToast }) {
                   <input 
                     type="text"
                     required
-                    placeholder="110/70"
+                    placeholder="115/75"
                     value={formAnc.tekanan_darah}
                     onChange={(e) => setFormAnc({...formAnc, tekanan_darah: e.target.value})}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none font-mono"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
                   />
                 </div>
               </div>

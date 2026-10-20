@@ -4,7 +4,7 @@ import { maskNik } from '../../../utils/nikUtils';
 import { masterService } from '../../../services/masterService';
 import { resolveTipeId } from '../../../utils/pesertaAdapter';
 
-export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKaderOrBidan = true }) {
+export default function DetailPeserta({ peserta, onBack, onSave, onDelete, onNavigate, isKaderOrBidan = true }) {
   if (!peserta) return null;
 
   // Default mode adalah VIEW (isEditing: false)
@@ -150,14 +150,36 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, isKad
                 <span>Batal Edit</span>
               </button>
             ) : (
-              <button
-                type="button"
-                onClick={() => setIsEditing(true)}
-                className="text-xs font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 cursor-pointer transition-colors"
-              >
-                <Edit3 size={13} />
-                <span>Ubah Data</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {(formData.jenis_peserta === 'Ibu Hamil' || peserta.status_ibu === 'hamil') && (
+                  <button
+                    type="button"
+                    onClick={() => onNavigate && onNavigate(`/kesehatan-ibu/pemeriksaan?peserta_id=${peserta.id}`)}
+                    className="px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Heart size={13} className="text-pink-600" />
+                    <span>Rekam Medis ANC</span>
+                  </button>
+                )}
+                {(formData.jenis_peserta === 'Balita' || formData.jenis_peserta === 'Bayi') && (
+                  <button
+                    type="button"
+                    onClick={() => onNavigate && onNavigate(`/kesehatan-anak/pertumbuhan?anak_id=${peserta.id}`)}
+                    className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Calendar size={13} className="text-blue-600" />
+                    <span>Grafik KMS Anak</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 cursor-pointer transition-colors px-2 py-1"
+                >
+                  <Edit3 size={13} />
+                  <span>Ubah Data</span>
+                </button>
+              </div>
             )
           )}
         </div>

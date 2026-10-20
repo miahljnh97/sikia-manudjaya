@@ -217,6 +217,7 @@ export default function DataPesertaPage({
         onSave={handleSavePeserta}
         onDelete={handleDeletePeserta}
         onBack={handleCloseDetail}
+        onNavigate={onNavigate}
       />
     );
   }
