@@ -15,9 +15,12 @@ export function useAuthController() {
         } else if ((email.includes('admin') || email === 'admin.desa@manudjaya.id') && parsed.role !== 'Super Admin') {
           parsed.role = 'Super Admin';
           if (!parsed.nama || parsed.nama === 'Annisa Wati') parsed.nama = 'Bambang Sudarmono, S.STP';
-        } else if ((email.includes('ibu') || email === 'ibu.balita@manudjaya.id') && parsed.role !== 'Ibu Balita') {
+        } else if (email.includes('hamil') || email === 'ibu.hamil@manudjaya.id' || parsed.role === 'Ibu Hamil') {
+          parsed.role = 'Ibu Hamil';
+          if (!parsed.nama || parsed.nama === 'Annisa Wati') parsed.nama = 'Siti Aminah';
+        } else if ((email.includes('balita') || email.includes('ibu') || email === 'ibu.balita@manudjaya.id') && parsed.role !== 'Ibu Balita') {
           parsed.role = 'Ibu Balita';
-          if (!parsed.nama || parsed.nama === 'Annisa Wati') parsed.nama = 'Ibu Aminah';
+          if (!parsed.nama || parsed.nama === 'Annisa Wati') parsed.nama = 'Ibu Ratna';
         }
       }
       return parsed;
