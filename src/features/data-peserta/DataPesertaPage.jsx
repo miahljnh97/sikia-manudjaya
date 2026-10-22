@@ -108,7 +108,7 @@ export default function DataPesertaPage({
         item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.nik.toLowerCase().includes(searchQuery.toLowerCase());
       const matchJenis = jenisFilter === 'Semua' || item.jenis_peserta === jenisFilter;
-      const matchStatus = statusFilter === 'Semua' || item.status === statusFilter;
+      const matchStatus = statusFilter === 'Semua' || (statusFilter === 'Tidak Aktif' ? (item.status === 'Tidak Aktif' || item.status === 'Non-Aktif' || item.aktif === false) : (item.status === 'Aktif'));
       const matchWilayah = wilayahFilter === 'Semua' || item.alamat.includes(wilayahFilter);
 
       return matchSearch && matchJenis && matchStatus && matchWilayah;

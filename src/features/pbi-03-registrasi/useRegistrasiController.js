@@ -94,7 +94,7 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi, curren
         (item.nik || '').includes(searchQuery) ||
         (item.no_kk || '').includes(searchQuery);
       const matchJenis = jenisFilter === 'Semua' || item.jenis_peserta === jenisFilter;
-      const matchStatus = statusFilter === 'Semua' || (item.status_kehadiran || 'Menunggu').toLowerCase().includes(statusFilter.toLowerCase());
+      const matchStatus = statusFilter === 'Semua' || (item.status || 'Aktif').toLowerCase() === statusFilter.toLowerCase();
       const matchWilayah = wilayahFilter === 'Semua' || item.dusun === wilayahFilter || item.alamat?.includes(wilayahFilter);
       return matchSearch && matchJenis && matchStatus && matchWilayah;
     });

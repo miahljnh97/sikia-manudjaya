@@ -26,6 +26,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
     if (!path) return 'Dashboard';
     if (path.startsWith('/registrasi-kunjungan')) return 'Registrasi Kunjungan';
     if (path.startsWith('/data-peserta')) return 'Data Peserta';
+    if (path.startsWith('/pemeriksaan')) return 'Pemeriksaan';
     if (path.startsWith('/riwayat-kunjungan')) return 'Riwayat Kunjungan';
     if (path.startsWith('/kelola-kader')) return 'Kelola Kader';
     if (path.startsWith('/laporan')) return 'Laporan';
@@ -35,6 +36,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
     if (path.startsWith('/kesehatan-ibu/persalinan')) return 'Persalinan';
     if (path.startsWith('/kesehatan-ibu/nifas-menyusui')) return 'Nifas & Menyusui';
     // Buku KIA - Kesehatan Anak
+    if (path.startsWith('/kesehatan-anak/profil')) return 'Profil Anak';
     if (path.startsWith('/kesehatan-anak/pertumbuhan')) return 'Pertumbuhan';
     if (path.startsWith('/kesehatan-anak/perkembangan')) return 'Perkembangan';
     if (path.startsWith('/kesehatan-anak/imunisasi')) return 'Imunisasi';
@@ -49,6 +51,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
     'Dashboard': '/dashboard',
     'Registrasi Kunjungan': '/registrasi-kunjungan',
     'Data Peserta': '/data-peserta',
+    'Pemeriksaan': '/pemeriksaan',
     'Riwayat Kunjungan': '/riwayat-kunjungan',
     'Kelola Kader': '/kelola-kader',
     'Laporan': '/laporan',
@@ -56,6 +59,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
     'Pemeriksaan Ibu': '/kesehatan-ibu/pemeriksaan',
     'Persalinan': '/kesehatan-ibu/persalinan',
     'Nifas & Menyusui': '/kesehatan-ibu/nifas-menyusui',
+    'Profil Anak': '/kesehatan-anak/profil',
     'Pertumbuhan': '/kesehatan-anak/pertumbuhan',
     'Perkembangan': '/kesehatan-anak/perkembangan',
     'Imunisasi': '/kesehatan-anak/imunisasi',
@@ -216,7 +220,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
               onNavigate={handleMenuChangeByPath} 
               onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
             />
-          ) : activeMenu === 'Pemeriksaan Ibu' ? (
+          ) : (activeMenu === 'Pemeriksaan' || activeMenu === 'Pemeriksaan Ibu') ? (
             <PemeriksaanIbuView 
               user={currentUser} 
               currentPath={currentPath} 
@@ -237,7 +241,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
               onNavigate={handleMenuChangeByPath} 
               onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
             />
-          ) : ['Pertumbuhan', 'Perkembangan', 'Imunisasi', 'Pemeriksaan Anak'].includes(activeMenu) ? (
+          ) : ['Profil Anak', 'Pertumbuhan', 'Perkembangan', 'Imunisasi', 'Pemeriksaan Anak'].includes(activeMenu) ? (
             <KesehatanAnakView 
               subFeature={activeMenu}
               user={currentUser} 

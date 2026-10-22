@@ -14,7 +14,10 @@ import {
   Users,
   User,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Upload,
+  Paperclip,
+  Trash2
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
@@ -53,6 +56,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
   const [selectedPemeriksaan, setSelectedPemeriksaan] = useState(null);
   const [isModalTambahOpen, setIsModalTambahOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
 
   // Form input ANC baru (Default tanggal = hari ini - User Review #181)
   const [formAnc, setFormAnc] = useState({
@@ -68,7 +72,8 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
     pemeriksa: user?.nama || 'Bidan Siti, S.Tr.Keb',
     faskes: 'Puskesmas Manud Jaya',
     status_hasil: 'Normal',
-    catatan_tindak_lanjut: 'Kondisi ibu dan janin sehat optimal. Persiapan persalinan P4K.'
+    catatan_tindak_lanjut: 'Kondisi ibu dan janin sehat optimal. Persiapan persalinan P4K.',
+    catatan_tambahan: ''
   });
 
   // Sinkronkan saat URL berubah (Back/Forward browser)
@@ -152,18 +157,68 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
     }
   };
 
-  // Handler Submit Tambah Pemeriksaan ANC Baru
-  const handleSimpanAnc = async (e) => {
-    e.preventDefault();
-    if (!kehamilan?.id) {
-      onShowToast && onShowToast('Data kehamilan belum terdaftar untuk pasien ini.', 'error');
+  // Handler Upload Dokumen (Format PDF/JPG/PNG, max 5 file, max 5 MB per file)
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    if (uploadedFiles.length + files.length > 5) {
+      onShowToast && onShowToast('Maksimal 5 file dokumen yang dapat diunggah.', 'error');
       return;
     }
 
+    const allowedExts = ['pdf', 'jpg', 'jpeg', 'png'];
+    const validFiles = [];
+
+    for (const f of files) {
+      const ext = f.name.split('.').pop().toLowerCase();
+      if (!allowedExts.includes(ext)) {
+        onShowToast && onShowToast(`File "${f.name}" tidak didukung. Format wajib PDF, JPG, atau PNG.`, 'error');
+        continue;
+      }
+
+      if (f.size > 5 * 1024 * 1024) {
+        onShowToast && onShowToast(`Ukuran file "${f.name}" melebihi batas maksimal 5 MB.`, 'error');
+        continue;
+      }
+
+      validFiles.push({
+        id: Date.now() + Math.random().toString(36).substring(2, 7),
+        name: f.name,
+        size: (f.size / (1024 * 1024)).toFixed(2) + ' MB'
+      });
+    }
+
+    if (validFiles.length > 0) {
+      setUploadedFiles(prev => [...prev, ...validFiles]);
+      onShowToast && onShowToast(`${validFiles.length} berkas berhasil diunggah.`, 'success');
+    }
+  };
+
+  const handleRemoveFile = (fileId) => {
+    setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
+  };
+
+  // Handler Submit Tambah Pemeriksaan ANC Baru (PBI 02C & Fix Issue 7)
+  const handleSimpanAnc = async (e) => {
+    e.preventDefault();
     setIsSubmitting(true);
     try {
+      let activeKehamilan = kehamilan;
+      if (!activeKehamilan?.id) {
+        // Auto-upsert kehamilan_ibu record jika belum ada (Fixes Issue 7)
+        activeKehamilan = await bukuKiaService.getOrCreateKehamilanIbu(activePesertaId);
+        if (activeKehamilan) setKehamilan(activeKehamilan);
+      }
+
+      if (!activeKehamilan?.id) {
+        onShowToast && onShowToast('Data kehamilan belum terdaftar untuk pasien ini.', 'error');
+        setIsSubmitting(false);
+        return;
+      }
+
       const payload = {
-        kehamilan_id: kehamilan.id,
+        kehamilan_id: activeKehamilan.id,
         kunjungan_ke: formAnc.kunjungan_ke,
         tanggal_pemeriksaan: formAnc.tanggal_pemeriksaan,
         usia_kehamilan: formAnc.usia_kehamilan,
@@ -199,6 +254,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
 
       setRiwayatList(prev => [...prev, newItem]);
       setIsModalTambahOpen(false);
+      setUploadedFiles([]);
       onShowToast && onShowToast(`Pemeriksaan ${formAnc.kunjungan_ke} berhasil dicatat ke rekam medis!`, 'success');
     } catch (err) {
       console.error(err);
@@ -380,7 +436,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
           >
             <Plus size={15} />
-            <span>+ Input Pemeriksaan ANC</span>
+            <span>Catat Pemeriksaan</span>
           </button>
         </div>
 
@@ -508,10 +564,11 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
         </div>
       )}
 
-      {/* 6. Modal Input Pemeriksaan ANC Baru (PBI 02C) */}
+      {/* 6. Modal Input Pemeriksaan ANC Baru (PBI 02C: 4 Sections & Dokumen Upload) */}
       {isModalTambahOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center font-bold">
@@ -519,9 +576,9 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
                 </div>
                 <div>
                   <h3 className="text-sm sm:text-base font-bold text-slate-900">
-                    Input Pemeriksaan ANC Baru ({namaPasien})
+                    Catat Pemeriksaan ANC ({namaPasien})
                   </h3>
-                  <p className="text-[11px] text-slate-400">Pencatatan rekam medis pemeriksaan harian oleh Bidan / Kader</p>
+                  <p className="text-[11px] text-slate-400">Pencatatan rekam medis pemeriksaan ANC 4 Section sesuai standar Buku KIA</p>
                 </div>
               </div>
               <button 
@@ -533,159 +590,263 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
               </button>
             </div>
 
-            <form onSubmit={handleSimpanAnc} className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Kunjungan Ke *</label>
-                  <select 
-                    value={formAnc.kunjungan_ke}
-                    onChange={(e) => setFormAnc({...formAnc, kunjungan_ke: e.target.value})}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                  >
-                    <option value="ANC 1">ANC 1 (Trimester 1)</option>
-                    <option value="ANC 2">ANC 2 (Trimester 1)</option>
-                    <option value="ANC 3">ANC 3 (Trimester 2)</option>
-                    <option value="ANC 4">ANC 4 (Trimester 2)</option>
-                    <option value="ANC 5">ANC 5 (Trimester 3)</option>
-                    <option value="ANC 6">ANC 6 (Trimester 3)</option>
-                  </select>
+            <form onSubmit={handleSimpanAnc} className="space-y-6 text-xs">
+              {/* SECTION 1: Data Kunjungan */}
+              <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 text-slate-800 font-bold">
+                  <div className="w-5 h-5 rounded-full bg-pink-100 text-[#E11D48] flex items-center justify-center text-[10px] font-extrabold">1</div>
+                  <span>Section 1: Data Kunjungan</span>
                 </div>
 
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Tanggal Pemeriksaan *</label>
-                  <input 
-                    type="date"
-                    required
-                    value={formAnc.tanggal_pemeriksaan}
-                    onChange={(e) => setFormAnc({...formAnc, tanggal_pemeriksaan: e.target.value})}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                  >
-                  </input>
-                </div>
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-1">Kunjungan Ke *</label>
+                    <select 
+                      value={formAnc.kunjungan_ke}
+                      onChange={(e) => setFormAnc({...formAnc, kunjungan_ke: e.target.value})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    >
+                      <option value="ANC 1">ANC 1 (Trimester 1)</option>
+                      <option value="ANC 2">ANC 2 (Trimester 1)</option>
+                      <option value="ANC 3">ANC 3 (Trimester 2)</option>
+                      <option value="ANC 4">ANC 4 (Trimester 2)</option>
+                      <option value="ANC 5">ANC 5 (Trimester 3)</option>
+                      <option value="ANC 6">ANC 6 (Trimester 3)</option>
+                    </select>
+                  </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Usia Kehamilan</label>
-                  <input 
-                    type="text"
-                    placeholder="Contoh: 32 Minggu"
-                    value={formAnc.usia_kehamilan}
-                    onChange={(e) => setFormAnc({...formAnc, usia_kehamilan: e.target.value})}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-1">Tanggal Pemeriksaan *</label>
+                    <input 
+                      type="date"
+                      required
+                      value={formAnc.tanggal_pemeriksaan}
+                      onChange={(e) => setFormAnc({...formAnc, tanggal_pemeriksaan: e.target.value})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Berat Badan (kg) *</label>
-                  <input 
-                    type="number"
-                    step="0.1"
-                    required
-                    placeholder="64.5"
-                    value={formAnc.berat_badan}
-                    onChange={(e) => setFormAnc({...formAnc, berat_badan: e.target.value})}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-1">Nama Pemeriksa / Petugas *</label>
+                    <input 
+                      type="text"
+                      required
+                      value={formAnc.pemeriksa}
+                      onChange={(e) => setFormAnc({...formAnc, pemeriksa: e.target.value})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Tekanan Darah *</label>
-                  <input 
-                    type="text"
-                    required
-                    placeholder="115/75"
-                    value={formAnc.tekanan_darah}
-                    onChange={(e) => setFormAnc({...formAnc, tekanan_darah: e.target.value})}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                  />
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-1">Fasilitas Kesehatan (Faskes) *</label>
+                    <input 
+                      type="text"
+                      required
+                      value={formAnc.faskes}
+                      onChange={(e) => setFormAnc({...formAnc, faskes: e.target.value})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">LILA (cm)</label>
-                  <input 
-                    type="number"
-                    step="0.1"
-                    placeholder="25.5"
-                    value={formAnc.lila}
-                    onChange={(e) => setFormAnc({...formAnc, lila: e.target.value})}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                  />
+              {/* SECTION 2: Pemeriksaan Kehamilan */}
+              <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 text-slate-800 font-bold">
+                  <div className="w-5 h-5 rounded-full bg-pink-100 text-[#E11D48] flex items-center justify-center text-[10px] font-extrabold">2</div>
+                  <span>Section 2: Pemeriksaan Kehamilan</span>
                 </div>
 
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">TFU (cm)</label>
-                  <input 
-                    type="number"
-                    step="0.1"
-                    placeholder="28.0"
-                    value={formAnc.tinggi_fundus}
-                    onChange={(e) => setFormAnc({...formAnc, tinggi_fundus: e.target.value})}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                  />
-                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-1">Usia Kehamilan</label>
+                    <input 
+                      type="text"
+                      placeholder="Contoh: 32 Minggu"
+                      value={formAnc.usia_kehamilan}
+                      onChange={(e) => setFormAnc({...formAnc, usia_kehamilan: e.target.value})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">DJJ (x/m)</label>
-                  <input 
-                    type="number"
-                    placeholder="142"
-                    value={formAnc.djj}
-                    onChange={(e) => setFormAnc({...formAnc, djj: e.target.value})}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-1">Berat Badan (kg) *</label>
+                    <input 
+                      type="number"
+                      step="0.1"
+                      required
+                      placeholder="64.5"
+                      value={formAnc.berat_badan}
+                      onChange={(e) => setFormAnc({...formAnc, berat_badan: e.target.value})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Hb (g/dL)</label>
-                  <input 
-                    type="number"
-                    step="0.1"
-                    placeholder="12.0"
-                    value={formAnc.hemoglobin}
-                    onChange={(e) => setFormAnc({...formAnc, hemoglobin: e.target.value})}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                  />
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-1">Tekanan Darah *</label>
+                    <input 
+                      type="text"
+                      required
+                      placeholder="115/75"
+                      value={formAnc.tekanan_darah}
+                      onChange={(e) => setFormAnc({...formAnc, tekanan_darah: e.target.value})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-1">TFU (cm)</label>
+                    <input 
+                      type="number"
+                      step="0.1"
+                      placeholder="28.0"
+                      value={formAnc.tinggi_fundus}
+                      onChange={(e) => setFormAnc({...formAnc, tinggi_fundus: e.target.value})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-1">DJJ (x/menit)</label>
+                    <input 
+                      type="number"
+                      placeholder="142"
+                      value={formAnc.djj}
+                      onChange={(e) => setFormAnc({...formAnc, djj: e.target.value})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-1">LILA (cm)</label>
+                    <input 
+                      type="number"
+                      step="0.1"
+                      placeholder="25.8"
+                      value={formAnc.lila}
+                      onChange={(e) => setFormAnc({...formAnc, lila: e.target.value})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-1">Hb (g/dL)</label>
+                    <input 
+                      type="number"
+                      step="0.1"
+                      placeholder="12.0"
+                      value={formAnc.hemoglobin}
+                      onChange={(e) => setFormAnc({...formAnc, hemoglobin: e.target.value})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Nama Pemeriksa</label>
-                  <input 
-                    type="text"
-                    value={formAnc.pemeriksa}
-                    onChange={(e) => setFormAnc({...formAnc, pemeriksa: e.target.value})}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                  />
+              {/* SECTION 3: Penilaian & Tindakan */}
+              <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 text-slate-800 font-bold">
+                  <div className="w-5 h-5 rounded-full bg-pink-100 text-[#E11D48] flex items-center justify-center text-[10px] font-extrabold">3</div>
+                  <span>Section 3: Penilaian & Tindakan</span>
                 </div>
 
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Status Hasil</label>
-                  <select 
-                    value={formAnc.status_hasil}
-                    onChange={(e) => setFormAnc({...formAnc, status_hasil: e.target.value})}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                  >
-                    <option value="Normal">Normal</option>
-                    <option value="Perlu Perhatian">Perlu Perhatian</option>
-                    <option value="Rujuk">Rujuk ke Faskes Lanjutan</option>
-                  </select>
+                <div className="space-y-3 pt-1">
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-1">Status Hasil Pemeriksaan *</label>
+                    <select 
+                      value={formAnc.status_hasil}
+                      onChange={(e) => setFormAnc({...formAnc, status_hasil: e.target.value})}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    >
+                      <option value="Normal">Normal</option>
+                      <option value="Perlu Perhatian">Perlu Perhatian</option>
+                      <option value="Rujuk">Rujuk ke Faskes Lanjutan</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-1">Catatan Tindak Lanjut / Terapi</label>
+                    <textarea 
+                      rows={2}
+                      value={formAnc.catatan_tindak_lanjut}
+                      onChange={(e) => setFormAnc({...formAnc, catatan_tindak_lanjut: e.target.value})}
+                      placeholder="Contoh: Kondisi ibu dan janin sehat optimal. Persiapan persalinan P4K."
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-slate-600 font-semibold mb-1">Catatan Tindak Lanjut / Terapi</label>
-                <textarea 
-                  rows={2}
-                  value={formAnc.catatan_tindak_lanjut}
-                  onChange={(e) => setFormAnc({...formAnc, catatan_tindak_lanjut: e.target.value})}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                />
+              {/* SECTION 4: Catatan Tambahan & Lampiran Dokumen */}
+              <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 text-slate-800 font-bold">
+                  <div className="w-5 h-5 rounded-full bg-pink-100 text-[#E11D48] flex items-center justify-center text-[10px] font-extrabold">4</div>
+                  <span>Section 4: Catatan Tambahan & Lampiran Dokumen</span>
+                </div>
+
+                <div className="space-y-3 pt-1">
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-1">Catatan Tambahan (Opsional)</label>
+                    <textarea 
+                      rows={2}
+                      value={formAnc.catatan_tambahan}
+                      onChange={(e) => setFormAnc({...formAnc, catatan_tambahan: e.target.value})}
+                      placeholder="Tambahkan catatan khusus bila ada keluhan atau instruksi tambahan..."
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    />
+                  </div>
+
+                  {/* Upload Dokumen Box */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-slate-700 font-semibold">Unggah Dokumen Pendukung</label>
+                      <span className="text-[10px] text-slate-400">PDF, JPG, PNG (Maks 5 file, maks 5 MB per file)</span>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                      <label className="w-full sm:w-auto px-4 py-2.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl text-slate-700 font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all shadow-xs active:scale-95">
+                        <Upload size={14} className="text-[#E11D48]" />
+                        <span>Unggah Dokumen</span>
+                        <input 
+                          type="file"
+                          multiple
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+                      <span className="text-[11px] text-slate-500">
+                        {uploadedFiles.length > 0 ? `${uploadedFiles.length} file dipilih` : 'Belum ada file dipilih'}
+                      </span>
+                    </div>
+
+                    {/* Daftar File yang Terunggah */}
+                    {uploadedFiles.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        {uploadedFiles.map((file) => (
+                          <div key={file.id} className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-xl text-xs">
+                            <div className="flex items-center gap-2 truncate">
+                              <Paperclip size={14} className="text-[#E11D48] shrink-0" />
+                              <span className="font-medium text-slate-800 truncate">{file.name}</span>
+                              <span className="text-[10px] text-slate-400 shrink-0">({file.size})</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile(file.id)}
+                              className="p-1 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 cursor-pointer"
+                              title="Hapus file"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
+              {/* Action Buttons */}
               <div className="pt-2 flex justify-end gap-2.5">
                 <button
                   type="button"

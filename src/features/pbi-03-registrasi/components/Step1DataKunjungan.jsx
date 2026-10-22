@@ -88,6 +88,9 @@ export default function Step1DataKunjungan({
               }`}>
                 {peserta?.jenis_peserta || '-'}
               </span>
+              <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold border ${peserta?.status === 'Tidak Aktif' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                {peserta?.status || 'Aktif'}
+              </span>
             </div>
 
             {/* 3 Kolom: NIK, Tanggal Lahir, Alamat */}

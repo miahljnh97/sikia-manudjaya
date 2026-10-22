@@ -18,7 +18,11 @@ import {
   Activity,
   X,
   Users,
-  Plus
+  Plus,
+  Heart,
+  User,
+  ShieldCheck,
+  FileText
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
@@ -237,6 +241,190 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
       </div>
 
       {/* =====================================================================
+          SUB-PAGE 0: PROFIL ANAK (PBI 02B)
+      ====================================================================== */}
+      {activeSub === 'Profil Anak' && (
+        <div className="space-y-6">
+          {/* 1. Header Banner Profil Anak */}
+          <div className="bg-gradient-to-r from-[#FFF0F4] via-[#FFE4EC] to-[#FFD6E4] border border-pink-200/70 rounded-3xl p-6 sm:p-7 relative overflow-hidden shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 min-h-[160px]">
+            <div className="flex items-center gap-5">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-3 border-white shadow-md overflow-hidden shrink-0 bg-white flex items-center justify-center">
+                <img 
+                  src="/images/farhan-avatar.png" 
+                  alt={activeAnak?.nama || 'Farhan'} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => { 
+                    e.target.style.display = 'none';
+                    e.target.parentNode.innerHTML = '<span class=\"text-2xl font-bold text-[#E11D48]\">👶</span>';
+                  }}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                    {activeAnak?.nama || 'Farhan'}
+                  </h2>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]">
+                    Status: Aktif
+                  </span>
+                </div>
+                <p className="text-xs font-bold text-[#E11D48]">
+                  1 Tahun 2 Bulan (14 Bulan)
+                </p>
+                <p className="text-xs text-slate-500 font-medium">
+                  NIK: <strong className="text-slate-800 font-bold">{activeAnak?.nik || '3201234567890004'}</strong> · {activeAnak?.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki–Laki'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="bg-white/90 rounded-2xl p-4 border border-pink-200/60 text-right">
+                <span className="text-[10px] text-slate-400 font-medium block">Nomor Buku KIA Anak</span>
+                <span className="text-sm font-extrabold text-[#E11D48] block mt-0.5">KIA-2024-0012</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. 4 Kartu Detail Identitas Anak */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Card 1: Data Kelahiran */}
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-50">
+                <div className="w-8 h-8 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center font-bold">
+                  <Calendar size={16} />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">Data Kelahiran</h3>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Tanggal Lahir</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">{activeAnak?.tgl_lahir || '20 Desember 2024'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Waktu Kelahiran</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">08:45 WIB</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Tempat Persalinan</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">Puskesmas Manud Jaya</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Penolong Persalinan</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">Bidan Siti, S.Tr.Keb</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Antropometri Saat Lahir */}
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-50">
+                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+                  <Scale size={16} />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">Ukuran Saat Lahir</h3>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Berat Badan Lahir (BBL)</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">3.200 gram (3,2 kg)</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Panjang Badan Lahir (PBL)</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">49,0 cm</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Lingkar Kepala Lahir</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">34,0 cm</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Golongan Darah</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">O (Rhesus +)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Data Orang Tua & Domisili */}
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-50">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                  <User size={16} />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">Data Orang Tua & Domisili</h3>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Nama Ibu Kandung</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">Siti Aminah</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Nama Ayah</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">Ahmad Fauzi</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">No. Telepon / WhatsApp</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">081234567890</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Wilayah Posyandu</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">Posyandu Anggrek (Dusun 1)</span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-[10px] text-slate-400 font-medium block">Alamat Domisili</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">RT 02 / RW 01, Dusun Karang Anyar, Desa Manud Jaya</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Ringkasan Rekam Medis Anak */}
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-50">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                  <ShieldCheck size={16} />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">Status Kesehatan Terkini</h3>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-50/60 border border-emerald-100">
+                  <div>
+                    <span className="text-[10px] text-emerald-700 font-bold block uppercase">Status Gizi (KMS)</span>
+                    <span className="font-extrabold text-slate-900 mt-0.5 block">Gizi Baik (Normal)</span>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-emerald-700 border border-emerald-200">
+                    BB 9,8 kg · TB 75 cm
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-blue-50/60 border border-blue-100">
+                  <div>
+                    <span className="text-[10px] text-blue-700 font-bold block uppercase">Cakupan Imunisasi</span>
+                    <span className="font-extrabold text-slate-900 mt-0.5 block">7 dari 9 Vaksin Selesai</span>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-blue-700 border border-blue-200">
+                    Sesuai Jadwal
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-pink-50/60 border border-pink-100">
+                  <div>
+                    <span className="text-[10px] text-[#E11D48] font-bold block uppercase">Skrining Perkembangan (KPSP)</span>
+                    <span className="font-extrabold text-slate-900 mt-0.5 block">Perkembangan Sesuai Usia</span>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-[#E11D48] border border-pink-200">
+                    Skor 10/10
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
           SUB-PAGE 1: PERTUMBUHAN (Image 4)
       ====================================================================== */}
       {activeSub === 'Pertumbuhan' && (
@@ -273,12 +461,12 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
               </div>
             </div>
 
-            {/* Ilustrasi Anak di Kanan */}
-            <div className="hidden sm:flex items-end self-end pointer-events-none -mr-2 -mb-2">
+            {/* Ilustrasi Anak di Kanan (Rapi tanpa terpotong / clipped) */}
+            <div className="hidden sm:flex items-center justify-center shrink-0 pointer-events-none pr-2">
               <img 
                 src="/images/anak-pertumbuhan.png" 
                 alt="Ilustrasi Anak Pertumbuhan" 
-                className="h-36 sm:h-40 object-contain drop-shadow-sm"
+                className="h-32 sm:h-36 w-auto max-w-[150px] object-contain drop-shadow-sm"
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
             </div>
