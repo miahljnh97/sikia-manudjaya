@@ -72,6 +72,31 @@ export const pesertaService = {
   },
 
   /**
+   * Mengambil detail satu data peserta berdasarkan ID
+   */
+  async getPesertaById(id) {
+    if (!id) return null;
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('peserta')
+          .select('*, dusun:dusun_id (id, nama, kode), tipe_peserta:tipe_id (id, kode, nama)')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (!error && data) {
+          return normalizePeserta(data);
+        }
+      } catch (err) {
+        console.warn('Gagal fetch peserta by id dari Supabase:', err);
+      }
+    }
+    // Fallback: Ambil dari Central Store
+    const local = dataStoreService.getPesertaById(id);
+    return local ? normalizePeserta(local) : null;
+  },
+
+  /**
    * Update status kehadiran peserta - Mendukung 4 status: Hadir, Menunggu, Sudah dilayani, Tidak Hadir
    */
   async updateStatusKehadiran(id, statusKehadiran) {
