@@ -24,10 +24,20 @@ export const DUMMY_ACCOUNTS = {
     role: 'Bidan Desa',
     nama: 'Bidan Siti, S.Tr.Keb',
   },
+  ibu_hamil: {
+    email: 'ibu.hamil@manudjaya.id',
+    role: 'Ibu Hamil',
+    nama: 'Siti Aminah',
+  },
+  ibu_balita: {
+    email: 'ibu.balita@manudjaya.id',
+    role: 'Ibu Balita',
+    nama: 'Ibu Ratna',
+  },
   ibu: {
     email: 'ibu.balita@manudjaya.id',
     role: 'Ibu Balita',
-    nama: 'Ibu Aminah',
+    nama: 'Ibu Ratna',
   },
   admin: {
     email: 'admin.desa@manudjaya.id',

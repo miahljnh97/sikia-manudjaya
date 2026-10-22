@@ -241,106 +241,267 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         </div>
       </div>
 
-      {/* 3. 4 Quick Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 3. 4 Quick Stat Cards (Persis Figma Group 6) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Pemeriksaan Kehamilan ANC */}
         <div 
           onClick={() => onNavigate && onNavigate(`/kesehatan-ibu/pemeriksaan?peserta_id=${activePesertaId}`)}
-          className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 hover:shadow-sm transition-all"
+          className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
               <Stethoscope size={20} />
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-medium block">Pemeriksaan Kehamilan</span>
-              <span className="text-sm font-bold text-slate-900 mt-0.5 block">Buka Rekam ANC</span>
+              <span className="text-sm font-bold text-slate-900 mt-0.5 block">5 dari 8 kali</span>
             </div>
           </div>
-          <ChevronRight size={16} className="text-slate-400" />
+          <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
         </div>
 
         {/* Konsumsi TTD/MMS */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
               <HeartPulse size={20} />
             </div>
             <div>
-              <span className="text-[11px] text-slate-400 font-medium block">Konsumsi Tablet Tambah Darah</span>
-              <span className="text-sm font-bold text-slate-900 mt-0.5 block">{feDiminum} / {feTarget}</span>
-              <span className="text-[10px] text-slate-400">tablet telah diminum</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Jadwal Mendatang */}
-        <div 
-          onClick={() => onNavigate && onNavigate('/jadwal-saya')}
-          className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-blue-200 hover:shadow-sm transition-all"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
-              <Calendar size={20} />
-            </div>
-            <div>
-              <span className="text-[11px] text-slate-400 font-medium block">Jadwal Posyandu</span>
-              <span className="text-sm font-bold text-slate-900 mt-0.5 block">Jadwal Saya</span>
-              <span className="text-[10px] text-slate-400">Pengingat WhatsApp H-3</span>
+              <span className="text-[11px] text-slate-400 font-medium block">Konsumsi TTD/MMS</span>
+              <span className="text-sm font-bold text-slate-900 mt-0.5 block">23 / 28</span>
+              <span className="text-[10px] text-slate-400 block -mt-0.5">hari konsumsi bulan ini</span>
             </div>
           </div>
           <ChevronRight size={16} className="text-slate-400" />
         </div>
 
-        {/* Status Kesehatan */}
+        {/* Jadwal Mendatang */}
+        <div 
+          onClick={() => onNavigate && onNavigate('/jadwal-saya')}
+          className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 hover:shadow-sm transition-all group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+              <Calendar size={20} />
+            </div>
+            <div>
+              <span className="text-[11px] text-slate-400 font-medium block">Jadwal Mendatang</span>
+              <span className="text-sm font-bold text-slate-900 mt-0.5 block">2</span>
+              <span className="text-[10px] text-slate-400 block -mt-0.5">Agenda berikutnya</span>
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
+        </div>
+
+        {/* Berat Badan */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
               <Weight size={20} />
             </div>
             <div>
-              <span className="text-[11px] text-slate-400 font-medium block">Status Kehamilan</span>
-              <span className="text-sm font-bold text-emerald-600 mt-0.5 block">
-                {kehamilan?.status_kehamilan || 'Aktif'}
-              </span>
-              <span className="text-[10px] text-slate-400">Kondisi Optimal</span>
+              <span className="text-[11px] text-slate-400 font-medium block">Berat badan</span>
+              <span className="text-sm font-bold text-slate-900 mt-0.5 block">62 kg</span>
+              <span className="text-[10px] text-emerald-600 font-semibold block -mt-0.5">+8 kg</span>
             </div>
           </div>
+          <ChevronRight size={16} className="text-slate-400" />
         </div>
       </div>
 
-      {/* 4. Section Panduan Kehamilan */}
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-base font-bold text-slate-900">Panduan Kehamilan</h3>
-          <p className="text-xs text-slate-400">Informasi penting seputar perawatan dan kesehatan selama masa kehamilan</p>
+      {/* 4. Main Analytics: Perkembangan Kehamilan (Grafik BB) & Konsumsi TTD/MMS (Donut Chart) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Kolom Kiri: Perkembangan Kehamilan (Area Chart BB Ibu Hamil) */}
+        <div className="lg:col-span-7 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
+          <div>
+            <h3 className="text-sm sm:text-base font-bold text-slate-900">Perkembangan Kehamilan</h3>
+            <p className="text-[11px] text-slate-400">Grafik tren kenaikan berat badan ibu dari minggu ke minggu</p>
+          </div>
+
+          {/* SVG Line / Area Chart */}
+          <div className="w-full overflow-x-auto">
+            <div className="min-w-[420px] pt-4 pb-2">
+              <svg viewBox="0 0 500 240" className="w-full h-56 select-none">
+                <defs>
+                  <linearGradient id="bbGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#FB7185" stopOpacity="0.35" />
+                    <stop offset="100%" stopColor="#FFF1F2" stopOpacity="0.05" />
+                  </linearGradient>
+                </defs>
+
+                {/* Horizontal Grid lines (Y: 100, 80, 60, 40, 20, 0) */}
+                {/* 100 kg -> y=20 */}
+                <line x1="45" y1="20" x2="480" y2="20" stroke="#E2E8F0" strokeDasharray="3 3" />
+                <text x="35" y="24" textAnchor="end" fontSize="10" fill="#94A3B8">100</text>
+
+                {/* 80 kg -> y=60 */}
+                <line x1="45" y1="60" x2="480" y2="60" stroke="#E2E8F0" strokeDasharray="3 3" />
+                <text x="35" y="64" textAnchor="end" fontSize="10" fill="#94A3B8">80</text>
+
+                {/* 60 kg -> y=100 */}
+                <line x1="45" y1="100" x2="480" y2="100" stroke="#E2E8F0" strokeDasharray="3 3" />
+                <text x="35" y="104" textAnchor="end" fontSize="10" fill="#94A3B8">60</text>
+
+                {/* 40 kg -> y=140 */}
+                <line x1="45" y1="140" x2="480" y2="140" stroke="#E2E8F0" strokeDasharray="3 3" />
+                <text x="35" y="144" textAnchor="end" fontSize="10" fill="#94A3B8">40</text>
+
+                {/* 20 kg -> y=180 */}
+                <line x1="45" y1="180" x2="480" y2="180" stroke="#E2E8F0" strokeDasharray="3 3" />
+                <text x="35" y="184" textAnchor="end" fontSize="10" fill="#94A3B8">20</text>
+
+                {/* 0 kg -> y=220 (Baseline) */}
+                <line x1="45" y1="220" x2="480" y2="220" stroke="#CBD5E1" strokeWidth="1.5" />
+                <text x="35" y="224" textAnchor="end" fontSize="10" fill="#94A3B8">0</text>
+
+                {/* X-Axis Labels (Weeks 12, 16, 20, 24, 28) */}
+                {/* Points:
+                    w12: x=45, bb=54kg -> y = 220 - (54 * 2) = 112
+                    w16: x=154, bb=59kg -> y = 220 - (59 * 2) = 102
+                    w20: x=262, bb=61kg -> y = 220 - (61 * 2) = 98
+                    w24: x=371, bb=63kg -> y = 220 - (63 * 2) = 94
+                    w28: x=480, bb=64.5kg -> y = 220 - (64.5 * 2) = 91
+                */}
+                <text x="45" y="235" textAnchor="middle" fontSize="10" fill="#64748B">12</text>
+                <text x="154" y="235" textAnchor="middle" fontSize="10" fill="#64748B">16</text>
+                <text x="262" y="235" textAnchor="middle" fontSize="10" fill="#64748B">20</text>
+                <text x="371" y="235" textAnchor="middle" fontSize="10" fill="#64748B">24</text>
+                <text x="480" y="235" textAnchor="middle" fontSize="10" fill="#64748B">28</text>
+
+                {/* Shaded Area Under Curve */}
+                <polygon
+                  points="45,220 45,112 154,102 262,98 371,94 480,91 480,220"
+                  fill="url(#bbGradient)"
+                />
+
+                {/* Curve Line */}
+                <polyline
+                  points="45,112 154,102 262,98 371,94 480,91"
+                  fill="none"
+                  stroke="#E11D48"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+
+                {/* Data Points */}
+                <circle cx="45" cy="112" r="4.5" fill="#FFFFFF" stroke="#E11D48" strokeWidth="2.5" />
+                <circle cx="154" cy="102" r="4.5" fill="#FFFFFF" stroke="#E11D48" strokeWidth="2.5" />
+                <circle cx="262" cy="98" r="4.5" fill="#FFFFFF" stroke="#E11D48" strokeWidth="2.5" />
+                <circle cx="371" cy="94" r="4.5" fill="#FFFFFF" stroke="#E11D48" strokeWidth="2.5" />
+                <circle cx="480" cy="91" r="4.5" fill="#FFFFFF" stroke="#E11D48" strokeWidth="2.5" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Chart Legend */}
+          <div className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-600">
+            <span className="w-3 h-0.5 bg-[#E11D48] inline-block rounded-full"></span>
+            <span className="w-2 h-2 rounded-full border-2 border-[#E11D48] bg-white inline-block"></span>
+            <span className="font-medium text-slate-700">Berat Badan</span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {panduanList.map((item) => (
-            <div 
-              key={item.id}
-              onClick={() => setSelectedPanduan(item)}
-              className="bg-white border border-slate-100 hover:border-pink-200 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between cursor-pointer group transition-all"
-            >
-              <div className="space-y-2">
-                <div className="w-10 h-10 rounded-2xl bg-pink-50 text-[#E11D48] flex items-center justify-center font-bold">
-                  <FileText size={18} />
+        {/* Kolom Kanan: Konsumsi TTD/MMS (Donut Chart) & Panduan untuk Ibu */}
+        <div className="lg:col-span-5 space-y-6">
+          {/* Card Donut Chart TTD/MMS */}
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900">Konsumsi TTD/MMS</h3>
+
+            <div className="flex items-center gap-6">
+              {/* SVG Donut Chart */}
+              <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                  {/* Background Ring (Belum diminum - 5 hari / 18%) */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    fill="transparent"
+                    stroke="#E2E8F0"
+                    strokeWidth="14"
+                  />
+                  {/* Foreground Ring (Sudah diminum - 23 hari / 82%) */}
+                  {/* Circumference = 2 * PI * 38 = 238.76. 82.1% = 196 */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    fill="transparent"
+                    stroke="#E11D48"
+                    strokeWidth="14"
+                    strokeDasharray="238.76"
+                    strokeDashoffset="42.7"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                {/* Center Percentage Display */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span className="text-base font-extrabold text-slate-900 leading-none">82%</span>
+                  <span className="text-[9px] text-slate-400 mt-0.5">Tercapai</span>
                 </div>
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
-                  {item.title}
-                </h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  {item.desc}
-                </p>
               </div>
 
-              <div className="pt-4 flex items-center justify-between text-xs font-bold text-[#E11D48]">
-                <span>Baca Selengkapnya</span>
-                <ChevronRight size={15} className="group-hover:translate-x-1 transition-transform" />
+              {/* Legend List */}
+              <div className="space-y-2.5 text-xs flex-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#E11D48] shrink-0" />
+                    <span className="text-slate-600">Sudah diminum</span>
+                  </div>
+                  <span className="font-bold text-slate-900">23 hari</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0" />
+                    <span className="text-slate-600">Belum diminum</span>
+                  </div>
+                  <span className="font-bold text-slate-900">5 hari</span>
+                </div>
               </div>
             </div>
-          ))}
+
+            {/* Blue / Purple Info Callout Box */}
+            <div className="bg-[#EEF2FF] border border-[#E0E7FF] rounded-2xl p-4 flex items-start gap-3 text-xs text-[#3730A3]">
+              <Info size={18} className="shrink-0 text-[#4F46E5] mt-0.5" />
+              <p className="leading-relaxed">
+                Tablet Tambah Darah (TTD) dilanjutkan diminum setiap hari selama kehamilan, minimal 90 tablet (3 bulan) sesuai buku KIA
+              </p>
+            </div>
+          </div>
+
+          {/* Card Panduan untuk Ibu */}
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900">Panduan untuk Ibu</h3>
+              <button 
+                type="button"
+                onClick={() => setSelectedPanduan(panduanList[0])}
+                className="text-xs font-bold text-[#E11D48] hover:underline cursor-pointer"
+              >
+                Lihat Semua
+              </button>
+            </div>
+
+            <div className="divide-y divide-slate-100">
+              {panduanList.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => setSelectedPanduan(item)}
+                  className="py-3 flex items-center justify-between group cursor-pointer hover:bg-slate-50/60 rounded-xl px-2 -mx-2 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <FileText size={16} className="text-slate-400 group-hover:text-[#E11D48] transition-colors" />
+                    <span className="text-xs font-semibold text-slate-800 group-hover:text-[#E11D48] transition-colors">
+                      {item.title}
+                    </span>
+                  </div>
+                  <ChevronRight size={15} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

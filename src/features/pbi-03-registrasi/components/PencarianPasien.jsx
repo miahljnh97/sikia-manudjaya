@@ -208,6 +208,7 @@ export default function PencarianPasien({
                 <th className="py-3.5 px-5">Tanggal Lahir</th>
                 <th className="py-3.5 px-5">Usia</th>
                 <th className="py-3.5 px-5">Alamat</th>
+                <th className="py-3.5 px-5">Status Peserta</th>
                 <th className="py-3.5 px-5">Status Kehadiran</th>
                 <th className="py-3.5 px-5 text-right">Aksi</th>
               </tr>
@@ -215,7 +216,7 @@ export default function PencarianPasien({
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {paginatedList.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400">
+                  <td colSpan={10} className="py-10 text-center text-slate-400">
                     Tidak ada data peserta ditemukan.
                   </td>
                 </tr>
@@ -288,6 +289,11 @@ export default function PencarianPasien({
                       <td className="py-3.5 px-5 text-slate-500">{item.tanggal_lahir || item.tgl_lahir || '-'}</td>
                       <td className="py-3.5 px-5 text-slate-600">{item.usia || '-'}</td>
                       <td className="py-3.5 px-5 text-slate-600">{item.alamat || '-'}</td>
+                      <td className="py-3.5 px-5">
+                        <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border ${item.status === 'Tidak Aktif' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                          {item.status || 'Aktif'}
+                        </span>
+                      </td>
                       <td className="py-3.5 px-5">{statusBadge}</td>
                       <td className="py-3.5 px-5 text-right">
                         <button

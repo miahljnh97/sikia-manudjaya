@@ -157,6 +157,44 @@ export const bukuKiaService = {
   },
 
   /**
+   * Mengambil atau membuat otomatis record kehamilan aktif
+   */
+  async getOrCreateKehamilanIbu(pesertaId) {
+    if (!pesertaId) return null;
+    const existing = await this.getKehamilanIbu(pesertaId);
+    if (existing && existing.id) return existing;
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('kehamilan_ibu')
+          .insert([{
+            peserta_id: pesertaId,
+            gravida: 1,
+            usia_kehamilan_minggu: 28,
+            trimester: 3,
+            status_kehamilan: 'Aktif'
+          }])
+          .select()
+          .single();
+
+        if (!error && data) return data;
+      } catch (err) {
+        console.warn('Auto create kehamilan_ibu error:', err);
+      }
+    }
+
+    return {
+      id: 'kh-' + pesertaId,
+      peserta_id: pesertaId,
+      gravida: 1,
+      usia_kehamilan_minggu: 28,
+      trimester: 3,
+      status_kehamilan: 'Aktif'
+    };
+  },
+
+  /**
    * Mengambil riwayat pemeriksaan ANC TERISOLASI untuk kehamilan tertentu
    */
   async getPemeriksaanAncList(kehamilanId) {

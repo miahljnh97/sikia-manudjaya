@@ -34,6 +34,12 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
   const [activePesertaId, setActivePesertaId] = useState(() => extractPesertaId() || '55af67c9-6695-4435-b4ea-2720efd73c92');
   const [peserta, setPeserta] = useState(null);
   const [selectedDoc, setSelectedDoc] = useState(null);
+  const [riwayatKF, setRiwayatKF] = useState([
+    { no: 1, kunjungan: 'KF 1', waktu: '6 Jam - 3 hari setelah persalinan', fokus: 'Kondisi umum ibu, perdarahan, tanda vital, ASI awal', status: 'Belum' },
+    { no: 2, kunjungan: 'KF 2', waktu: '4 - 7 hari setelah persalinan', fokus: 'Pemulihan ibu, luka, involusi uterus, menyusui', status: 'Belum' },
+    { no: 3, kunjungan: 'KF 3', waktu: '8 - 28 hari setelah persalinan', fokus: 'Kondisi ibu & bayi, menyusui, KB pasca persalinan', status: 'Belum' },
+    { no: 4, kunjungan: 'KF 4', waktu: '29 - 42 hari setelah persalinan', fokus: 'Evaluasi akhir masa nifas & KB', status: 'Belum' },
+  ]);
 
   useEffect(() => {
     const urlId = extractPesertaId();
@@ -75,13 +81,6 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
       onNavigate(`/kesehatan-ibu/nifas-menyusui?peserta_id=${newId}`);
     }
   };
-
-  const [riwayatKF, setRiwayatKF] = useState([
-    { no: 1, kunjungan: 'KF 1', waktu: '6 Jam - 3 hari setelah persalinan', fokus: 'Kondisi umum ibu, perdarahan, tanda vital, ASI awal', status: 'Belum' },
-    { no: 2, kunjungan: 'KF 2', waktu: '4 - 7 hari setelah persalinan', fokus: 'Pemulihan ibu, luka, involusi uterus, menyusui', status: 'Belum' },
-    { no: 3, kunjungan: 'KF 3', waktu: '8 - 28 hari setelah persalinan', fokus: 'Kondisi ibu & bayi, menyusui, KB pasca persalinan', status: 'Belum' },
-    { no: 4, kunjungan: 'KF 4', waktu: '29 - 42 hari setelah persalinan', fokus: 'Evaluasi akhir masa nifas & KB', status: 'Belum' },
-  ]);
 
   const edukasiASI = [
     { title: 'Manfaat ASI Ekslusif', content: 'ASI eksklusif melindungi bayi dari infeksi, mendukung perkembangan kecerdasan otak, mempererat ikatan batin ibu-bayi, serta mempercepat proses pemulihan rahim pasca melahirkan.' },

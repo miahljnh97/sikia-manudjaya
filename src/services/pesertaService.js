@@ -25,7 +25,6 @@ export const pesertaService = {
             dusun:dusun_id (id, nama, kode),
             tipe_peserta:tipe_id (id, kode, nama)
           `)
-          .eq('is_suspended', false)
           .order('id', { ascending: true });
 
         if (!error && data && data.length > 0) {
@@ -39,7 +38,6 @@ export const pesertaService = {
               .from('kunjungan')
               .select('peserta_id, status_kehadiran, jam_kedatangan, created_at')
               .in('tanggal', targetDates)
-              .eq('is_suspended', false)
               .order('created_at', { ascending: false });
 
             const kunjunganMap = new Map();

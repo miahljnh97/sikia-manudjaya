@@ -12,7 +12,8 @@ import {
   Smile,
   Calendar,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Stethoscope
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -44,6 +45,7 @@ export default function Sidebar({
   ];
 
   const subKesehatanAnak = [
+    { id: 'Profil Anak', label: 'Profil Anak' },
     { id: 'Pertumbuhan', label: 'Pertumbuhan' },
     { id: 'Perkembangan', label: 'Perkembangan' },
     { id: 'Imunisasi', label: 'Imunisasi' },
@@ -148,6 +150,19 @@ export default function Sidebar({
             >
               <Users size={18} className={activeMenu === 'Data Peserta' ? 'text-[#2563EB]' : 'text-slate-400'} />
               <span>Data Peserta</span>
+            </button>
+
+            {/* Menu Pemeriksaan untuk Bidan / Kader (PBI 02C & Figma Bidan View) */}
+            <button
+              onClick={() => handleSelect('Pemeriksaan')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                activeMenu === 'Pemeriksaan' || activeMenu === 'Pemeriksaan Ibu'
+                  ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <Stethoscope size={18} className={activeMenu === 'Pemeriksaan' || activeMenu === 'Pemeriksaan Ibu' ? 'text-[#2563EB]' : 'text-slate-400'} />
+              <span>Pemeriksaan</span>
             </button>
 
             {/* 4. Riwayat Kunjungan */}

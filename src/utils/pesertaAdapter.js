@@ -163,7 +163,7 @@ export function normalizePeserta(row) {
     telepon: row.no_wa || row.telepon || '-',
     jenis_kelamin: jenisKelamin,
     nama_suami: row.nama_suami || null,
-    status: (row.aktif !== false && !row.is_suspended) ? 'Aktif' : 'Non-Aktif',
+    status: (row.status === 'Tidak Aktif' || row.status === 'Non-Aktif' || row.aktif === false || row.is_suspended) ? 'Tidak Aktif' : 'Aktif',
     status_kehadiran: row.status_kehadiran || 'Belum Hadir',
     waktu_hadir: row.waktu_hadir || null,
   };
