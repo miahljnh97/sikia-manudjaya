@@ -8,11 +8,23 @@ export const authService = {
   async login(email, password) {
     const lowerEmail = (email || '').toLowerCase().trim();
 
-    // Fast-path untuk Akun Ibu Hamil evaluasi (karena domain manudjaya.id tidak di-whitelist di Auth SMTP)
+    // Fast-path untuk Akun Ibu demo evaluasi
     if ((lowerEmail === DUMMY_ACCOUNTS.ibu_hamil?.email || lowerEmail === 'ibu.hamil@manudjaya.id') && password === 'Ibu123!') {
       return { 
-        user: { email, id: '55af67c9-6695-4435-b4ea-2720efd73c92' }, 
+        user: { email, id: DUMMY_ACCOUNTS.ibu_hamil.peserta_id }, 
         ...DUMMY_ACCOUNTS.ibu_hamil 
+      };
+    }
+    if ((lowerEmail === DUMMY_ACCOUNTS.ibu_balita?.email || lowerEmail === 'ibu.balita@manudjaya.id') && password === 'Ibu123!') {
+      return { 
+        user: { email, id: DUMMY_ACCOUNTS.ibu_balita.peserta_id }, 
+        ...DUMMY_ACCOUNTS.ibu_balita 
+      };
+    }
+    if ((lowerEmail === DUMMY_ACCOUNTS.ibu_hamil_anak?.email || lowerEmail === 'ibu.hamil.anak@manudjaya.id' || lowerEmail === 'siti.aminah@manudjaya.id') && password === 'Ibu123!') {
+      return { 
+        user: { email, id: DUMMY_ACCOUNTS.ibu_hamil_anak.peserta_id }, 
+        ...DUMMY_ACCOUNTS.ibu_hamil_anak 
       };
     }
 
@@ -94,10 +106,8 @@ export const authService = {
             normalizedRole = 'Super Admin';
           } else if (r.includes('bidan') || r === 'bidan_desa') {
             normalizedRole = 'Bidan Desa';
-          } else if (r.includes('hamil') || lowerEmail.includes('hamil')) {
-            normalizedRole = 'Ibu Hamil';
-          } else if (r.includes('ibu') || r === 'ibu_balita') {
-            normalizedRole = 'Ibu Balita';
+          } else if (r.includes('ibu') || r.includes('hamil') || r.includes('balita') || lowerEmail.includes('ibu')) {
+            normalizedRole = 'Ibu';
           } else {
             normalizedRole = 'Kader Posyandu';
           }
@@ -121,10 +131,13 @@ export const authService = {
       return { user: { email }, ...DUMMY_ACCOUNTS.bidan };
     }
     if ((lowerEmail === DUMMY_ACCOUNTS.ibu_hamil?.email || lowerEmail === 'ibu.hamil@manudjaya.id') && password === 'Ibu123!') {
-      return { user: { email, id: '55af67c9-6695-4435-b4ea-2720efd73c92' }, ...DUMMY_ACCOUNTS.ibu_hamil };
+      return { user: { email, id: DUMMY_ACCOUNTS.ibu_hamil.peserta_id }, ...DUMMY_ACCOUNTS.ibu_hamil };
     }
-    if ((lowerEmail === DUMMY_ACCOUNTS.ibu_balita?.email || lowerEmail === 'ibu.balita@manudjaya.id' || lowerEmail === DUMMY_ACCOUNTS.ibu?.email) && password === 'Ibu123!') {
-      return { user: { email, id: 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73' }, ...DUMMY_ACCOUNTS.ibu_balita };
+    if ((lowerEmail === DUMMY_ACCOUNTS.ibu_balita?.email || lowerEmail === 'ibu.balita@manudjaya.id') && password === 'Ibu123!') {
+      return { user: { email, id: DUMMY_ACCOUNTS.ibu_balita.peserta_id }, ...DUMMY_ACCOUNTS.ibu_balita };
+    }
+    if ((lowerEmail === DUMMY_ACCOUNTS.ibu_hamil_anak?.email || lowerEmail === 'ibu.hamil.anak@manudjaya.id' || lowerEmail === 'siti.aminah@manudjaya.id') && password === 'Ibu123!') {
+      return { user: { email, id: DUMMY_ACCOUNTS.ibu_hamil_anak.peserta_id }, ...DUMMY_ACCOUNTS.ibu_hamil_anak };
     }
     if (lowerEmail === DUMMY_ACCOUNTS.admin.email && password === 'Admin123!') {
       return { user: { email }, ...DUMMY_ACCOUNTS.admin };

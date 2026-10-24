@@ -26,18 +26,27 @@ export const DUMMY_ACCOUNTS = {
   },
   ibu_hamil: {
     email: 'ibu.hamil@manudjaya.id',
-    role: 'Ibu Hamil',
-    nama: 'Siti Aminah',
+    role: 'Ibu',
+    nama: 'Najwa Sihab',
+    peserta_id: '214fbe12-2216-4e61-9b12-9fccca445e84', // Ibu Hamil Saja (Belum punya anak)
   },
   ibu_balita: {
     email: 'ibu.balita@manudjaya.id',
-    role: 'Ibu Balita',
+    role: 'Ibu',
     nama: 'Ibu Ratna',
+    peserta_id: 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73', // Ibu Balita Saja (Alea Shanum Almahira)
+  },
+  ibu_hamil_anak: {
+    email: 'ibu.hamil.anak@manudjaya.id',
+    role: 'Ibu',
+    nama: 'Siti Aminah',
+    peserta_id: '55af67c9-6695-4435-b4ea-2720efd73c92', // Ibu Hamil dengan Balita (Dian Pranata)
   },
   ibu: {
-    email: 'ibu.balita@manudjaya.id',
-    role: 'Ibu Balita',
-    nama: 'Ibu Ratna',
+    email: 'ibu.hamil@manudjaya.id',
+    role: 'Ibu',
+    nama: 'Najwa Sihab',
+    peserta_id: '214fbe12-2216-4e61-9b12-9fccca445e84',
   },
   admin: {
     email: 'admin.desa@manudjaya.id',

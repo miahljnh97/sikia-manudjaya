@@ -73,16 +73,23 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
     }
   }, [currentPath]);
 
-  // Load daftar anak untuk dropdown selector Bidan/Kader
+  // Load daftar anak untuk dropdown selector Bidan/Kader atau anak milik ibu login
   useEffect(() => {
-    bukuKiaService.getDaftarAnak().then(list => {
+    const ibuId = isIbuRole ? (user?.peserta_id || user?.user?.id || user?.id) : null;
+    bukuKiaService.getDaftarAnak(ibuId).then(list => {
       if (list && list.length > 0) {
         setDaftarAnak(list);
-        const cur = list.find(a => a.id === activeAnakId) || list[0];
+        const urlId = extractAnakId();
+        const cur = (urlId ? list.find(a => a.id === urlId) : null) || list[0];
         setActiveAnak(cur);
+        setActiveAnakId(cur.id);
+      } else {
+        setDaftarAnak([]);
+        setActiveAnak(null);
+        setActiveAnakId(null);
       }
     });
-  }, []);
+  }, [user]);
 
   // Handler pergantian anak oleh Bidan/Kader
   const handleSwitchAnak = (newId) => {
@@ -254,6 +261,32 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
         )}
       </div>
 
+      {/* Tampilan edukatif jika Ibu Hamil Saja belum memiliki anak terdaftar */}
+      {isIbuRole && !activeAnak && (
+        <div className="bg-white border border-slate-100 rounded-3xl p-8 text-center max-w-lg mx-auto shadow-xs space-y-4 my-8">
+          <div className="w-16 h-16 rounded-full bg-pink-50 text-[#E11D48] flex items-center justify-center mx-auto">
+            <Baby size={32} />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-lg font-bold text-slate-900">Belum Ada Data Anak Terdaftar</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Anda saat ini terdaftar dalam program pemantauan kehamilan. Rekam medis anak, grafik pertumbuhan KMS, dan jadwal imunisasi akan otomatis aktif setelah proses kelahiran dicatat oleh Bidan Desa / Kader Posyandu.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onNavigate && onNavigate('/kesehatan-ibu/kehamilan')}
+            className="px-5 py-2.5 bg-[#FF4D80] hover:bg-[#F43F5E] text-white rounded-full text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-pink-200"
+          >
+            <span>Buka Buku KIA Kehamilan</span>
+            <ChevronRight size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Konten Sub-Halaman Buku KIA Anak (hanya tampil jika anak tersedia atau peran tenaga kesehatan) */}
+      {(activeAnak || !isIbuRole) && (
+      <>
       {/* =====================================================================
           SUB-PAGE 0: PROFIL ANAK (PBI 02B)
       ====================================================================== */}
@@ -1440,6 +1473,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
             </form>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

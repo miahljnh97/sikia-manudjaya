@@ -31,7 +31,8 @@ export default function JadwalSayaView({ onNavigate, onShowToast }) {
   ]);
 
   useEffect(() => {
-    bukuKiaService.getJadwalPesertaList('55af67c9-6695-4435-b4ea-2720efd73c92').then((res) => {
+    const targetIbuId = user?.peserta_id || user?.user?.id || user?.id || '55af67c9-6695-4435-b4ea-2720efd73c92';
+    bukuKiaService.getJadwalPesertaList(targetIbuId).then((res) => {
       if (res && res.length > 0) {
         const mapped = res.map((j, idx) => ({
           no: idx + 1,
