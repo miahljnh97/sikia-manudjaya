@@ -22,48 +22,46 @@ import {
 } from 'lucide-react';
 
 export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
-  const userRole = (user?.role || '').toLowerCase();
-  const userEmail = (user?.email || user?.user?.email || '').toLowerCase();
-  const isIbuBalita = (userRole.includes('balita') || userEmail.includes('balita')) && !userRole.includes('hamil') && !userEmail.includes('hamil');
+  const ibuId = user?.peserta_id || user?.user?.id || user?.id || (
+    (user?.nama || '').toLowerCase().includes('ratna') ? 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73' :
+    (user?.nama || '').toLowerCase().includes('najwa') ? '214fbe12-2216-4e61-9b12-9fccca445e84' :
+    '55af67c9-6695-4435-b4ea-2720efd73c92'
+  );
 
   const [kehamilan, setKehamilan] = useState(null);
-  const [anak, setAnak] = useState({
-    id: 'b2222222-2222-2222-2222-222222222222',
-    nama: 'Dian Pranata',
-    tgl_lahir: '2025-07-15'
-  });
+  const [anak, setAnak] = useState(null);
   const [jadwalList, setJadwalList] = useState([
     {
       day: '20',
       month: 'Okt',
-      title: 'Pemeriksaan Kehamilan',
-      location: 'Puskesmas Manud Jaya',
-      tanggal: '2026-10-20'
-    },
-    {
-      day: '20',
-      month: 'Okt',
-      title: 'Posyandu Balita',
+      title: 'Pemeriksaan Rutin Posyandu',
       location: 'Puskesmas Manud Jaya',
       tanggal: '2026-10-20'
     }
   ]);
 
   useEffect(() => {
-    bukuKiaService.getKehamilanIbu().then(res => {
-      if (res) setKehamilan(res);
+    if (!ibuId) return;
+
+    // 1. Ambil data kehamilan ibu (aktif jika hamil)
+    bukuKiaService.getKehamilanIbu(ibuId).then(res => {
+      setKehamilan(res);
     });
 
-    bukuKiaService.getDaftarAnak().then(list => {
+    // 2. Ambil data anak milik ibu ini
+    bukuKiaService.getDaftarAnak(ibuId).then(list => {
       if (list && list.length > 0) {
-        const myAnak = list.find(a => a.id === 'b2222222-2222-2222-2222-222222222222' || a.ibu_id === (user?.id || '55af67c9-6695-4435-b4ea-2720efd73c92')) || list[0];
-        if (myAnak) setAnak(myAnak);
+        setAnak(list[0]);
+      } else {
+        setAnak(null);
       }
     }).catch(err => {
       console.warn('Gagal load data anak di dashboard:', err);
+      setAnak(null);
     });
 
-    bukuKiaService.getJadwalPesertaList().then(res => {
+    // 3. Ambil jadwal terdekat
+    bukuKiaService.getJadwalPesertaList(ibuId).then(res => {
       if (res && res.length > 0) {
         const formatted = res.slice(0, 2).map(item => {
           try {
@@ -93,7 +91,10 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
         }
       }
     });
-  }, []);
+  }, [ibuId]);
+
+  const hasKehamilan = Boolean(kehamilan && (kehamilan.status_kehamilan === 'Aktif' || kehamilan.usia_kehamilan_minggu));
+  const hasAnak = Boolean(anak);
 
   const handleNav = (path) => {
     if (onNavigate) {
@@ -125,13 +126,13 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
             <div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#E11D48] tracking-tight">
-                {isIbuBalita ? 'Ibu Ratna' : 'Siti Aminah'}
+                {user?.nama || (hasKehamilan ? 'Siti Aminah' : 'Ibu Ratna')}
               </h2>
               <p className="text-xs text-slate-600 font-medium mt-1">
-                {isIbuBalita ? (
-                  <>Status: <strong className="text-slate-900 font-bold">Pasca Persalinan (Menyusui)</strong> · Kondisi Sehat</>
-                ) : (
+                {hasKehamilan ? (
                   <>Usia Kehamilan: <strong className="text-slate-900 font-bold">{kehamilan?.usia_kehamilan_minggu || 28} Minggu</strong> · Trimester {kehamilan?.trimester || 3}</>
+                ) : (
+                  <>Status: <strong className="text-slate-900 font-bold">Pasca Persalinan (Menyusui)</strong> · Kondisi Sehat</>
                 )}
               </p>
             </div>
@@ -139,7 +140,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
             <div className="pt-2">
               <button
                 type="button"
-                onClick={() => handleNav(isIbuBalita ? '/kesehatan-ibu/nifas-menyusui' : '/kesehatan-ibu/kehamilan')}
+                onClick={() => handleNav(hasKehamilan ? '/kesehatan-ibu/kehamilan' : '/kesehatan-ibu/nifas-menyusui')}
                 className="px-5 py-2.5 bg-[#FF4D80] hover:bg-[#F43F5E] text-white rounded-full text-xs font-bold inline-flex items-center gap-1.5 shadow-md shadow-pink-300/40 transition-all cursor-pointer active:scale-95"
               >
                 <span>Lihat Detail Ibu</span>
@@ -162,7 +163,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
         </div>
 
         {/* Card 2: Kesehatan Anak (Balita Terdaftar vs Belum Terdaftar) */}
-        {(isIbuBalita || anak) ? (
+        {hasAnak ? (
           /* Tampilan Anak Terdaftar (Dian Pranata - Konsisten dengan Profil Anak) */
           <div className="bg-gradient-to-r from-[#FFF5F7] via-[#FFEBF1] to-[#FFE0EA] border border-pink-200/70 rounded-3xl p-6 sm:p-7 relative overflow-hidden shadow-xs flex flex-col justify-between items-center text-center min-h-[220px]">
             <div className="w-full flex items-center justify-start">
@@ -430,7 +431,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
         </div>
 
         {/* Ringkasan Kesehatan Anak (Jika Ibu Balita atau anak terdaftar) */}
-        {(isIbuBalita || anak) && (
+        {hasAnak && (
           <div className="bg-white/70 border border-pink-100/80 rounded-3xl p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900">Ringkasan Kesehatan Anak ({anak?.nama || 'Dian Pranata'})</h3>
