@@ -95,7 +95,7 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 sm:px-6 z-20 shrink-0">
+    <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 sm:px-6 z-20 shrink-0 sticky top-0">
       {/* Tombol Hamburger Menu (HP & Toggle Desktop) */}
       <div className="flex items-center gap-3">
         <button

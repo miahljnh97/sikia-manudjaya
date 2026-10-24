@@ -176,7 +176,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
       />
 
       {/* 2. Main Workspace Content */}
-      <div className="flex-1 flex flex-col min-w-0 w-full transition-all duration-300">
+      <div className={`flex-1 flex flex-col min-w-0 w-full transition-all duration-300 ${isSidebarOpen ? 'lg:pl-64' : 'lg:pl-0'}`}>
         <Navbar 
           user={currentUser} 
           onLogout={onLogout} 

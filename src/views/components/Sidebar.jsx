@@ -64,10 +64,10 @@ export default function Sidebar({
 
       {/* Sidebar Container */}
       <aside 
-        className={`fixed lg:sticky top-0 bottom-0 lg:bottom-auto left-0 lg:left-auto h-screen z-50 bg-white border-r border-slate-100 flex flex-col shrink-0 transition-all duration-300 ease-in-out ${
+        className={`fixed top-0 bottom-0 left-0 z-40 bg-white border-r border-slate-100 flex flex-col shrink-0 transition-all duration-300 ease-in-out ${
           isOpen 
             ? 'w-64 translate-x-0 shadow-2xl lg:shadow-none' 
-            : 'w-0 -translate-x-full lg:w-0 lg:-translate-x-full overflow-hidden border-none'
+            : 'w-0 -translate-x-full overflow-hidden border-none'
         }`}
       >
         <div className="w-64 flex flex-col h-full min-h-0">
