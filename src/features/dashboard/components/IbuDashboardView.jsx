@@ -29,6 +29,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
   );
 
   const [kehamilan, setKehamilan] = useState(null);
+  const [daftarAnak, setDaftarAnak] = useState([]);
   const [anak, setAnak] = useState(null);
   const [jadwalList, setJadwalList] = useState([
     {
@@ -51,12 +52,15 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
     // 2. Ambil data anak milik ibu ini
     bukuKiaService.getDaftarAnak(ibuId).then(list => {
       if (list && list.length > 0) {
+        setDaftarAnak(list);
         setAnak(list[0]);
       } else {
+        setDaftarAnak([]);
         setAnak(null);
       }
     }).catch(err => {
       console.warn('Gagal load data anak di dashboard:', err);
+      setDaftarAnak([]);
       setAnak(null);
     });
 
@@ -164,26 +168,52 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
         {/* Card 2: Kesehatan Anak (Balita Terdaftar vs Belum Terdaftar) */}
         {hasAnak ? (
-          /* Tampilan Anak Terdaftar (Dian Pranata - Konsisten dengan Profil Anak) */
+          /* Tampilan Anak Terdaftar */
           <div className="bg-gradient-to-r from-[#FFF5F7] via-[#FFEBF1] to-[#FFE0EA] border border-pink-200/70 rounded-3xl p-6 sm:p-7 relative overflow-hidden shadow-xs flex flex-col justify-between items-center text-center min-h-[220px]">
-            <div className="w-full flex items-center justify-start">
+            <div className="w-full flex items-center justify-between gap-2 flex-wrap">
               <div className="inline-flex items-center gap-1.5 text-pink-600 text-xs font-bold">
                 <Star size={14} className="fill-pink-500 text-pink-500" />
                 <span>Kesehatan Anak</span>
               </div>
+
+              {/* Multiple Children Tab Selector jika punya > 1 anak */}
+              {daftarAnak.length > 1 && (
+                <div className="flex items-center gap-1 bg-white/80 backdrop-blur-xs p-1 rounded-xl border border-pink-200/60 shadow-2xs">
+                  {daftarAnak.map((a) => {
+                    const isSelected = a.id === anak?.id;
+                    const isBoy = a.jenis_kelamin === 'L';
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        data-anak-id={a.id}
+                        onClick={() => setAnak(a)}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#E11D48] text-white shadow-xs'
+                            : 'text-slate-600 hover:text-[#E11D48] hover:bg-white/60'
+                        }`}
+                      >
+                        <span>{isBoy ? '👦' : '👧'}</span>
+                        <span>{a.nama.split(' ')[0]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="my-1 flex flex-col items-center max-w-sm">
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-pink-100/80 border-2 border-pink-200 p-1 flex items-center justify-center">
                 <img 
                   src="/images/baby-wreath.png" 
-                  alt={anak?.nama || 'Dian Pranata'} 
+                  alt={anak?.nama || 'Si Kecil'} 
                   className="w-full h-full object-contain"
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
               </div>
               <h3 className="text-xl sm:text-2xl font-extrabold text-[#E11D48] tracking-tight mt-2">
-                {anak?.nama || 'Dian Pranata'}
+                {anak?.nama || 'Si Kecil'}
               </h3>
               <p className="text-xs text-slate-600 font-medium mt-0.5">
                 {hitungUsiaString(anak?.tgl_lahir)}
@@ -193,7 +223,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
             <div className="pt-2">
               <button
                 type="button"
-                onClick={() => handleNav(`/kesehatan-anak/profil?anak_id=${anak?.id || 'b2222222-2222-2222-2222-222222222222'}`)}
+                onClick={() => handleNav(`/kesehatan-anak/profil?anak_id=${anak?.id}`)}
                 className="px-6 py-2.5 bg-[#FF4D80] hover:bg-[#F43F5E] text-white rounded-full text-xs font-bold inline-flex items-center gap-1.5 shadow-md shadow-pink-300/40 transition-all cursor-pointer active:scale-95"
               >
                 <span>Lihat Detail Anak</span>
@@ -433,11 +463,40 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
         {/* Ringkasan Kesehatan Anak (Jika Ibu Balita atau anak terdaftar) */}
         {hasAnak && (
           <div className="bg-white/70 border border-pink-100/80 rounded-3xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900">Ringkasan Kesehatan Anak ({anak?.nama || 'Dian Pranata'})</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h3 className="text-sm font-bold text-slate-900">
+                  Ringkasan Kesehatan Anak ({anak?.nama || 'Si Kecil'})
+                </h3>
+                {daftarAnak.length > 1 && (
+                  <div className="flex items-center gap-1 bg-pink-50 p-1 rounded-xl border border-pink-200">
+                    <span className="text-[10px] font-bold text-slate-400 px-1 uppercase tracking-wider">Pilih:</span>
+                    {daftarAnak.map((a) => {
+                      const isSelected = a.id === anak?.id;
+                      const isBoy = a.jenis_kelamin === 'L';
+                      return (
+                        <button
+                          key={a.id}
+                          type="button"
+                          data-anak-id={a.id}
+                          onClick={() => setAnak(a)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#E11D48] text-white shadow-xs'
+                              : 'text-slate-600 hover:text-[#E11D48] hover:bg-white/70'
+                          }`}
+                        >
+                          <span>{isBoy ? '👦' : '👧'}</span>
+                          <span>{a.nama.split(' ')[0]}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
-                onClick={() => handleNav('/kesehatan-anak/pertumbuhan')}
+                onClick={() => handleNav(`/kesehatan-anak/pertumbuhan?anak_id=${anak?.id}`)}
                 className="text-xs font-semibold text-[#E11D48] hover:text-[#BE185D] cursor-pointer"
               >
                 Lihat Detail
@@ -447,7 +506,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Berat Badan */}
               <div 
-                onClick={() => handleNav('/kesehatan-anak/pertumbuhan')}
+                onClick={() => handleNav(`/kesehatan-anak/pertumbuhan?anak_id=${anak?.id}`)}
                 className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
               >
                 <div className="flex items-center gap-3.5">
@@ -467,7 +526,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
               {/* Tinggi Badan */}
               <div 
-                onClick={() => handleNav('/kesehatan-anak/pertumbuhan')}
+                onClick={() => handleNav(`/kesehatan-anak/pertumbuhan?anak_id=${anak?.id}`)}
                 className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
               >
                 <div className="flex items-center gap-3.5">
@@ -487,7 +546,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
               {/* Imunisasi */}
               <div 
-                onClick={() => handleNav('/kesehatan-anak/imunisasi')}
+                onClick={() => handleNav(`/kesehatan-anak/imunisasi?anak_id=${anak?.id}`)}
                 className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
               >
                 <div className="flex items-center gap-3.5">
@@ -507,7 +566,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
               {/* Perkembangan */}
               <div 
-                onClick={() => handleNav('/kesehatan-anak/perkembangan')}
+                onClick={() => handleNav(`/kesehatan-anak/perkembangan?anak_id=${anak?.id}`)}
                 className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
               >
                 <div className="flex items-center gap-3.5">
