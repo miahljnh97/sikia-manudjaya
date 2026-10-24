@@ -22,7 +22,8 @@ import {
   Heart,
   User,
   ShieldCheck,
-  FileText
+  FileText,
+  Baby
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
@@ -49,7 +50,19 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
       const last = segments[segments.length - 1];
       if (last && last.includes('-') && last.length >= 20) return last;
     }
-    return 'b2222222-2222-2222-2222-222222222222'; // default Dian Pranata
+    return null; // dynamic default from list
+  };
+
+  // Helper standar faskes/posyandu untuk bayi baru lahir yang belum dinamai (By. Ny. [Nama Ibu] 1 / 2)
+  const formatNamaAnak = (anakObj, index = 0) => {
+    if (anakObj?.nama && anakObj.nama.trim()) {
+      const lower = anakObj.nama.toLowerCase().trim();
+      if (!lower.startsWith('anak ') && lower !== 'anak') {
+        return anakObj.nama;
+      }
+    }
+    const ibuNama = user?.nama ? user.nama.split(',')[0].trim() : 'Ibu';
+    return `By. Ny. ${ibuNama} ${index + 1}`;
   };
 
   const [activeSub, setActiveSub] = useState(subFeature);
@@ -91,13 +104,30 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
     });
   }, [user]);
 
-  // Handler pergantian anak oleh Bidan/Kader
+  // Handler pergantian anak (Membawa anak_id unik dan reset state async seketika)
   const handleSwitchAnak = (newId) => {
+    if (!newId || newId === activeAnakId) return;
+    
+    // 1. Reset state data async anak sebelumnya agar tidak terjadi UI leak
+    setRiwayatPertumbuhan([]);
+    setDaftarImunisasi([]);
+    
+    // 2. Set ID dan objek anak aktif
     setActiveAnakId(newId);
     const found = daftarAnak.find(a => a.id === newId);
     if (found) setActiveAnak(found);
+    
+    // 3. Update URL dengan parameter ?anak_id=<id>
     if (onNavigate) {
-      onNavigate(`/kesehatan-anak/${activeSub.toLowerCase()}?anak_id=${newId}`);
+      const subMap = {
+        'Profil Anak': 'profil',
+        'Pertumbuhan': 'pertumbuhan',
+        'Perkembangan': 'perkembangan',
+        'Imunisasi': 'imunisasi',
+        'Pemeriksaan Anak': 'pemeriksaan'
+      };
+      const seg = subMap[activeSub] || 'profil';
+      onNavigate(`/kesehatan-anak/${seg}?anak_id=${newId}`);
     }
   };
 
@@ -246,7 +276,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
             <div className="text-[11px]">
               <span className="text-slate-400 block font-medium">Pilih Pasien Anak:</span>
               <select
-                value={activeAnakId}
+                value={activeAnakId || ''}
                 onChange={(e) => handleSwitchAnak(e.target.value)}
                 className="font-bold text-slate-900 bg-transparent focus:outline-none cursor-pointer text-xs pr-2"
               >
@@ -260,6 +290,55 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
           </div>
         )}
       </div>
+
+      {/* Multiple Child Tab Selector: Dinamis sesuai anak milik ibu dari Supabase */}
+      {daftarAnak.length > 0 && (
+        <div className="bg-white/80 backdrop-blur-xs p-2 rounded-2xl border border-pink-100 shadow-xs flex items-center gap-2 overflow-x-auto scrollbar-none">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-2 shrink-0">
+            Pilih Anak:
+          </span>
+          <div className="flex items-center gap-2">
+            {daftarAnak.map((anak, idx) => {
+              const isSelected = anak.id === activeAnakId;
+              const usiaStr = hitungUsiaString(anak.tgl_lahir);
+              const isBoy = anak.jenis_kelamin === 'L';
+              const displayName = formatNamaAnak(anak, idx);
+              
+              return (
+                <button
+                  key={anak.id}
+                  type="button"
+                  data-anak-id={anak.id}
+                  onClick={() => handleSwitchAnak(anak.id)}
+                  className={`group relative inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none active:scale-95 shrink-0 ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-[#FF4D80] to-[#E11D48] text-white shadow-md shadow-pink-300/40 border border-pink-400'
+                      : 'bg-white hover:bg-pink-50/60 text-slate-700 hover:text-[#E11D48] border border-slate-200/80 shadow-xs'
+                  }`}
+                >
+                  <span className="text-sm">
+                    {isBoy ? '👦' : '👧'}
+                  </span>
+                  <span className="truncate max-w-[150px] sm:max-w-[200px]">
+                    {displayName}
+                  </span>
+                  {usiaStr && (
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                        isSelected
+                          ? 'bg-white/25 text-white'
+                          : 'bg-slate-100 text-slate-500 group-hover:bg-pink-100 group-hover:text-pink-700'
+                      }`}
+                    >
+                      {usiaStr}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Tampilan edukatif jika Ibu Hamil Saja belum memiliki anak terdaftar */}
       {isIbuRole && !activeAnak && (
@@ -298,7 +377,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-3 border-white shadow-md overflow-hidden shrink-0 bg-white flex items-center justify-center">
                 <img 
                   src="/images/farhan-avatar.png" 
-                  alt={activeAnak?.nama || 'Dian Pranata'} 
+                  alt={activeAnak?.nama || 'Anak'} 
                   className="w-full h-full object-cover"
                   onError={(e) => { 
                     e.target.style.display = 'none';
@@ -310,7 +389,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
               <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                    {activeAnak?.nama || 'Dian Pranata'}
+                    {activeAnak?.nama || 'Anak'}
                   </h2>
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]">
                     Status: Aktif
@@ -483,7 +562,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                 <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Usia Anak</span>
                 <div className="flex items-baseline gap-2 mt-0.5">
                   <h2 className="text-2xl sm:text-3xl font-extrabold text-[#E11D48] tracking-tight">
-                    {activeAnak?.nama || 'Dian Pranata'}
+                    {activeAnak?.nama || 'Anak'}
                   </h2>
                   <span className="text-xs font-semibold text-slate-500">1 Tahun 2 Bulan</span>
                 </div>
@@ -793,7 +872,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-white shadow-xs overflow-hidden shrink-0">
                 <img 
                   src="/images/farhan-avatar.png" 
-                  alt="Dian Pranata" 
+                  alt={activeAnak?.nama || 'Anak'} 
                   className="w-full h-full object-cover"
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
@@ -801,7 +880,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
               <div>
                 <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-                  {activeAnak?.nama || 'Dian Pranata'}
+                  {activeAnak?.nama || 'Anak'}
                 </h2>
                 <p className="text-xs font-bold text-[#E11D48] mt-0.5">
                   1 Tahun 2 bulan
@@ -840,7 +919,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
             <div className="md:col-span-6 bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-center space-y-1">
               <h3 className="text-base sm:text-lg font-bold text-emerald-600">Sesuai Usia</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Perkembangan {activeAnak?.nama || 'Dian Pranata'} sesuai dengan tahapan usianya. Terus berikan stimulasi secara rutin
+                Perkembangan {activeAnak?.nama || 'anak'} sesuai dengan tahapan usianya. Terus berikan stimulasi secara rutin
               </p>
             </div>
 
@@ -860,7 +939,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
             {/* Card 3: Stimulasi Hari Ini */}
             <div 
-              onClick={() => onShowToast && onShowToast('Dian Pranata memiliki 3 aktivitas stimulasi yang disarankan hari ini.', 'info')}
+              onClick={() => onShowToast && onShowToast(`${activeAnak?.nama || 'Anak'} memiliki 3 aktivitas stimulasi yang disarankan hari ini.`, 'info')}
               className="md:col-span-3 bg-white border border-slate-100 hover:border-pink-200 rounded-3xl p-5 shadow-xs flex items-center justify-between cursor-pointer group transition-all"
             >
               <div className="flex items-center gap-4">
@@ -1031,7 +1110,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-white shadow-xs overflow-hidden shrink-0">
                 <img 
                   src="/images/farhan-avatar.png" 
-                  alt="Dian Pranata" 
+                  alt={activeAnak?.nama || 'Anak'} 
                   className="w-full h-full object-cover"
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
@@ -1039,7 +1118,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
               <div>
                 <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-                  {activeAnak?.nama || 'Dian Pranata'}
+                  {activeAnak?.nama || 'Anak'}
                 </h2>
                 <p className="text-xs font-bold text-[#E11D48] mt-0.5">
                   1 Tahun 2 bulan
@@ -1338,8 +1417,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                   <Scale size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-bold text-slate-900">Catat Penimbangan KMS Anak ({activeAnak?.nama || 'Dian Pranata'})</h3>
-                  <p className="text-[11px] text-slate-400">Pencatatan hasil penimbangan berat & tinggi badan balita {activeAnak?.nama || 'Dian Pranata'}</p>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900">Catat Penimbangan KMS Anak ({activeAnak?.nama || 'Anak'})</h3>
+                  <p className="text-[11px] text-slate-400">Pencatatan hasil penimbangan berat & tinggi badan balita {activeAnak?.nama || 'Anak'}</p>
                 </div>
               </div>
               <button 
