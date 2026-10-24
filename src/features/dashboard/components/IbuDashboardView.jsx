@@ -100,6 +100,18 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
   const hasKehamilan = Boolean(kehamilan && (kehamilan.status_kehamilan === 'Aktif' || kehamilan.usia_kehamilan_minggu));
   const hasAnak = Boolean(anak);
 
+  // Helper standar faskes/posyandu untuk bayi baru lahir yang belum dinamai (By. Ny. [Nama Ibu] 1 / 2)
+  const formatNamaAnak = (anakObj, index = 0) => {
+    if (anakObj?.nama && anakObj.nama.trim()) {
+      const lower = anakObj.nama.toLowerCase().trim();
+      if (!lower.startsWith('anak ') && lower !== 'anak') {
+        return anakObj.nama;
+      }
+    }
+    const ibuNama = user?.nama ? user.nama.split(',')[0].trim() : 'Ibu';
+    return `By. Ny. ${ibuNama} ${index + 1}`;
+  };
+
   const handleNav = (path) => {
     if (onNavigate) {
       onNavigate(path);
@@ -179,7 +191,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
               {/* Multiple Children Tab Selector jika punya > 1 anak */}
               {daftarAnak.length > 1 && (
                 <div className="flex items-center gap-1 bg-white/80 backdrop-blur-xs p-1 rounded-xl border border-pink-200/60 shadow-2xs">
-                  {daftarAnak.map((a) => {
+                  {daftarAnak.map((a, idx) => {
                     const isSelected = a.id === anak?.id;
                     const isBoy = a.jenis_kelamin === 'L';
                     return (
@@ -195,7 +207,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                         }`}
                       >
                         <span>{isBoy ? '👦' : '👧'}</span>
-                        <span>{a.nama.split(' ')[0]}</span>
+                        <span>{formatNamaAnak(a, idx).split(' ')[0]}</span>
                       </button>
                     );
                   })}
@@ -471,7 +483,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                 {daftarAnak.length > 1 && (
                   <div className="flex items-center gap-1 bg-pink-50 p-1 rounded-xl border border-pink-200">
                     <span className="text-[10px] font-bold text-slate-400 px-1 uppercase tracking-wider">Pilih:</span>
-                    {daftarAnak.map((a) => {
+                    {daftarAnak.map((a, idx) => {
                       const isSelected = a.id === anak?.id;
                       const isBoy = a.jenis_kelamin === 'L';
                       return (
@@ -487,7 +499,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                           }`}
                         >
                           <span>{isBoy ? '👦' : '👧'}</span>
-                          <span>{a.nama.split(' ')[0]}</span>
+                          <span>{formatNamaAnak(a, idx).split(' ')[0]}</span>
                         </button>
                       );
                     })}

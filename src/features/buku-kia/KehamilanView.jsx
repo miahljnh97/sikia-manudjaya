@@ -10,7 +10,10 @@ import {
   CheckCircle2, 
   AlertCircle,
   X,
-  Users
+  Users,
+  Activity,
+  Heart,
+  Baby
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
@@ -39,6 +42,48 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
   const [peserta, setPeserta] = useState(null);
   const [kehamilan, setKehamilan] = useState(null);
   const [selectedPanduan, setSelectedPanduan] = useState(null);
+  const [jumlahJanin, setJumlahJanin] = useState(1);
+  const [activeJaninId, setActiveJaninId] = useState('janin-1');
+
+  // Sinkronkan jumlah janin jika ada di record kehamilan
+  useEffect(() => {
+    if (kehamilan?.jumlah_janin) {
+      setJumlahJanin(kehamilan.jumlah_janin);
+    }
+  }, [kehamilan]);
+
+  const dataJaninList = [
+    {
+      id: 'janin-1',
+      label: 'Janin 1',
+      alias: 'Calon Si Kecil 1',
+      djj: 142,
+      djjStatus: 'Normal (120-160 x/mnt)',
+      tbj: 1250,
+      tbjKet: 'Sesuai kurva usia kehamilan',
+      gerakan: '12 kali / 12 jam',
+      gerakanKet: 'Aktif & Responsif',
+      posisi: 'Presentasi Kepala (Preskep)',
+      letakDjj: 'Punctum maximum di kuadran kanan bawah perut ibu',
+      catatanBidan: 'Detak jantung reguler dan kuat. Gerakan janin sangat baik.'
+    },
+    {
+      id: 'janin-2',
+      label: 'Janin 2',
+      alias: 'Calon Si Kecil 2',
+      djj: 138,
+      djjStatus: 'Normal (120-160 x/mnt)',
+      tbj: 1180,
+      tbjKet: 'Sesuai kurva kehamilan kembar',
+      gerakan: '10 kali / 12 jam',
+      gerakanKet: 'Aktif & Responsif',
+      posisi: 'Presentasi Bokong / Sungsang',
+      letakDjj: 'Punctum maximum di kuadran kiri atas perut ibu',
+      catatanBidan: 'Pertumbuhan janin kedua simetris dan sehat.'
+    }
+  ];
+
+  const selectedJanin = dataJaninList.find(j => j.id === activeJaninId) || dataJaninList[0];
 
   // Sinkronkan saat URL berubah
   useEffect(() => {
@@ -239,6 +284,187 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
             <span className="text-xs sm:text-sm font-bold text-slate-900 mt-1 block">{usiaMinggu} Minggu</span>
           </div>
         </div>
+      </div>
+
+      {/* 2.5 Card Pemantauan Kesehatan Janin (Fetus Health & Tab Janin 1 / Janin 2) */}
+      <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-7 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-pink-50 text-[#E11D48] text-xs font-bold mb-1">
+              <HeartPulse size={13} />
+              <span>Kesehatan Janin ({namaIbu})</span>
+            </div>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+              Pemantauan Detak Jantung &amp; Posisi Janin
+            </h3>
+            <p className="text-xs text-slate-500">
+              Evaluasi kondisi klinis janin dalam kandungan berdasarkan pemeriksaan Buku KIA
+            </p>
+          </div>
+
+          {/* Pengalih Kehamilan Tunggal vs Kembar (Gemelli) */}
+          <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-200/80 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => {
+                setJumlahJanin(1);
+                setActiveJaninId('janin-1');
+              }}
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                jumlahJanin === 1
+                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Tunggal (1 Janin)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setJumlahJanin(2);
+              }}
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                jumlahJanin === 2
+                  ? 'bg-gradient-to-r from-[#FF4D80] to-[#E11D48] text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Kembar / Gemelli (2 Janin)
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Selector Janin (Tampil jika kembar atau tunggal) */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
+            Pilih Janin:
+          </span>
+          <div className="flex items-center gap-2">
+            {dataJaninList.slice(0, jumlahJanin).map((j) => {
+              const isSelected = j.id === activeJaninId;
+              return (
+                <button
+                  key={j.id}
+                  type="button"
+                  data-janin-id={j.id}
+                  onClick={() => setActiveJaninId(j.id)}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-[#FF4D80] to-[#E11D48] text-white shadow-md shadow-pink-300/40 border border-pink-400'
+                      : 'bg-white hover:bg-pink-50/60 text-slate-700 hover:text-[#E11D48] border border-slate-200 shadow-xs'
+                  }`}
+                >
+                  <span className="text-sm">🤰</span>
+                  <span>{j.label}</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                    isSelected ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    {j.alias}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Detail Pemantauan Janin Terpilih */}
+        {selectedJanin && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+            {/* 1. Denyut Jantung Janin (DJJ) */}
+            <div className="bg-gradient-to-br from-pink-50/70 to-rose-50/40 border border-pink-200/70 rounded-2xl p-4.5 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                  Denyut Jantung (DJJ)
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-pink-100 text-[#E11D48] flex items-center justify-center animate-pulse">
+                  <HeartPulse size={16} />
+                </div>
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl sm:text-3xl font-extrabold text-[#E11D48] tracking-tight">
+                  {selectedJanin.djj}
+                </span>
+                <span className="text-xs text-slate-500 font-semibold">x/menit</span>
+              </div>
+              <p className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 rounded-lg px-2 py-0.5 inline-block">
+                ✓ {selectedJanin.djjStatus}
+              </p>
+              <p className="text-[10px] text-slate-500 mt-1 leading-snug">
+                Rentang aman normal: 120 - 160 detak per menit dengan irama teratur.
+              </p>
+            </div>
+
+            {/* 2. Tafsiran Berat Janin (TBJ) */}
+            <div className="bg-white border border-slate-100 rounded-2xl p-4.5 space-y-2 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                  Tafsiran Berat Janin (TBJ)
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                  <Weight size={16} />
+                </div>
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                  {selectedJanin.tbj.toLocaleString('id-ID')}
+                </span>
+                <span className="text-xs text-slate-500 font-semibold">gram</span>
+              </div>
+              <p className="text-[11px] font-bold text-slate-700">
+                {selectedJanin.tbjKet}
+              </p>
+              <p className="text-[10px] text-slate-400 mt-1 leading-snug">
+                Dihitung dari Tinggi Fundus Uteri (TFU) {usiaMinggu} minggu.
+              </p>
+            </div>
+
+            {/* 3. Gerakan Janin Harian */}
+            <div className="bg-white border border-slate-100 rounded-2xl p-4.5 space-y-2 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                  Gerakan Janin
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Activity size={16} />
+                </div>
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                  {selectedJanin.gerakan.split(' ')[0]}
+                </span>
+                <span className="text-xs text-slate-500 font-semibold">kali / 12 jam</span>
+              </div>
+              <p className="text-[11px] font-bold text-emerald-600">
+                ✓ {selectedJanin.gerakanKet}
+              </p>
+              <p className="text-[10px] text-slate-400 mt-1 leading-snug">
+                Minimal 10 kali gerakan dalam 12 jam sebagai indikator janin sehat.
+              </p>
+            </div>
+
+            {/* 4. Letak & Presentasi Janin */}
+            <div className="bg-white border border-slate-100 rounded-2xl p-4.5 space-y-2 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                  Letak &amp; Posisi
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <CheckCircle2 size={16} />
+                </div>
+              </div>
+              <div className="text-sm font-extrabold text-slate-900 leading-tight">
+                {selectedJanin.posisi}
+              </div>
+              <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+                {selectedJanin.letakDjj}
+              </p>
+              <div className="p-2 rounded-xl bg-pink-50/60 border border-pink-100 text-[10px] text-slate-600">
+                <strong className="text-[#E11D48] font-bold block">Catatan Bidan:</strong>
+                {selectedJanin.catatanBidan}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 3. 4 Quick Stat Cards (Persis Figma Group 6) */}

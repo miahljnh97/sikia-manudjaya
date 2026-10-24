@@ -52,6 +52,18 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
     return null; // dynamic default from list
   };
 
+  // Helper standar faskes/posyandu untuk bayi baru lahir yang belum dinamai (By. Ny. [Nama Ibu] 1 / 2)
+  const formatNamaAnak = (anakObj, index = 0) => {
+    if (anakObj?.nama && anakObj.nama.trim()) {
+      const lower = anakObj.nama.toLowerCase().trim();
+      if (!lower.startsWith('anak ') && lower !== 'anak') {
+        return anakObj.nama;
+      }
+    }
+    const ibuNama = user?.nama ? user.nama.split(',')[0].trim() : 'Ibu';
+    return `By. Ny. ${ibuNama} ${index + 1}`;
+  };
+
   const [activeSub, setActiveSub] = useState(subFeature);
   const [activeChartTab, setActiveChartTab] = useState('Berat Badan');
   const [selectedStimulasi, setSelectedStimulasi] = useState(null);
@@ -285,10 +297,11 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
             Pilih Anak:
           </span>
           <div className="flex items-center gap-2">
-            {daftarAnak.map((anak) => {
+            {daftarAnak.map((anak, idx) => {
               const isSelected = anak.id === activeAnakId;
               const usiaStr = hitungUsiaString(anak.tgl_lahir);
               const isBoy = anak.jenis_kelamin === 'L';
+              const displayName = formatNamaAnak(anak, idx);
               
               return (
                 <button
@@ -306,7 +319,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                     {isBoy ? '👦' : '👧'}
                   </span>
                   <span className="truncate max-w-[150px] sm:max-w-[200px]">
-                    {anak.nama}
+                    {displayName}
                   </span>
                   {usiaStr && (
                     <span
