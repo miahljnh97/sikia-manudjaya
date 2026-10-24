@@ -64,7 +64,7 @@ export default function Sidebar({
 
       {/* Sidebar Container */}
       <aside 
-        className={`fixed lg:static top-0 bottom-0 left-0 z-50 bg-white border-r border-slate-100 flex flex-col justify-between shrink-0 transition-all duration-300 ease-in-out ${
+        className={`fixed lg:sticky top-0 bottom-0 lg:bottom-auto left-0 lg:left-auto h-screen z-50 bg-white border-r border-slate-100 flex flex-col shrink-0 transition-all duration-300 ease-in-out ${
           isOpen 
             ? 'w-64 translate-x-0 shadow-2xl lg:shadow-none' 
             : 'w-0 -translate-x-full lg:w-0 lg:-translate-x-full overflow-hidden border-none'
@@ -97,7 +97,7 @@ export default function Sidebar({
           </div>
 
           {/* Navigation Items (Scrollable jika layar pendek) */}
-          <nav className="px-3 py-3 space-y-1 overflow-y-auto flex-1 text-xs">
+          <nav className="px-3 py-3 space-y-1 overflow-y-auto flex-1 min-h-0 text-xs custom-scrollbar">
             {/* 1. Dashboard */}
             <button
               onClick={() => handleSelect('Dashboard')}
