@@ -111,6 +111,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
     // 1. Reset state data async anak sebelumnya agar tidak terjadi UI leak
     setRiwayatPertumbuhan([]);
     setDaftarImunisasi([]);
+    setPencapaianMilestones([]);
     
     // 2. Set ID dan objek anak aktif
     setActiveAnakId(newId);
@@ -131,13 +132,27 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
     }
   };
 
-  // Data Pencapaian Perkembangan (Image 1)
-  const pencapaianMilestones = [
-    { title: 'Duduk tanpa Bantuan', usia: 'Usia 6 Bulan', tanggal: '20 Feb 2026' },
-    { title: 'Merangkak', usia: 'Usia 6 Bulan', tanggal: '20 Feb 2026' },
-    { title: 'Berdiri dengan berpegagngan', usia: 'Usia 6 Bulan', tanggal: '20 Feb 2026' },
-    { title: 'Berjalan beberapa langkah', usia: 'Usia 12 Bulan', tanggal: '20 Feb 2026' },
-  ];
+  // Data Pencapaian Perkembangan dinamis dari Supabase
+  const [pencapaianMilestones, setPencapaianMilestones] = useState([]);
+
+  useEffect(() => {
+    if (!activeAnakId) {
+      setPencapaianMilestones([]);
+      return;
+    }
+    bukuKiaService.getPerkembanganAnakList(activeAnakId).then((res) => {
+      if (res && res.length > 0) {
+        setPencapaianMilestones(res.map(m => ({
+          title: m.judul_milestone || m.tahap_perkembangan,
+          usia: m.usia_pencapaian || m.tahap_perkembangan || 'Sesuai Usia',
+          tanggal: m.tanggal_tercapai || 'Tercapai',
+          status: m.status_perkembangan || m.status || 'Sesuai Usia'
+        })));
+      } else {
+        setPencapaianMilestones([]);
+      }
+    });
+  }, [activeAnakId]);
 
   // Data Aktivitas Stimulasi Rekomendasi (Image 1)
   const aktivitasStimulasi = [
@@ -189,10 +204,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
     });
   }, [activeAnakId]);
 
-  const [riwayatPertumbuhan, setRiwayatPertumbuhan] = useState([
-    { no: 1, tanggal: '12 Sep 2026', usia: '14 Bulan', bb: '9,8 Kg', tb: '75 Cm', lk: '46 Cm', status: 'Normal' },
-    { no: 2, tanggal: '15 Agu 2026', usia: '13 Bulan', bb: '9,4 Kg', tb: '73 Cm', lk: '45,5 Cm', status: 'Normal' },
-  ]);
+  const [riwayatPertumbuhan, setRiwayatPertumbuhan] = useState([]);
 
   useEffect(() => {
     if (!activeAnakId) return;
@@ -839,7 +851,13 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {riwayatPertumbuhan.map((row, idx) => (
+                  {riwayatPertumbuhan.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-slate-400">
+                        Belum ada riwayat pengukuran pertumbuhan KMS untuk anak ini.
+                      </td>
+                    </tr>
+                  ) : riwayatPertumbuhan.map((row, idx) => (
                     <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-3.5 px-4 text-center font-medium">{row.no}</td>
                       <td className="py-3.5 px-4 font-semibold text-slate-900">{row.tanggal}</td>
@@ -974,7 +992,11 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
               </div>
 
               <div className="space-y-3">
-                {pencapaianMilestones.map((item, idx) => (
+                {pencapaianMilestones.length === 0 ? (
+                  <div className="py-6 text-center text-xs text-slate-400">
+                    Belum ada catatan pencapaian perkembangan untuk anak ini.
+                  </div>
+                ) : pencapaianMilestones.map((item, idx) => (
                   <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/70 border border-slate-100">
                     <div className="flex items-center gap-3">
                       <CheckCircle2 size={18} className="text-emerald-500 fill-emerald-100 shrink-0" />

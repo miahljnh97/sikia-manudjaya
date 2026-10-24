@@ -31,15 +31,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
   const [kehamilan, setKehamilan] = useState(null);
   const [daftarAnak, setDaftarAnak] = useState([]);
   const [anak, setAnak] = useState(null);
-  const [jadwalList, setJadwalList] = useState([
-    {
-      day: '20',
-      month: 'Okt',
-      title: 'Pemeriksaan Rutin Posyandu',
-      location: 'Puskesmas Manud Jaya',
-      tanggal: '2026-10-20'
-    }
-  ]);
+  const [jadwalList, setJadwalList] = useState([]);
 
   useEffect(() => {
     if (!ibuId) return;

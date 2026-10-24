@@ -23,15 +23,10 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
   const [selectedJadwal, setSelectedJadwal] = useState(null);
   const [isSendingWa, setIsSendingWa] = useState(false);
 
-  const [jadwalList, setJadwalList] = useState([
-    { no: 1, tanggal: '2026-09-12', displayTanggal: '12 Sep 2026', waktu: '09:00 - 10:00', jenis: 'Pemeriksaan Kehamilan ANC', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Siti Nurhayati', keterangan: 'Pemeriksaan ANC Trimester 3 rutin dan USG dasar.' },
-    { no: 2, tanggal: '2026-09-17', displayTanggal: '17 Sep 2026', waktu: '09:00 - 10:00', jenis: 'Konseling Gizi', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Ahli Gizi Puskesmas', keterangan: 'Evaluasi pola makan, asupan zat besi, dan pencegahan anemia.' },
-    { no: 3, tanggal: '2026-09-24', displayTanggal: '24 Sep 2026', waktu: '09:00 - 10:00', jenis: 'Pemeriksaan Kehamilan ANC', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'dr. Haryono, Sp.OG', keterangan: 'Kontrol berkala pemantauan posisi janin dan DJJ.' },
-    { no: 4, tanggal: '2026-10-10', displayTanggal: '10 Okt 2026', waktu: '09:00 - 10:00', jenis: 'Kelas Ibu Hamil & Senam Hamil', lokasi: 'Posyandu Anggrek', status: 'Akan Datang', petugas: 'Bidan Koordinator', keterangan: 'Edukasi persiapan persalinan, senam hamil, dan IMD.' },
-  ]);
+  const [jadwalList, setJadwalList] = useState([]);
 
   useEffect(() => {
-    const targetIbuId = user?.peserta_id || user?.user?.id || user?.id || '55af67c9-6695-4435-b4ea-2720efd73c92';
+    const targetIbuId = user?.peserta_id || user?.user?.id || user?.id || null;
     bukuKiaService.getJadwalPesertaList(targetIbuId).then((res) => {
       if (res && res.length > 0) {
         const mapped = res.map((j, idx) => ({
@@ -316,7 +311,11 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
           </div>
 
           <div className="space-y-3">
-            {jadwalList.slice(0, 3).map((item, idx) => {
+            {jadwalList.length === 0 ? (
+              <div className="py-6 text-center text-xs text-slate-400">
+                Belum ada agenda jadwal kegiatan mendatang.
+              </div>
+            ) : jadwalList.slice(0, 3).map((item, idx) => {
               const reminder = getReminderStatus(item.tanggal);
               let dayStr = '12';
               let monthStr = 'Sep';
