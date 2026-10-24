@@ -96,3 +96,25 @@ export function toISODateString(input) {
   return getTodayISODate();
 }
 
+/**
+ * Menghitung usia anak dalam teks ramah pengguna (contoh: "1 Tahun 3 Bulan")
+ */
+export function hitungUsiaString(tglLahir) {
+  if (!tglLahir) return '1 Tahun 3 Bulan';
+  const birth = new Date(tglLahir);
+  if (isNaN(birth.getTime())) return '1 Tahun 3 Bulan';
+  const now = new Date();
+  let years = now.getFullYear() - birth.getFullYear();
+  let months = now.getMonth() - birth.getMonth();
+  if (now.getDate() < birth.getDate()) {
+    months--;
+  }
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  if (years > 0 && months > 0) return `${years} Tahun ${months} Bulan`;
+  if (years > 0) return `${years} Tahun`;
+  if (months > 0) return `${months} Bulan`;
+  return 'Baru Lahir';
+}
