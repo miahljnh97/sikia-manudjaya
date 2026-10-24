@@ -42,24 +42,18 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
   const [peserta, setPeserta] = useState(null);
   const [kehamilan, setKehamilan] = useState(null);
   const [selectedPanduan, setSelectedPanduan] = useState(null);
-  // Mendukung jumlah janin dinamis tanpa batas kaku (termasuk edge case QA kembar 19)
-  const MAX_JANIN = 30;
-  const [jumlahJanin, setJumlahJanin] = useState(() => {
+  // Jumlah janin dinamis murni dari database Supabase / URL query ?janin=N
+  const jumlahJanin = (() => {
     if (typeof window !== 'undefined' && window.location.search) {
       const sp = new URLSearchParams(window.location.search);
-      if (sp.get('janin')) return Math.min(MAX_JANIN, Math.max(1, parseInt(sp.get('janin')) || 2));
+      if (sp.get('janin')) return Math.max(1, parseInt(sp.get('janin')) || 2);
+    }
+    if (kehamilan?.jumlah_janin) {
+      return Math.max(1, parseInt(kehamilan.jumlah_janin) || 2);
     }
     return 2; // Default langsung tampil Janin 1 dan Janin 2
-  });
+  })();
   const [activeJaninId, setActiveJaninId] = useState('janin-1');
-
-  // Sinkronkan jika jumlah_janin diatur di database Supabase
-  useEffect(() => {
-    if (kehamilan?.jumlah_janin) {
-      const jCount = Math.min(MAX_JANIN, Math.max(1, parseInt(kehamilan.jumlah_janin) || 2));
-      setJumlahJanin(jCount);
-    }
-  }, [kehamilan]);
 
   // Generator data klinis dinamis untuk Janin 1 ... Janin N (termasuk edge case kembar 19)
   const generateJaninList = (count) => {
@@ -323,57 +317,11 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
             </p>
           </div>
 
-          {/* Stepper Tambah / Kurangi Janin (Bisa fleksibel untuk testing QA ekstrem hingga kembar 19+) */}
-          <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-200/80 self-start sm:self-auto">
-            <span className="text-[11px] font-bold text-slate-600 px-1">
-              {jumlahJanin > 1 ? `Kembar (${jumlahJanin} Janin)` : '1 Janin'}
+          {jumlahJanin > 1 && (
+            <span className="px-3 py-1 rounded-xl bg-pink-100 text-[#E11D48] text-xs font-bold border border-pink-200 self-start sm:self-auto">
+              Kehamilan Kembar ({jumlahJanin} Janin)
             </span>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                disabled={jumlahJanin <= 1}
-                onClick={() => {
-                  const nextCount = Math.max(1, jumlahJanin - 1);
-                  setJumlahJanin(nextCount);
-                  if (activeJaninId === `janin-${jumlahJanin}`) {
-                    setActiveJaninId(`janin-${nextCount}`);
-                  }
-                }}
-                className="w-7 h-7 rounded-xl bg-white hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 shadow-2xs cursor-pointer transition-all active:scale-95"
-                title="Kurangi Janin (-1)"
-              >
-                -
-              </button>
-              <button
-                type="button"
-                disabled={jumlahJanin >= MAX_JANIN}
-                onClick={() => {
-                  const nextCount = Math.min(MAX_JANIN, jumlahJanin + 1);
-                  setJumlahJanin(nextCount);
-                }}
-                className="w-7 h-7 rounded-xl bg-[#E11D48] hover:bg-[#BE185D] disabled:opacity-30 disabled:pointer-events-none text-white font-bold text-xs flex items-center justify-center shadow-xs cursor-pointer transition-all active:scale-95"
-                title="Tambah Janin (+1)"
-              >
-                +
-              </button>
-              {/* Pintasan Edge Case Testing QA Kembar 19 */}
-              <button
-                type="button"
-                onClick={() => {
-                  setJumlahJanin(19);
-                  setActiveJaninId('janin-1');
-                }}
-                className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-all cursor-pointer ${
-                  jumlahJanin === 19 
-                    ? 'bg-purple-600 text-white border-purple-600 shadow-xs' 
-                    : 'bg-white hover:bg-purple-50 text-purple-700 border-purple-200'
-                }`}
-                title="Pintasan Uji QA: Kembar 19"
-              >
-                ⚡ 19
-              </button>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Tab Selector Janin: Langsung tampil Janin 1, Janin 2, dst */}
