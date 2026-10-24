@@ -80,7 +80,7 @@ export const bukuKiaService = {
             p.tipe_peserta?.nama === 'Balita' || 
             p.tipe_peserta?.nama === 'Bayi' ||
             p.ibu_id !== null ||
-            p.nama?.toLowerCase().includes('farhan')
+            p.nama?.toLowerCase().includes('dian') || p.nama?.toLowerCase().includes('farhan')
           );
           if (filtered.length > 0) return filtered;
         }
@@ -89,7 +89,7 @@ export const bukuKiaService = {
       }
     }
     return [
-      { id: 'b2222222-2222-2222-2222-222222222222', nama: 'Farhan', ibu_id: '55af67c9-6695-4435-b4ea-2720efd73c92', tgl_lahir: '2024-10-15', jenis_kelamin: 'L' },
+      { id: 'b2222222-2222-2222-2222-222222222222', nama: 'Dian Pranata', ibu_id: '55af67c9-6695-4435-b4ea-2720efd73c92', tgl_lahir: '2025-07-15', jenis_kelamin: 'L' },
       { id: 'b0d0ceae-d9bb-4c7c-b569-3c22a1bd96fd', nama: 'Ariana Venti', ibu_id: null, tgl_lahir: '2025-02-10', jenis_kelamin: 'P' },
       { id: '90876706-2c55-4b8a-b1e7-fa54fd98ca31', nama: 'Sukma Ayu', ibu_id: null, tgl_lahir: '2024-05-20', jenis_kelamin: 'P' }
     ];
