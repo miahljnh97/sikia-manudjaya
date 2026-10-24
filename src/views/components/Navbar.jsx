@@ -7,14 +7,14 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
     const r = (role || '').toLowerCase();
     if (r.includes('admin') || e.includes('admin')) return 'Super Admin';
     if (r.includes('bidan') || e.includes('bidan')) return 'Bidan Desa';
-    if (r.includes('ibu') || e.includes('ibu')) return 'Ibu Hamil';
     if (r.includes('kader') || e.includes('kader')) return 'Kader Posyandu';
+    if (r.includes('ibu') || e.includes('ibu') || r.includes('peserta')) return 'Ibu';
     return role || 'Kader Posyandu';
   };
 
   const userEmail = user?.user?.email || user?.email || '';
   const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || userEmail.toLowerCase().includes('ibu');
-  const displayName = isIbuRole ? (user?.nama || 'Siti Aminah') : (user?.nama || (userEmail ? userEmail.split('@')[0] : 'Annisa Wati'));
+  const displayName = user?.nama || (userEmail ? userEmail.split('@')[0] : 'Pengguna');
   const roleName = getNormalizedRole(user?.role, userEmail);
 
   // State Notifikasi dengan LocalStorage Persistence
@@ -95,7 +95,7 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 sm:px-6 z-20 shrink-0">
+    <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 sm:px-6 z-20 shrink-0 sticky top-0">
       {/* Tombol Hamburger Menu (HP & Toggle Desktop) */}
       <div className="flex items-center gap-3">
         <button

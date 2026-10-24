@@ -15,12 +15,20 @@ export function useAuthController() {
         } else if ((email.includes('admin') || email === 'admin.desa@manudjaya.id') && parsed.role !== 'Super Admin') {
           parsed.role = 'Super Admin';
           if (!parsed.nama || parsed.nama === 'Annisa Wati') parsed.nama = 'Bambang Sudarmono, S.STP';
-        } else if (email.includes('hamil') || email === 'ibu.hamil@manudjaya.id' || parsed.role === 'Ibu Hamil') {
-          parsed.role = 'Ibu Hamil';
-          if (!parsed.nama || parsed.nama === 'Annisa Wati') parsed.nama = 'Siti Aminah';
-        } else if ((email.includes('balita') || email.includes('ibu') || email === 'ibu.balita@manudjaya.id') && parsed.role !== 'Ibu Balita') {
-          parsed.role = 'Ibu Balita';
-          if (!parsed.nama || parsed.nama === 'Annisa Wati') parsed.nama = 'Ibu Ratna';
+        } else if (email === 'ibu.balita@manudjaya.id') {
+          parsed.role = 'Ibu';
+          parsed.nama = 'Ibu Ratna';
+          parsed.peserta_id = 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73';
+        } else if (email === 'ibu.hamil.anak@manudjaya.id' || email === 'siti.aminah@manudjaya.id') {
+          parsed.role = 'Ibu';
+          parsed.nama = 'Siti Aminah';
+          parsed.peserta_id = '55af67c9-6695-4435-b4ea-2720efd73c92';
+        } else if (email === 'ibu.hamil@manudjaya.id' || email.includes('hamil')) {
+          parsed.role = 'Ibu';
+          parsed.nama = 'Najwa Sihab';
+          parsed.peserta_id = '214fbe12-2216-4e61-9b12-9fccca445e84';
+        } else if (email.includes('ibu') || (parsed.role || '').toLowerCase().includes('ibu')) {
+          parsed.role = 'Ibu';
         }
       }
       return parsed;

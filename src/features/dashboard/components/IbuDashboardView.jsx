@@ -22,48 +22,42 @@ import {
 } from 'lucide-react';
 
 export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
-  const userRole = (user?.role || '').toLowerCase();
-  const userEmail = (user?.email || user?.user?.email || '').toLowerCase();
-  const isIbuBalita = (userRole.includes('balita') || userEmail.includes('balita')) && !userRole.includes('hamil') && !userEmail.includes('hamil');
+  const ibuId = user?.peserta_id || user?.user?.id || user?.id || (
+    (user?.nama || '').toLowerCase().includes('ratna') ? 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73' :
+    (user?.nama || '').toLowerCase().includes('najwa') ? '214fbe12-2216-4e61-9b12-9fccca445e84' :
+    '55af67c9-6695-4435-b4ea-2720efd73c92'
+  );
 
   const [kehamilan, setKehamilan] = useState(null);
-  const [anak, setAnak] = useState({
-    id: 'b2222222-2222-2222-2222-222222222222',
-    nama: 'Dian Pranata',
-    tgl_lahir: '2025-07-15'
-  });
-  const [jadwalList, setJadwalList] = useState([
-    {
-      day: '20',
-      month: 'Okt',
-      title: 'Pemeriksaan Kehamilan',
-      location: 'Puskesmas Manud Jaya',
-      tanggal: '2026-10-20'
-    },
-    {
-      day: '20',
-      month: 'Okt',
-      title: 'Posyandu Balita',
-      location: 'Puskesmas Manud Jaya',
-      tanggal: '2026-10-20'
-    }
-  ]);
+  const [daftarAnak, setDaftarAnak] = useState([]);
+  const [anak, setAnak] = useState(null);
+  const [jadwalList, setJadwalList] = useState([]);
 
   useEffect(() => {
-    bukuKiaService.getKehamilanIbu().then(res => {
-      if (res) setKehamilan(res);
+    if (!ibuId) return;
+
+    // 1. Ambil data kehamilan ibu (aktif jika hamil)
+    bukuKiaService.getKehamilanIbu(ibuId).then(res => {
+      setKehamilan(res);
     });
 
-    bukuKiaService.getDaftarAnak().then(list => {
+    // 2. Ambil data anak milik ibu ini
+    bukuKiaService.getDaftarAnak(ibuId).then(list => {
       if (list && list.length > 0) {
-        const myAnak = list.find(a => a.id === 'b2222222-2222-2222-2222-222222222222' || a.ibu_id === (user?.id || '55af67c9-6695-4435-b4ea-2720efd73c92')) || list[0];
-        if (myAnak) setAnak(myAnak);
+        setDaftarAnak(list);
+        setAnak(list[0]);
+      } else {
+        setDaftarAnak([]);
+        setAnak(null);
       }
     }).catch(err => {
       console.warn('Gagal load data anak di dashboard:', err);
+      setDaftarAnak([]);
+      setAnak(null);
     });
 
-    bukuKiaService.getJadwalPesertaList().then(res => {
+    // 3. Ambil jadwal terdekat
+    bukuKiaService.getJadwalPesertaList(ibuId).then(res => {
       if (res && res.length > 0) {
         const formatted = res.slice(0, 2).map(item => {
           try {
@@ -93,7 +87,22 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
         }
       }
     });
-  }, []);
+  }, [ibuId]);
+
+  const hasKehamilan = Boolean(kehamilan && (kehamilan.status_kehamilan === 'Aktif' || kehamilan.usia_kehamilan_minggu));
+  const hasAnak = Boolean(anak);
+
+  // Helper standar faskes/posyandu untuk bayi baru lahir yang belum dinamai (By. Ny. [Nama Ibu] 1 / 2)
+  const formatNamaAnak = (anakObj, index = 0) => {
+    if (anakObj?.nama && anakObj.nama.trim()) {
+      const lower = anakObj.nama.toLowerCase().trim();
+      if (!lower.startsWith('anak ') && lower !== 'anak') {
+        return anakObj.nama;
+      }
+    }
+    const ibuNama = user?.nama ? user.nama.split(',')[0].trim() : 'Ibu';
+    return `By. Ny. ${ibuNama} ${index + 1}`;
+  };
 
   const handleNav = (path) => {
     if (onNavigate) {
@@ -125,13 +134,13 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
             <div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#E11D48] tracking-tight">
-                {isIbuBalita ? 'Ibu Ratna' : 'Siti Aminah'}
+                {user?.nama || (hasKehamilan ? 'Siti Aminah' : 'Ibu Ratna')}
               </h2>
               <p className="text-xs text-slate-600 font-medium mt-1">
-                {isIbuBalita ? (
-                  <>Status: <strong className="text-slate-900 font-bold">Pasca Persalinan (Menyusui)</strong> · Kondisi Sehat</>
-                ) : (
+                {hasKehamilan ? (
                   <>Usia Kehamilan: <strong className="text-slate-900 font-bold">{kehamilan?.usia_kehamilan_minggu || 28} Minggu</strong> · Trimester {kehamilan?.trimester || 3}</>
+                ) : (
+                  <>Status: <strong className="text-slate-900 font-bold">Pasca Persalinan (Menyusui)</strong> · Kondisi Sehat</>
                 )}
               </p>
             </div>
@@ -139,7 +148,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
             <div className="pt-2">
               <button
                 type="button"
-                onClick={() => handleNav(isIbuBalita ? '/kesehatan-ibu/nifas-menyusui' : '/kesehatan-ibu/kehamilan')}
+                onClick={() => handleNav(hasKehamilan ? '/kesehatan-ibu/kehamilan' : '/kesehatan-ibu/nifas-menyusui')}
                 className="px-5 py-2.5 bg-[#FF4D80] hover:bg-[#F43F5E] text-white rounded-full text-xs font-bold inline-flex items-center gap-1.5 shadow-md shadow-pink-300/40 transition-all cursor-pointer active:scale-95"
               >
                 <span>Lihat Detail Ibu</span>
@@ -162,27 +171,53 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
         </div>
 
         {/* Card 2: Kesehatan Anak (Balita Terdaftar vs Belum Terdaftar) */}
-        {(isIbuBalita || anak) ? (
-          /* Tampilan Anak Terdaftar (Dian Pranata - Konsisten dengan Profil Anak) */
+        {hasAnak ? (
+          /* Tampilan Anak Terdaftar */
           <div className="bg-gradient-to-r from-[#FFF5F7] via-[#FFEBF1] to-[#FFE0EA] border border-pink-200/70 rounded-3xl p-6 sm:p-7 relative overflow-hidden shadow-xs flex flex-col justify-between items-center text-center min-h-[220px]">
-            <div className="w-full flex items-center justify-start">
+            <div className="w-full flex items-center justify-between gap-2 flex-wrap">
               <div className="inline-flex items-center gap-1.5 text-pink-600 text-xs font-bold">
                 <Star size={14} className="fill-pink-500 text-pink-500" />
                 <span>Kesehatan Anak</span>
               </div>
+
+              {/* Multiple Children Tab Selector jika punya > 1 anak */}
+              {daftarAnak.length > 1 && (
+                <div className="flex items-center gap-1 bg-white/80 backdrop-blur-xs p-1 rounded-xl border border-pink-200/60 shadow-2xs">
+                  {daftarAnak.map((a, idx) => {
+                    const isSelected = a.id === anak?.id;
+                    const isBoy = a.jenis_kelamin === 'L';
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        data-anak-id={a.id}
+                        onClick={() => setAnak(a)}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#E11D48] text-white shadow-xs'
+                            : 'text-slate-600 hover:text-[#E11D48] hover:bg-white/60'
+                        }`}
+                      >
+                        <span>{isBoy ? '👦' : '👧'}</span>
+                        <span>{formatNamaAnak(a, idx).split(' ')[0]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="my-1 flex flex-col items-center max-w-sm">
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-pink-100/80 border-2 border-pink-200 p-1 flex items-center justify-center">
                 <img 
                   src="/images/baby-wreath.png" 
-                  alt={anak?.nama || 'Dian Pranata'} 
+                  alt={anak?.nama || 'Si Kecil'} 
                   className="w-full h-full object-contain"
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
               </div>
               <h3 className="text-xl sm:text-2xl font-extrabold text-[#E11D48] tracking-tight mt-2">
-                {anak?.nama || 'Dian Pranata'}
+                {anak?.nama || 'Si Kecil'}
               </h3>
               <p className="text-xs text-slate-600 font-medium mt-0.5">
                 {hitungUsiaString(anak?.tgl_lahir)}
@@ -192,7 +227,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
             <div className="pt-2">
               <button
                 type="button"
-                onClick={() => handleNav(`/kesehatan-anak/profil?anak_id=${anak?.id || 'b2222222-2222-2222-2222-222222222222'}`)}
+                onClick={() => handleNav(`/kesehatan-anak/profil?anak_id=${anak?.id}`)}
                 className="px-6 py-2.5 bg-[#FF4D80] hover:bg-[#F43F5E] text-white rounded-full text-xs font-bold inline-flex items-center gap-1.5 shadow-md shadow-pink-300/40 transition-all cursor-pointer active:scale-95"
               >
                 <span>Lihat Detail Anak</span>
@@ -430,13 +465,42 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
         </div>
 
         {/* Ringkasan Kesehatan Anak (Jika Ibu Balita atau anak terdaftar) */}
-        {(isIbuBalita || anak) && (
+        {hasAnak && (
           <div className="bg-white/70 border border-pink-100/80 rounded-3xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900">Ringkasan Kesehatan Anak ({anak?.nama || 'Dian Pranata'})</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h3 className="text-sm font-bold text-slate-900">
+                  Ringkasan Kesehatan Anak ({anak?.nama || 'Si Kecil'})
+                </h3>
+                {daftarAnak.length > 1 && (
+                  <div className="flex items-center gap-1 bg-pink-50 p-1 rounded-xl border border-pink-200">
+                    <span className="text-[10px] font-bold text-slate-400 px-1 uppercase tracking-wider">Pilih:</span>
+                    {daftarAnak.map((a, idx) => {
+                      const isSelected = a.id === anak?.id;
+                      const isBoy = a.jenis_kelamin === 'L';
+                      return (
+                        <button
+                          key={a.id}
+                          type="button"
+                          data-anak-id={a.id}
+                          onClick={() => setAnak(a)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#E11D48] text-white shadow-xs'
+                              : 'text-slate-600 hover:text-[#E11D48] hover:bg-white/70'
+                          }`}
+                        >
+                          <span>{isBoy ? '👦' : '👧'}</span>
+                          <span>{formatNamaAnak(a, idx).split(' ')[0]}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
-                onClick={() => handleNav('/kesehatan-anak/pertumbuhan')}
+                onClick={() => handleNav(`/kesehatan-anak/pertumbuhan?anak_id=${anak?.id}`)}
                 className="text-xs font-semibold text-[#E11D48] hover:text-[#BE185D] cursor-pointer"
               >
                 Lihat Detail
@@ -446,7 +510,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Berat Badan */}
               <div 
-                onClick={() => handleNav('/kesehatan-anak/pertumbuhan')}
+                onClick={() => handleNav(`/kesehatan-anak/pertumbuhan?anak_id=${anak?.id}`)}
                 className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
               >
                 <div className="flex items-center gap-3.5">
@@ -466,7 +530,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
               {/* Tinggi Badan */}
               <div 
-                onClick={() => handleNav('/kesehatan-anak/pertumbuhan')}
+                onClick={() => handleNav(`/kesehatan-anak/pertumbuhan?anak_id=${anak?.id}`)}
                 className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
               >
                 <div className="flex items-center gap-3.5">
@@ -486,7 +550,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
               {/* Imunisasi */}
               <div 
-                onClick={() => handleNav('/kesehatan-anak/imunisasi')}
+                onClick={() => handleNav(`/kesehatan-anak/imunisasi?anak_id=${anak?.id}`)}
                 className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
               >
                 <div className="flex items-center gap-3.5">
@@ -506,7 +570,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
               {/* Perkembangan */}
               <div 
-                onClick={() => handleNav('/kesehatan-anak/perkembangan')}
+                onClick={() => handleNav(`/kesehatan-anak/perkembangan?anak_id=${anak?.id}`)}
                 className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
               >
                 <div className="flex items-center gap-3.5">

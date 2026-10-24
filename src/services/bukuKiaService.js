@@ -33,21 +33,14 @@ export const bukuKiaService = {
         if (!error && data) {
           return data.filter(p => 
             p.status_ibu === 'hamil' || 
-            p.tipe_peserta?.nama === 'Ibu Hamil' ||
-            p.nama?.toLowerCase().includes('aminah') ||
-            p.nama?.toLowerCase().includes('bela') ||
-            p.nama?.toLowerCase().includes('sri')
+            p.tipe_peserta?.nama === 'Ibu Hamil'
           );
         }
       } catch (e) {
         console.warn('Gagal fetch daftar ibu hamil:', e);
       }
     }
-    return [
-      { id: '55af67c9-6695-4435-b4ea-2720efd73c92', nama: 'Siti Aminah', nik: '3201234567890001', no_wa: '081234567890' },
-      { id: '0f154ec8-374f-451e-ba80-5cbea9780554', nama: 'Bela wati', nik: '3201234567890002', no_wa: '081298765432' },
-      { id: '488a2c6a-92ee-478e-af12-80d5c4548ba2', nama: 'Sri angraini', nik: '3201234567890003', no_wa: '081311223344' }
-    ];
+    return [];
   },
 
   /**
@@ -72,27 +65,26 @@ export const bukuKiaService = {
 
         if (ibuId) {
           query = query.eq('ibu_id', ibuId);
+          const { data, error } = await query.order('nama', { ascending: true });
+          if (!error && data) {
+            return data;
+          }
+          return [];
         }
 
         const { data, error } = await query.order('nama', { ascending: true });
         if (!error && data) {
-          const filtered = data.filter(p => 
+          return data.filter(p => 
             p.tipe_peserta?.nama === 'Balita' || 
             p.tipe_peserta?.nama === 'Bayi' ||
-            p.ibu_id !== null ||
-            p.nama?.toLowerCase().includes('dian') || p.nama?.toLowerCase().includes('farhan')
+            p.ibu_id !== null
           );
-          if (filtered.length > 0) return filtered;
         }
       } catch (e) {
         console.warn('Gagal fetch daftar anak:', e);
       }
     }
-    return [
-      { id: 'b2222222-2222-2222-2222-222222222222', nama: 'Dian Pranata', ibu_id: '55af67c9-6695-4435-b4ea-2720efd73c92', tgl_lahir: '2025-07-15', jenis_kelamin: 'L' },
-      { id: 'b0d0ceae-d9bb-4c7c-b569-3c22a1bd96fd', nama: 'Ariana Venti', ibu_id: null, tgl_lahir: '2025-02-10', jenis_kelamin: 'P' },
-      { id: '90876706-2c55-4b8a-b1e7-fa54fd98ca31', nama: 'Sukma Ayu', ibu_id: null, tgl_lahir: '2024-05-20', jenis_kelamin: 'P' }
-    ];
+    return [];
   },
 
   // ==========================================
@@ -113,47 +105,12 @@ export const bukuKiaService = {
           .eq('peserta_id', pesertaId)
           .maybeSingle();
 
-        if (!error && data) return data;
-
-        // Jika ibu belum memiliki record kehamilan di Supabase, buatkan otomatis
-        if (!data) {
-          const defaultHpl = new Date();
-          defaultHpl.setMonth(defaultHpl.getMonth() + 3);
-          const { data: newRow, error: insertErr } = await supabase
-            .from('kehamilan_ibu')
-            .insert([{
-              peserta_id: pesertaId,
-              gravida: 1,
-              hpht: new Date(Date.now() - 28 * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              hpl: defaultHpl.toISOString().split('T')[0],
-              usia_kehamilan_minggu: 28,
-              trimester: 3,
-              jumlah_tablet_fe_diminum: 60,
-              target_tablet_fe: 90,
-              status_kehamilan: 'Aktif'
-            }])
-            .select()
-            .single();
-
-          if (!insertErr && newRow) return newRow;
-        }
+        return data || null;
       } catch (e) {
         console.warn('Gagal fetch kehamilan_ibu dari Supabase:', e);
       }
     }
-
-    // Fallback Mock khusus Siti Aminah jika offline
-    return {
-      id: 'c3333333-3333-3333-3333-333333333333',
-      peserta_id: pesertaId,
-      hpht: '2026-02-12',
-      hpl: '2026-12-20',
-      usia_kehamilan_minggu: 28,
-      trimester: 3,
-      jumlah_tablet_fe_diminum: 70,
-      target_tablet_fe: 80,
-      status_kehamilan: 'Aktif'
-    };
+    return null;
   },
 
   /**
@@ -278,7 +235,7 @@ export const bukuKiaService = {
         const { data, error } = await supabase
           .from('pemeriksaan_nifas')
           .select('*')
-          .eq('ibu_id', pesertaId)
+          .eq('peserta_id', pesertaId)
           .order('kunjungan', { ascending: true });
 
         if (!error && data) return data;
@@ -395,18 +352,27 @@ export const bukuKiaService = {
   /**
    * Mengambil daftar jadwal peserta terisolasi per peserta_id
    */
-  async getJadwalPesertaList(pesertaId) {
-    if (!pesertaId) return [];
-
+  async getJadwalPesertaList(pesertaId = null) {
     if (isSupabaseConfigured && supabase) {
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from('jadwal_peserta')
           .select('*')
-          .eq('peserta_id', pesertaId)
           .order('tanggal', { ascending: true });
 
-        if (!error && data) return data;
+        if (pesertaId) {
+          const { data, error } = await query.eq('peserta_id', pesertaId);
+          if (!error && data && data.length > 0) return data;
+          // Jika untuk peserta ini belum ada jadwal spesifik, ambil jadwal Posyandu umum
+          const { data: allData, error: allErr } = await supabase
+            .from('jadwal_peserta')
+            .select('*')
+            .order('tanggal', { ascending: true });
+          if (!allErr && allData) return allData;
+        } else {
+          const { data, error } = await query;
+          if (!error && data) return data;
+        }
       } catch (e) {
         console.warn('Gagal fetch jadwal_peserta dari Supabase:', e);
       }

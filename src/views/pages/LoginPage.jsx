@@ -20,8 +20,11 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
     } else if (type === "ibu_hamil") {
       setEmail(DUMMY_ACCOUNTS.ibu_hamil?.email || "ibu.hamil@manudjaya.id");
       setPassword("Ibu123!");
-    } else if (type === "ibu_balita" || type === "ibu") {
+    } else if (type === "ibu_balita") {
       setEmail(DUMMY_ACCOUNTS.ibu_balita?.email || "ibu.balita@manudjaya.id");
+      setPassword("Ibu123!");
+    } else if (type === "ibu_hamil_anak" || type === "ibu") {
+      setEmail(DUMMY_ACCOUNTS.ibu_hamil_anak?.email || "ibu.hamil.anak@manudjaya.id");
       setPassword("Ibu123!");
     } else if (type === "admin") {
       setEmail(DUMMY_ACCOUNTS.admin.email);
@@ -177,22 +180,30 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="grid grid-cols-3 gap-1.5">
                 <button
                   type="button"
                   onClick={() => handleQuickFill("ibu_hamil")}
-                  className="py-1 px-2 bg-pink-50 hover:bg-pink-100 text-pink-700 rounded text-[11px] font-bold text-left truncate border border-pink-200"
-                  title="Akun Ibu Hamil (Siti Aminah, 28 Minggu)"
+                  className="py-1 px-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 rounded text-[10px] font-bold text-center truncate border border-pink-200"
+                  title="Akun Ibu Hamil Saja - Belum punya anak (Najwa Sihab, 28 Minggu)"
                 >
-                  Ibu Hamil
+                  Ibu Hamil Saja
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickFill("ibu_balita")}
-                  className="py-1 px-2 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded text-[11px] font-bold text-left truncate border border-amber-200"
-                  title="Akun Ibu Balita Non-Hamil (Ibu Ratna, Balita Dian)"
+                  className="py-1 px-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded text-[10px] font-bold text-center truncate border border-amber-200"
+                  title="Akun Ibu Balita - Pasca Persalinan / Menyusui (Ibu Ratna, Balita Alea)"
                 >
                   Ibu Balita
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill("ibu_hamil_anak")}
+                  className="py-1 px-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded text-[10px] font-bold text-center truncate border border-rose-200"
+                  title="Akun Ibu Hamil & Balita - Hamil anak ke-2 (Siti Aminah, Balita Dian)"
+                >
+                  Hamil & Balita
                 </button>
               </div>
 
