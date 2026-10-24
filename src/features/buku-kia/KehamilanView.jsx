@@ -42,47 +42,65 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
   const [peserta, setPeserta] = useState(null);
   const [kehamilan, setKehamilan] = useState(null);
   const [selectedPanduan, setSelectedPanduan] = useState(null);
-  const [jumlahJanin, setJumlahJanin] = useState(1);
+  // Default langsung 2 janin (Janin 1 & Janin 2) atau dinamis sesuai Supabase, support hingga kembar 7
+  const [jumlahJanin, setJumlahJanin] = useState(() => {
+    if (typeof window !== 'undefined' && window.location.search) {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get('janin')) return Math.min(7, Math.max(1, parseInt(sp.get('janin')) || 2));
+    }
+    return 2; // Default langsung tampil Janin 1 dan Janin 2
+  });
   const [activeJaninId, setActiveJaninId] = useState('janin-1');
 
-  // Sinkronkan jumlah janin jika ada di record kehamilan
+  // Sinkronkan jika jumlah_janin diatur di database Supabase
   useEffect(() => {
     if (kehamilan?.jumlah_janin) {
-      setJumlahJanin(kehamilan.jumlah_janin);
+      const jCount = Math.min(7, Math.max(1, parseInt(kehamilan.jumlah_janin) || 2));
+      setJumlahJanin(jCount);
     }
   }, [kehamilan]);
 
-  const dataJaninList = [
-    {
-      id: 'janin-1',
-      label: 'Janin 1',
-      alias: 'Calon Si Kecil 1',
-      djj: 142,
-      djjStatus: 'Normal (120-160 x/mnt)',
-      tbj: 1250,
-      tbjKet: 'Sesuai kurva usia kehamilan',
-      gerakan: '12 kali / 12 jam',
-      gerakanKet: 'Aktif & Responsif',
-      posisi: 'Presentasi Kepala (Preskep)',
-      letakDjj: 'Punctum maximum di kuadran kanan bawah perut ibu',
-      catatanBidan: 'Detak jantung reguler dan kuat. Gerakan janin sangat baik.'
-    },
-    {
-      id: 'janin-2',
-      label: 'Janin 2',
-      alias: 'Calon Si Kecil 2',
-      djj: 138,
-      djjStatus: 'Normal (120-160 x/mnt)',
-      tbj: 1180,
-      tbjKet: 'Sesuai kurva kehamilan kembar',
-      gerakan: '10 kali / 12 jam',
-      gerakanKet: 'Aktif & Responsif',
-      posisi: 'Presentasi Bokong / Sungsang',
-      letakDjj: 'Punctum maximum di kuadran kiri atas perut ibu',
-      catatanBidan: 'Pertumbuhan janin kedua simetris dan sehat.'
-    }
-  ];
+  // Generator data klinis dinamis untuk Janin 1 ... Janin N (hingga kembar 7)
+  const generateJaninList = (count) => {
+    const positions = [
+      'Presentasi Kepala (Preskep)',
+      'Presentasi Bokong (Sungsang)',
+      'Letak Melintang (Transversal)',
+      'Presentasi Kepala (Vertex)',
+      'Presentasi Bokong Murni',
+      'Letak Oblik (Miring)',
+      'Presentasi Muka'
+    ];
+    const quadrants = [
+      'kuadran kanan bawah',
+      'kuadran kiri atas',
+      'kuadran kiri bawah',
+      'kuadran kanan atas',
+      'tengah bawah perut',
+      'lateral kanan',
+      'lateral kiri'
+    ];
 
+    return Array.from({ length: count }, (_, i) => {
+      const idx = i + 1;
+      return {
+        id: `janin-${idx}`,
+        label: `Janin ${idx}`,
+        alias: `Calon Si Kecil ${idx}`,
+        djj: 142 - ((idx - 1) * 2),
+        djjStatus: 'Normal (120 - 160 x/mnt)',
+        tbj: Math.max(750, 1250 - ((idx - 1) * 45)),
+        tbjKet: count > 1 ? `Sesuai kurva kehamilan kembar (${count} janin)` : 'Sesuai kurva kehamilan tunggal',
+        gerakan: `${Math.max(8, 12 - (idx % 3))} kali / 12 jam`,
+        gerakanKet: 'Aktif & Responsif',
+        posisi: positions[(idx - 1) % positions.length],
+        letakDjj: `Punctum maximum di ${quadrants[(idx - 1) % quadrants.length]} perut ibu`,
+        catatanBidan: `Kondisi klinis Janin ${idx} sehat, detak jantung reguler dan kuat.`
+      };
+    });
+  };
+
+  const dataJaninList = generateJaninList(jumlahJanin);
   const selectedJanin = dataJaninList.find(j => j.id === activeJaninId) || dataJaninList[0];
 
   // Sinkronkan saat URL berubah
@@ -286,7 +304,7 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         </div>
       </div>
 
-      {/* 2.5 Card Pemantauan Kesehatan Janin (Fetus Health & Tab Janin 1 / Janin 2) */}
+      {/* 2.5 Card Pemantauan Kesehatan Janin (Tab Langsung Janin 1, Janin 2 ... Janin N) */}
       <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-7 shadow-xs space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div>
@@ -302,45 +320,50 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
             </p>
           </div>
 
-          {/* Pengalih Kehamilan Tunggal vs Kembar (Gemelli) */}
-          <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-200/80 self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => {
-                setJumlahJanin(1);
-                setActiveJaninId('janin-1');
-              }}
-              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                jumlahJanin === 1
-                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              Tunggal (1 Janin)
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setJumlahJanin(2);
-              }}
-              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                jumlahJanin === 2
-                  ? 'bg-gradient-to-r from-[#FF4D80] to-[#E11D48] text-white shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              Kembar / Gemelli (2 Janin)
-            </button>
+          {/* Stepper Tambah / Kurangi Janin (Bisa sampai Kembar 7) */}
+          <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-200/80 self-start sm:self-auto">
+            <span className="text-[11px] font-bold text-slate-500 px-1">
+              {jumlahJanin > 1 ? `Kembar (${jumlahJanin} Janin)` : '1 Janin'}
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                disabled={jumlahJanin <= 1}
+                onClick={() => {
+                  const nextCount = Math.max(1, jumlahJanin - 1);
+                  setJumlahJanin(nextCount);
+                  if (activeJaninId === `janin-${jumlahJanin}`) {
+                    setActiveJaninId(`janin-${nextCount}`);
+                  }
+                }}
+                className="w-7 h-7 rounded-xl bg-white hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 shadow-2xs cursor-pointer transition-all active:scale-95"
+                title="Kurangi Janin"
+              >
+                -
+              </button>
+              <button
+                type="button"
+                disabled={jumlahJanin >= 7}
+                onClick={() => {
+                  const nextCount = Math.min(7, jumlahJanin + 1);
+                  setJumlahJanin(nextCount);
+                }}
+                className="w-7 h-7 rounded-xl bg-[#E11D48] hover:bg-[#BE185D] disabled:opacity-30 disabled:pointer-events-none text-white font-bold text-xs flex items-center justify-center shadow-xs cursor-pointer transition-all active:scale-95"
+                title="Tambah Janin (bisa sampai kembar 7)"
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Tab Selector Janin (Tampil jika kembar atau tunggal) */}
+        {/* Tab Selector Janin: Langsung tampil Janin 1, Janin 2, dst */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">
             Pilih Janin:
           </span>
-          <div className="flex items-center gap-2">
-            {dataJaninList.slice(0, jumlahJanin).map((j) => {
+          <div className="flex items-center gap-2 flex-nowrap">
+            {dataJaninList.map((j) => {
               const isSelected = j.id === activeJaninId;
               return (
                 <button
@@ -348,7 +371,7 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
                   type="button"
                   data-janin-id={j.id}
                   onClick={() => setActiveJaninId(j.id)}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer active:scale-95 shrink-0 ${
                     isSelected
                       ? 'bg-gradient-to-r from-[#FF4D80] to-[#E11D48] text-white shadow-md shadow-pink-300/40 border border-pink-400'
                       : 'bg-white hover:bg-pink-50/60 text-slate-700 hover:text-[#E11D48] border border-slate-200 shadow-xs'
