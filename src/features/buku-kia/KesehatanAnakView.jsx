@@ -139,6 +139,19 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
     catatan: 'Pertumbuhan anak normal dan aktif.'
   });
 
+  const [daftarImunisasi, setDaftarImunisasi] = useState([]);
+
+  useEffect(() => {
+    if (!activeAnakId) return;
+    bukuKiaService.getImunisasiAnakList(activeAnakId).then((res) => {
+      if (res && res.length > 0) {
+        setDaftarImunisasi(res);
+      } else {
+        setDaftarImunisasi([]);
+      }
+    });
+  }, [activeAnakId]);
+
   const [riwayatPertumbuhan, setRiwayatPertumbuhan] = useState([
     { no: 1, tanggal: '12 Sep 2026', usia: '14 Bulan', bb: '9,8 Kg', tb: '75 Cm', lk: '46 Cm', status: 'Normal' },
     { no: 2, tanggal: '15 Agu 2026', usia: '13 Bulan', bb: '9,4 Kg', tb: '73 Cm', lk: '45,5 Cm', status: 'Normal' },
@@ -1011,7 +1024,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                 <Syringe size={18} className="text-[#E11D48]" />
                 <div>
                   <span className="text-[10px] text-slate-400 font-medium block">Imunisasi Selesai</span>
-                  <span className="text-xs sm:text-sm font-bold text-slate-900">7 / 9</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900">{daftarImunisasi.length > 0 ? `${daftarImunisasi.filter(i => i.status === 'Selesai').length} / ${daftarImunisasi.length}` : '7 / 9'}</span>
                 </div>
               </div>
 
@@ -1042,25 +1055,27 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
               </div>
 
               <div className="space-y-3">
-                {[
-                  { title: 'Hepatitis B', usia: 'Usia 0–7 Hari', tanggal: '20 Feb 2026' },
-                  { title: 'BCG', usia: 'Usia 1 Bulan', tanggal: '20 Feb 2026' },
-                  { title: 'Polio 1', usia: 'Usia 0–7 Hari', tanggal: '20 Feb 2026' },
-                  { title: 'Polio 2', usia: 'Usia 0–7 Hari', tanggal: '20 Feb 2026' },
-                ].map((item, idx) => (
+                {(daftarImunisasi.length > 0 ? daftarImunisasi : [
+                  { nama_vaksin: 'Hepatitis B (HB0)', jadwal_usia: '0 - 24 Jam', tanggal_diberikan: '15 Jul 2025', status: 'Selesai' },
+                  { nama_vaksin: 'BCG', jadwal_usia: '1 Bulan', tanggal_diberikan: '14 Agu 2025', status: 'Selesai' },
+                  { nama_vaksin: 'Polio Tetes 1', jadwal_usia: '1 Bulan', tanggal_diberikan: '14 Agu 2025', status: 'Selesai' },
+                  { nama_vaksin: 'Polio Tetes 2', jadwal_usia: '2 Bulan', tanggal_diberikan: '18 Sep 2025', status: 'Selesai' },
+                ]).map((item, idx) => (
                   <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/70 border border-slate-100 group hover:border-pink-200 transition-all cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <CheckCircle2 size={18} className="text-emerald-500 fill-emerald-100 shrink-0" />
+                      <CheckCircle2 size={18} className={item.status === 'Selesai' ? 'text-emerald-500 fill-emerald-100 shrink-0' : 'text-slate-300 shrink-0'} />
                       <div>
-                        <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">{item.title}</h4>
-                        <span className="text-[10px] text-slate-400 font-medium">{item.usia}</span>
+                        <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">{item.nama_vaksin}</h4>
+                        <span className="text-[10px] text-slate-400 font-medium">{item.jadwal_usia}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#DCFCE7] text-[#15803D]">
-                        Selesai
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        item.status === 'Selesai' ? 'bg-[#DCFCE7] text-[#15803D]' : 'bg-amber-50 text-amber-700'
+                      }`}>
+                        {item.status}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-medium">{item.tanggal}</span>
+                      <span className="text-[10px] text-slate-400 font-medium">{item.tanggal_diberikan || 'Akan Datang'}</span>
                       <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />
                     </div>
                   </div>
@@ -1179,40 +1194,31 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
-                  <tr className="hover:bg-slate-50/60 transition-colors">
-                    <td className="py-3.5 px-4 text-center font-medium">1</td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-900">12 Sep 2026</td>
-                    <td className="py-3.5 px-4 text-slate-600">14 Bulan</td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900">DPT-HB-Hb 3</td>
-                    <td className="py-3.5 px-4 text-slate-600">Puskesmas Maju Jaya</td>
-                    <td className="py-3.5 px-4 text-slate-600">Bidan Sari</td>
-                    <td className="py-3.5 px-4 text-center">
-                      <button
-                        type="button"
-                        onClick={() => onShowToast && onShowToast('Detail vaksin: DPT-HB-Hib 3 No. Batch V-9821, kondisi anak sehat pasca vaksinasi.', 'info')}
-                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-slate-50/60 transition-colors">
-                    <td className="py-3.5 px-4 text-center font-medium">1</td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-900">12 Sep 2026</td>
-                    <td className="py-3.5 px-4 text-slate-600">14 Bulan</td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900">DPT-HB-Hb 3</td>
-                    <td className="py-3.5 px-4 text-slate-600">Puskesmas Maju Jaya</td>
-                    <td className="py-3.5 px-4 text-slate-600">Bidan Sari</td>
-                    <td className="py-3.5 px-4 text-center">
-                      <button
-                        type="button"
-                        onClick={() => onShowToast && onShowToast('Detail vaksin: DPT-HB-Hib 3 No. Batch V-9821, kondisi anak sehat pasca vaksinasi.', 'info')}
-                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
+                  {(daftarImunisasi.filter(i => i.status === 'Selesai').length > 0 
+                    ? daftarImunisasi.filter(i => i.status === 'Selesai')
+                    : [
+                        { nama_vaksin: 'Hepatitis B (HB0)', tanggal_diberikan: '2025-07-15', jadwal_usia: '0 - 24 Jam', lokasi: 'Puskesmas Manud Jaya', petugas: 'Bidan Siti, S.Tr.Keb', no_batch_vaksin: 'HB-2025-01' },
+                        { nama_vaksin: 'BCG', tanggal_diberikan: '2025-08-14', jadwal_usia: '1 Bulan', lokasi: 'Puskesmas Manud Jaya', petugas: 'Bidan Siti, S.Tr.Keb', no_batch_vaksin: 'BCG-2025-08' }
+                      ]
+                  ).map((vax, idx) => (
+                    <tr key={vax.id || idx} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="py-3.5 px-4 text-center font-medium">{idx + 1}</td>
+                      <td className="py-3.5 px-4 font-semibold text-slate-900">{vax.tanggal_diberikan || '-'}</td>
+                      <td className="py-3.5 px-4 text-slate-600">{vax.jadwal_usia}</td>
+                      <td className="py-3.5 px-4 font-bold text-slate-900">{vax.nama_vaksin}</td>
+                      <td className="py-3.5 px-4 text-slate-600">{vax.lokasi || 'Puskesmas Manud Jaya'}</td>
+                      <td className="py-3.5 px-4 text-slate-600">{vax.petugas || 'Bidan Siti'}</td>
+                      <td className="py-3.5 px-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => onShowToast && onShowToast(`Detail vaksin: ${vax.nama_vaksin} No. Batch ${vax.no_batch_vaksin || '-'}, kondisi anak sehat pasca vaksinasi.`, 'info')}
+                          className="text-xs font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
+                        >
+                          Detail
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

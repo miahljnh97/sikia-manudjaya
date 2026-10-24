@@ -76,13 +76,13 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
   };
 
   const persiapanList = [
-    { label: 'Kartu Identitas (KTP / KK)', status: 'Sudah' },
-    { label: 'Buku KIA', status: 'Sudah' },
-    { label: 'BPJS / Kartu Jaminan Kesehatan', status: 'Sudah' },
-    { label: 'Pakaian Ibu dan Bayi', status: 'Sudah' },
-    { label: 'Perlengkapan Ibu Menyusui', status: 'Belum' },
-    { label: 'Dana Cadangan Persalinan', status: 'Sudah' },
-    { label: 'Kontak Donor Darah & Kendaraan Siaga', status: 'Sudah' },
+    { label: 'Kartu Identitas (KTP / KK)', status: p4k ? (p4k.checklist_identitas ? 'Sudah' : 'Belum') : 'Sudah' },
+    { label: 'Buku KIA', status: p4k ? (p4k.checklist_buku_kia ? 'Sudah' : 'Belum') : 'Sudah' },
+    { label: 'BPJS / Kartu Jaminan Kesehatan', status: p4k ? (p4k.checklist_bpjs ? 'Sudah' : 'Belum') : 'Sudah' },
+    { label: 'Pakaian Ibu dan Bayi', status: p4k ? (p4k.checklist_pakaian ? 'Sudah' : 'Belum') : 'Belum' },
+    { label: 'Perlengkapan Ibu Menyusui', status: p4k ? (p4k.checklist_perlengkapan ? 'Sudah' : 'Belum') : 'Belum' },
+    { label: 'Dana Cadangan Persalinan', status: p4k ? (p4k.checklist_dana_darurat ? 'Sudah' : 'Belum') : 'Belum' },
+    { label: 'Kontak Donor Darah & Kendaraan Siaga', status: p4k ? (p4k.checklist_kontak_darurat ? 'Sudah' : 'Belum') : 'Belum' },
   ];
 
   const namaPasien = peserta?.nama || 'Siti Aminah';
@@ -258,11 +258,11 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
             </div>
             <div className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between">
               <span className="text-slate-500 font-medium">Pendamping Persalinan:</span>
-              <span className="font-bold text-slate-800">{p4k?.pendamping_persalinan || 'Suami / Keluarga'}</span>
+              <span className="font-bold text-slate-800">{p4k?.pendamping || p4k?.pendamping_persalinan || 'Suami'}</span>
             </div>
             <div className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between">
               <span className="text-slate-500 font-medium">Transportasi Siaga:</span>
-              <span className="font-bold text-slate-800">{p4k?.transportasi || 'Ambulans Desa Manud Jaya'}</span>
+              <span className="font-bold text-slate-800">{p4k?.transportasi || 'Mobil Pribadi'}</span>
             </div>
             <div className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between">
               <span className="text-slate-500 font-medium">Calon Pendonor Darah:</span>
@@ -275,7 +275,7 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <h3 className="text-sm font-bold text-slate-900">Checklist Persiapan Persalinan</h3>
-            <span className="text-[11px] font-bold text-emerald-600">6 dari 7 Siap</span>
+            <span className="text-[11px] font-bold text-emerald-600">{persiapanList.filter(p => p.status === 'Sudah').length} dari {persiapanList.length} Siap</span>
           </div>
 
           <div className="space-y-2 text-xs">
