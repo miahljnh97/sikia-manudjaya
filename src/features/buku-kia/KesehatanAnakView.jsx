@@ -22,7 +22,8 @@ import {
   Heart,
   User,
   ShieldCheck,
-  FileText
+  FileText,
+  Baby
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
