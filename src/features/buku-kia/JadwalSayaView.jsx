@@ -18,7 +18,7 @@ import {
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { sendWhatsAppReminder, getReminderStatus } from '../../services/whatsappService';
 
-export default function JadwalSayaView({ onNavigate, onShowToast }) {
+export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedJadwal, setSelectedJadwal] = useState(null);
   const [isSendingWa, setIsSendingWa] = useState(false);

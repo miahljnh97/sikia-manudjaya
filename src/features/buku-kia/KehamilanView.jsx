@@ -359,14 +359,14 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
 
         {/* Detail Pemantauan Janin Terpilih */}
         {selectedJanin && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 pt-2">
             {/* 1. Denyut Jantung Janin (DJJ) */}
-            <div className="bg-gradient-to-br from-pink-50/70 to-rose-50/40 border border-pink-200/70 rounded-2xl p-4.5 space-y-2">
+            <div className="bg-gradient-to-br from-pink-50/70 to-rose-50/40 border border-pink-200/70 rounded-2xl p-5 sm:p-6 space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
                   Denyut Jantung (DJJ)
                 </span>
-                <div className="w-8 h-8 rounded-xl bg-pink-100 text-[#E11D48] flex items-center justify-center animate-pulse">
+                <div className="w-8 h-8 rounded-xl bg-pink-100 text-[#E11D48] flex items-center justify-center animate-pulse shrink-0">
                   <HeartPulse size={16} />
                 </div>
               </div>
@@ -385,12 +385,12 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
             </div>
 
             {/* 2. Tafsiran Berat Janin (TBJ) */}
-            <div className="bg-white border border-slate-100 rounded-2xl p-4.5 space-y-2 shadow-xs">
+            <div className="bg-white border border-slate-100 rounded-2xl p-5 sm:p-6 space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                   Tafsiran Berat Janin (TBJ)
                 </span>
-                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
                   <Weight size={16} />
                 </div>
               </div>
@@ -409,12 +409,12 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
             </div>
 
             {/* 3. Gerakan Janin Harian */}
-            <div className="bg-white border border-slate-100 rounded-2xl p-4.5 space-y-2 shadow-xs">
+            <div className="bg-white border border-slate-100 rounded-2xl p-5 sm:p-6 space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                   Gerakan Janin
                 </span>
-                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                   <Activity size={16} />
                 </div>
               </div>
@@ -433,12 +433,12 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
             </div>
 
             {/* 4. Letak & Presentasi Janin */}
-            <div className="bg-white border border-slate-100 rounded-2xl p-4.5 space-y-2 shadow-xs">
+            <div className="bg-white border border-slate-100 rounded-2xl p-5 sm:p-6 space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                   Letak &amp; Posisi
                 </span>
-                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
                   <CheckCircle2 size={16} />
                 </div>
               </div>
@@ -448,7 +448,7 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
               <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
                 {selectedJanin.letakDjj}
               </p>
-              <div className="p-2 rounded-xl bg-pink-50/60 border border-pink-100 text-[10px] text-slate-600">
+              <div className="p-3 rounded-xl bg-pink-50/60 border border-pink-100 text-[10px] text-slate-600">
                 <strong className="text-[#E11D48] font-bold block">Catatan Bidan:</strong>
                 {selectedJanin.catatanBidan}
               </div>
