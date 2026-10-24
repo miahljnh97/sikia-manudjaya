@@ -42,12 +42,6 @@ export const DUMMY_ACCOUNTS = {
     nama: 'Siti Aminah',
     peserta_id: '55af67c9-6695-4435-b4ea-2720efd73c92', // Ibu Hamil dengan Balita (Dian Pranata)
   },
-  calon_ibu: {
-    email: 'calon.ibu@manudjaya.id',
-    role: 'Ibu',
-    nama: 'Dewi Lestari',
-    peserta_id: '77777777-7777-7777-7777-777777777777', // Calon Ibu / Prakonsepsi
-  },
   ibu: {
     email: 'ibu.hamil@manudjaya.id',
     role: 'Ibu',

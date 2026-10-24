@@ -162,74 +162,58 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
                 ✕
               </button>
             </div>
-            <div className="space-y-2">
-              <div>
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Petugas Posyandu</p>
-                <div className="grid grid-cols-3 gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickFill("admin")}
-                    className="py-1 px-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded text-[10px] font-bold text-center truncate border border-purple-200"
-                    title="Super Admin - Bambang Sudarmono"
-                  >
-                    Super Admin
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickFill("bidan")}
-                    className="py-1 px-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold text-center truncate border border-emerald-200"
-                    title="Bidan Desa - Bidan Siti"
-                  >
-                    Bidan Desa
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickFill("kader")}
-                    className="py-1 px-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[10px] font-bold text-center truncate border border-blue-200"
-                    title="Kader Posyandu - Annisa Wati"
-                  >
-                    Kader Posyandu
-                  </button>
-                </div>
+            <div className="space-y-1.5">
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill("kader")}
+                  className="py-1 px-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[11px] font-medium text-left truncate"
+                >
+                  Kader Posyandu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill("bidan")}
+                  className="py-1 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-[11px] font-medium text-left truncate"
+                >
+                  Bidan Desa
+                </button>
               </div>
 
-              <div>
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Sasaran (Role: Ibu)</p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickFill("ibu_hamil")}
-                    className="py-1 px-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 rounded text-[10px] font-bold text-left truncate border border-pink-200"
-                    title="Ibu Hamil Saja - Najwa Sihab (Hamil 28 Minggu, Tanpa Anak)"
-                  >
-                    🤰 Ibu Hamil Saja
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickFill("ibu_balita")}
-                    className="py-1 px-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded text-[10px] font-bold text-left truncate border border-amber-200"
-                    title="Ibu dan Anak - Ibu Ratna (Anak Balita: Alea, Tidak Hamil)"
-                  >
-                    👶 Ibu dan Anak
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickFill("ibu_hamil_anak")}
-                    className="py-1 px-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded text-[10px] font-bold text-left truncate border border-rose-200"
-                    title="Ibu Hamil & Balita - Siti Aminah (Hamil 28 Minggu & Balita Dian)"
-                  >
-                    🤰👶 Hamil & Anak
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickFill("calon_ibu")}
-                    className="py-1 px-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 rounded text-[10px] font-bold text-left truncate border border-violet-200"
-                    title="Calon Ibu - Dewi Lestari (Prakonsepsi / Belum Hamil & Tanpa Anak)"
-                  >
-                    🌸 Calon Ibu
-                  </button>
-                </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill("ibu_hamil")}
+                  className="py-1 px-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 rounded text-[10px] font-bold text-center truncate border border-pink-200"
+                  title="Akun Ibu Hamil Saja - Belum punya anak (Najwa Sihab, 28 Minggu)"
+                >
+                  Ibu Hamil Saja
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill("ibu_balita")}
+                  className="py-1 px-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded text-[10px] font-bold text-center truncate border border-amber-200"
+                  title="Akun Ibu Balita - Pasca Persalinan / Menyusui (Ibu Ratna, Balita Alea)"
+                >
+                  Ibu Balita
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill("ibu_hamil_anak")}
+                  className="py-1 px-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded text-[10px] font-bold text-center truncate border border-rose-200"
+                  title="Akun Ibu Hamil & Balita - Hamil anak ke-2 (Siti Aminah, Balita Dian)"
+                >
+                  Hamil & Balita
+                </button>
               </div>
+
+              <button
+                type="button"
+                onClick={() => handleQuickFill("admin")}
+                className="w-full py-1 px-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded text-[11px] font-bold text-left truncate"
+              >
+                Super Admin
+              </button>
             </div>
           </div>
         )}

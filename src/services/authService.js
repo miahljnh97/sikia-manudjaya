@@ -27,12 +27,6 @@ export const authService = {
         ...DUMMY_ACCOUNTS.ibu_hamil_anak 
       };
     }
-    if ((lowerEmail === DUMMY_ACCOUNTS.calon_ibu?.email || lowerEmail === 'calon.ibu@manudjaya.id') && password === 'Ibu123!') {
-      return { 
-        user: { email, id: DUMMY_ACCOUNTS.calon_ibu.peserta_id }, 
-        ...DUMMY_ACCOUNTS.calon_ibu 
-      };
-    }
 
     if (isSupabaseConfigured && supabase) {
       try {
@@ -144,9 +138,6 @@ export const authService = {
     }
     if ((lowerEmail === DUMMY_ACCOUNTS.ibu_hamil_anak?.email || lowerEmail === 'ibu.hamil.anak@manudjaya.id' || lowerEmail === 'siti.aminah@manudjaya.id') && password === 'Ibu123!') {
       return { user: { email, id: DUMMY_ACCOUNTS.ibu_hamil_anak.peserta_id }, ...DUMMY_ACCOUNTS.ibu_hamil_anak };
-    }
-    if ((lowerEmail === DUMMY_ACCOUNTS.calon_ibu?.email || lowerEmail === 'calon.ibu@manudjaya.id') && password === 'Ibu123!') {
-      return { user: { email, id: DUMMY_ACCOUNTS.calon_ibu.peserta_id }, ...DUMMY_ACCOUNTS.calon_ibu };
     }
     if (lowerEmail === DUMMY_ACCOUNTS.admin.email && password === 'Admin123!') {
       return { user: { email }, ...DUMMY_ACCOUNTS.admin };

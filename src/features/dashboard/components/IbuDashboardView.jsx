@@ -25,7 +25,6 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
   const ibuId = user?.peserta_id || user?.user?.id || user?.id || (
     (user?.nama || '').toLowerCase().includes('ratna') ? 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73' :
     (user?.nama || '').toLowerCase().includes('najwa') ? '214fbe12-2216-4e61-9b12-9fccca445e84' :
-    (user?.nama || '').toLowerCase().includes('dewi') ? '77777777-7777-7777-7777-777777777777' :
     '55af67c9-6695-4435-b4ea-2720efd73c92'
   );
 
@@ -127,15 +126,13 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
             <div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#E11D48] tracking-tight">
-                {user?.nama || (hasKehamilan ? 'Najwa Sihab' : hasAnak ? 'Ibu Ratna' : 'Dewi Lestari')}
+                {user?.nama || (hasKehamilan ? 'Siti Aminah' : 'Ibu Ratna')}
               </h2>
               <p className="text-xs text-slate-600 font-medium mt-1">
                 {hasKehamilan ? (
                   <>Usia Kehamilan: <strong className="text-slate-900 font-bold">{kehamilan?.usia_kehamilan_minggu || 28} Minggu</strong> · Trimester {kehamilan?.trimester || 3}</>
-                ) : hasAnak ? (
-                  <>Status: <strong className="text-slate-900 font-bold">Pasca Persalinan (Menyusui)</strong> · Kondisi Sehat</>
                 ) : (
-                  <>Status: <strong className="text-slate-900 font-bold">Calon Ibu / Prakonsepsi</strong> · Persiapan Kehamilan Sehat</>
+                  <>Status: <strong className="text-slate-900 font-bold">Pasca Persalinan (Menyusui)</strong> · Kondisi Sehat</>
                 )}
               </p>
             </div>
@@ -143,10 +140,10 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
             <div className="pt-2">
               <button
                 type="button"
-                onClick={() => handleNav(hasKehamilan ? '/kesehatan-ibu/kehamilan' : hasAnak ? '/kesehatan-ibu/nifas-menyusui' : '/kesehatan-ibu/pemeriksaan')}
+                onClick={() => handleNav(hasKehamilan ? '/kesehatan-ibu/kehamilan' : '/kesehatan-ibu/nifas-menyusui')}
                 className="px-5 py-2.5 bg-[#FF4D80] hover:bg-[#F43F5E] text-white rounded-full text-xs font-bold inline-flex items-center gap-1.5 shadow-md shadow-pink-300/40 transition-all cursor-pointer active:scale-95"
               >
-                <span>{hasKehamilan ? 'Lihat Detail Kehamilan' : hasAnak ? 'Lihat Detail Pasca Persalinan' : 'Konsultasi & Pemeriksaan'}</span>
+                <span>Lihat Detail Ibu</span>
                 <ArrowRight size={14} />
               </button>
             </div>
@@ -226,12 +223,10 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                 />
               </div>
               <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight mt-1.5">
-                {hasKehamilan ? 'Si kecil belum terdaftar di SIKIA' : 'Belum Ada Data Anak Terdaftar'}
+                Si kecil belum terdaftar di SIKIA
               </h3>
               <p className="text-xs text-slate-500 font-medium mt-1 leading-snug">
-                {hasKehamilan 
-                  ? 'Tambahkan data anak setelah persalinan untuk melihat ringkasan kesehatan, pertumbuhan, dan jadwal imunisasi.'
-                  : 'Anda terdaftar sebagai Calon Ibu (Prakonsepsi). Menu pencatatan dan imunisasi anak akan aktif setelah proses kelahiran si kecil.'}
+                Tambahkan data anak untuk melihat ringkasan kesehatan, pertumbuhan, dan jadwal imunisasi.
               </p>
             </div>
 
@@ -528,47 +523,6 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                   </div>
                 </div>
                 <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600" />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Card Khusus Calon Ibu (Prakonsepsi / WUS) */}
-        {!hasAnak && !hasKehamilan && (
-          <div className="bg-gradient-to-br from-violet-50/80 via-white to-purple-50/60 border border-violet-100 rounded-3xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-violet-100 text-violet-700 font-bold text-base">🌸</span>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-950">Panduan Persiapan Kehamilan Sehat (Prakonsepsi)</h3>
-                  <p className="text-[11px] text-slate-500">Langkah penting bagi calon ibu untuk menyambut kehamilan yang sehat dan bahagia.</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleNav('/kesehatan-ibu/pemeriksaan')}
-                className="text-xs font-semibold text-violet-700 hover:text-violet-900 cursor-pointer"
-              >
-                Konsultasi Bidan
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs">
-                <span className="text-xs font-bold text-violet-700 block mb-1">1. Skrining Anemia</span>
-                <p className="text-[11px] text-slate-600 leading-relaxed">Cek kadar Hemoglobin (Hb) rutin untuk mencegah risiko anemia saat mulai hamil.</p>
-              </div>
-              <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs">
-                <span className="text-xs font-bold text-violet-700 block mb-1">2. Asam Folat 400 mcg</span>
-                <p className="text-[11px] text-slate-600 leading-relaxed">Konsumsi asam folat setiap hari untuk mencegah kelainan tabung saraf janin.</p>
-              </div>
-              <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs">
-                <span className="text-xs font-bold text-violet-700 block mb-1">3. Imunisasi TT</span>
-                <p className="text-[11px] text-slate-600 leading-relaxed">Dapatkan vaksin Tetanus Toksoid untuk perlindungan kesehatan calon ibu dan bayi.</p>
-              </div>
-              <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs">
-                <span className="text-xs font-bold text-violet-700 block mb-1">4. Gizi Seimbang</span>
-                <p className="text-[11px] text-slate-600 leading-relaxed">Perbanyak protein, zat besi, sayuran hijau, dan hindari paparan asap rokok.</p>
               </div>
             </div>
           </div>

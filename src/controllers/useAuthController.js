@@ -23,10 +23,6 @@ export function useAuthController() {
           parsed.role = 'Ibu';
           parsed.nama = 'Siti Aminah';
           parsed.peserta_id = '55af67c9-6695-4435-b4ea-2720efd73c92';
-        } else if (email === 'calon.ibu@manudjaya.id' || email.includes('calon')) {
-          parsed.role = 'Ibu';
-          parsed.nama = 'Dewi Lestari';
-          parsed.peserta_id = '77777777-7777-7777-7777-777777777777';
         } else if (email === 'ibu.hamil@manudjaya.id' || email.includes('hamil')) {
           parsed.role = 'Ibu';
           parsed.nama = 'Najwa Sihab';
