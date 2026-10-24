@@ -163,7 +163,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex font-sans antialiased text-slate-800 relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#F8FAFC] flex font-sans antialiased text-slate-800 relative">
       {/* 1. Left Sidebar Navigation */}
       <Sidebar 
         activeMenu={activeMenu} 
