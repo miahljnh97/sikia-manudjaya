@@ -42,11 +42,12 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
   const [peserta, setPeserta] = useState(null);
   const [kehamilan, setKehamilan] = useState(null);
   const [selectedPanduan, setSelectedPanduan] = useState(null);
-  // Default langsung 2 janin (Janin 1 & Janin 2) atau dinamis sesuai Supabase, support hingga kembar 7
+  // Mendukung jumlah janin dinamis tanpa batas kaku (termasuk edge case QA kembar 19)
+  const MAX_JANIN = 30;
   const [jumlahJanin, setJumlahJanin] = useState(() => {
     if (typeof window !== 'undefined' && window.location.search) {
       const sp = new URLSearchParams(window.location.search);
-      if (sp.get('janin')) return Math.min(7, Math.max(1, parseInt(sp.get('janin')) || 2));
+      if (sp.get('janin')) return Math.min(MAX_JANIN, Math.max(1, parseInt(sp.get('janin')) || 2));
     }
     return 2; // Default langsung tampil Janin 1 dan Janin 2
   });
@@ -55,12 +56,12 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
   // Sinkronkan jika jumlah_janin diatur di database Supabase
   useEffect(() => {
     if (kehamilan?.jumlah_janin) {
-      const jCount = Math.min(7, Math.max(1, parseInt(kehamilan.jumlah_janin) || 2));
+      const jCount = Math.min(MAX_JANIN, Math.max(1, parseInt(kehamilan.jumlah_janin) || 2));
       setJumlahJanin(jCount);
     }
   }, [kehamilan]);
 
-  // Generator data klinis dinamis untuk Janin 1 ... Janin N (hingga kembar 7)
+  // Generator data klinis dinamis untuk Janin 1 ... Janin N (termasuk edge case kembar 19)
   const generateJaninList = (count) => {
     const positions = [
       'Presentasi Kepala (Preskep)',
@@ -83,15 +84,17 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
 
     return Array.from({ length: count }, (_, i) => {
       const idx = i + 1;
+      // Rumus fisiologis agar DJJ selalu aman di rentang 130 - 154 x/menit berapapun jumlah janinnya
+      const djjVal = 130 + ((idx * 7) % 25);
       return {
         id: `janin-${idx}`,
         label: `Janin ${idx}`,
         alias: `Calon Si Kecil ${idx}`,
-        djj: 142 - ((idx - 1) * 2),
+        djj: djjVal,
         djjStatus: 'Normal (120 - 160 x/mnt)',
-        tbj: Math.max(750, 1250 - ((idx - 1) * 45)),
+        tbj: Math.max(500, 1250 - ((idx * 35) % 400)),
         tbjKet: count > 1 ? `Sesuai kurva kehamilan kembar (${count} janin)` : 'Sesuai kurva kehamilan tunggal',
-        gerakan: `${Math.max(8, 12 - (idx % 3))} kali / 12 jam`,
+        gerakan: `${Math.max(8, 12 - (idx % 4))} kali / 12 jam`,
         gerakanKet: 'Aktif & Responsif',
         posisi: positions[(idx - 1) % positions.length],
         letakDjj: `Punctum maximum di ${quadrants[(idx - 1) % quadrants.length]} perut ibu`,
@@ -320,9 +323,9 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
             </p>
           </div>
 
-          {/* Stepper Tambah / Kurangi Janin (Bisa sampai Kembar 7) */}
+          {/* Stepper Tambah / Kurangi Janin (Bisa fleksibel untuk testing QA ekstrem hingga kembar 19+) */}
           <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-200/80 self-start sm:self-auto">
-            <span className="text-[11px] font-bold text-slate-500 px-1">
+            <span className="text-[11px] font-bold text-slate-600 px-1">
               {jumlahJanin > 1 ? `Kembar (${jumlahJanin} Janin)` : '1 Janin'}
             </span>
             <div className="flex items-center gap-1">
@@ -337,21 +340,37 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
                   }
                 }}
                 className="w-7 h-7 rounded-xl bg-white hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 shadow-2xs cursor-pointer transition-all active:scale-95"
-                title="Kurangi Janin"
+                title="Kurangi Janin (-1)"
               >
                 -
               </button>
               <button
                 type="button"
-                disabled={jumlahJanin >= 7}
+                disabled={jumlahJanin >= MAX_JANIN}
                 onClick={() => {
-                  const nextCount = Math.min(7, jumlahJanin + 1);
+                  const nextCount = Math.min(MAX_JANIN, jumlahJanin + 1);
                   setJumlahJanin(nextCount);
                 }}
                 className="w-7 h-7 rounded-xl bg-[#E11D48] hover:bg-[#BE185D] disabled:opacity-30 disabled:pointer-events-none text-white font-bold text-xs flex items-center justify-center shadow-xs cursor-pointer transition-all active:scale-95"
-                title="Tambah Janin (bisa sampai kembar 7)"
+                title="Tambah Janin (+1)"
               >
                 +
+              </button>
+              {/* Pintasan Edge Case Testing QA Kembar 19 */}
+              <button
+                type="button"
+                onClick={() => {
+                  setJumlahJanin(19);
+                  setActiveJaninId('janin-1');
+                }}
+                className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-all cursor-pointer ${
+                  jumlahJanin === 19 
+                    ? 'bg-purple-600 text-white border-purple-600 shadow-xs' 
+                    : 'bg-white hover:bg-purple-50 text-purple-700 border-purple-200'
+                }`}
+                title="Pintasan Uji QA: Kembar 19"
+              >
+                ⚡ 19
               </button>
             </div>
           </div>
