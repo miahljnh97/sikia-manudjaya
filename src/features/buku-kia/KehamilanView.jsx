@@ -181,10 +181,62 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
   const usiaMinggu = kehamilan?.usia_kehamilan_minggu || 28;
   const trimesterNum = kehamilan?.trimester || 3;
   const hplDate = kehamilan?.hpl || '20 Desember 2026';
-  const hphtDate = kehamilan?.hpht || '12 Februari 2026';
+  const hphtDate = kehamilan?.hpht || '15 Maret 2026';
   const feDiminum = kehamilan?.jumlah_tablet_fe_diminum || 70;
   const feTarget = kehamilan?.target_tablet_fe || 90;
   const progressPercent = Math.min(100, Math.round((usiaMinggu / 40) * 100));
+
+  const formatTanggalIndo = (dateStr) => {
+    if (!dateStr) return '-';
+    if (typeof dateStr === 'string' && /[a-zA-Z]/.test(dateStr) && dateStr.includes(' ')) {
+      return dateStr;
+    }
+    try {
+      const parts = String(dateStr).trim().split('-');
+      if (parts.length === 3) {
+        const year = parts[0];
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        const namaBulan = [
+          'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
+        if (month >= 0 && month < 12 && !isNaN(day)) {
+          return `${day} ${namaBulan[month]} ${year}`;
+        }
+      }
+      const d = new Date(dateStr);
+      if (!isNaN(d.getTime())) {
+        const namaBulan = [
+          'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
+        return `${d.getDate()} ${namaBulan[d.getMonth()]} ${d.getFullYear()}`;
+      }
+    } catch (e) {
+      return dateStr;
+    }
+    return dateStr;
+  };
+
+  const getUsiaKehamilanDetail = () => {
+    if (kehamilan?.hpht) {
+      try {
+        const hphtTime = new Date(kehamilan.hpht).getTime();
+        const nowTime = new Date().getTime();
+        if (!isNaN(hphtTime) && nowTime >= hphtTime) {
+          const diffDays = Math.floor((nowTime - hphtTime) / (1000 * 60 * 60 * 24));
+          const w = Math.floor(diffDays / 7);
+          const d = diffDays % 7;
+          if (w > 0 && d > 0) return `${w} Minggu ${d} hari`;
+          if (w > 0) return `${w} Minggu`;
+        }
+      } catch (err) {
+        console.warn('Gagal kalkulasi hari kehamilan:', err);
+      }
+    }
+    return `${usiaMinggu} Minggu 3 hari`;
+  };
 
   return (
     <div className="space-y-6">
@@ -224,43 +276,47 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
       {/* 2. Top Banner Card */}
       <div className="bg-gradient-to-r from-[#FFF0F4] via-[#FFE4EC] to-[#FFD6E4] border border-pink-200/80 rounded-3xl p-6 sm:p-7 relative overflow-hidden shadow-xs">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-          {/* Sisi Kiri: Usia Kehamilan + Progress Bar */}
-          <div className="lg:col-span-5 space-y-3">
-            <span className="text-xs text-slate-600 font-medium block">Usia Kehamilan ({namaIbu})</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl sm:text-4xl font-extrabold text-[#E11D48] tracking-tight">
-                {usiaMinggu} Minggu
-              </span>
-              <span className="text-xs text-slate-500 font-medium">dari 40 minggu</span>
+          {/* Sisi Kiri: Usia Kehamilan + Trimester + Progress Bar */}
+          <div className="lg:col-span-5 space-y-2.5">
+            <span className="text-xs text-slate-600 font-medium block">Usia Kehamilan</span>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="text-3xl sm:text-4xl font-extrabold text-[#E11D48] tracking-tight leading-none">
+                  {usiaMinggu} Minggu
+                </div>
+                <span className="text-xs text-slate-500 font-medium block mt-1">
+                  dari 40 minggu
+                </span>
+              </div>
+
+              {/* Trimester Badge */}
+              <div className="flex flex-col items-center">
+                <span className="text-[11px] text-slate-500 font-medium block mb-1">Trimester</span>
+                <span className="px-3.5 py-1 rounded-xl bg-pink-100 text-[#E11D48] text-xs font-bold border border-pink-200">
+                  Trimester {trimesterNum}
+                </span>
+              </div>
             </div>
 
             {/* Progress Bar usia/40 minggu */}
-            <div className="w-full max-w-xs h-2.5 bg-pink-200/80 rounded-full overflow-hidden">
+            <div className="w-full h-2.5 bg-slate-200/70 rounded-full overflow-hidden mt-3">
               <div 
                 className="h-full bg-[#E11D48] rounded-full transition-all duration-500" 
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-
-            {/* Trimester Badge */}
-            <div className="pt-2 flex items-center gap-2">
-              <span className="text-xs text-slate-500 font-medium">Trimester</span>
-              <span className="px-3 py-1 rounded-xl bg-pink-100 text-[#BE185D] text-xs font-bold border border-pink-200">
-                Trimester {trimesterNum}
-              </span>
-            </div>
           </div>
 
           {/* Sisi Tengah: Perkiraan Hari Lahir Box */}
           <div className="lg:col-span-4">
-            <div className="bg-white/90 backdrop-blur-xs border border-white/80 rounded-2xl p-4 sm:p-5 shadow-xs flex items-center gap-4">
-              <div className="w-11 h-11 rounded-xl bg-pink-50 text-slate-800 flex items-center justify-center shrink-0 border border-pink-100">
-                <Calendar size={22} className="text-slate-800" />
+            <div className="bg-white/95 backdrop-blur-xs border border-white/80 rounded-2xl p-4 sm:p-5 shadow-xs flex items-center gap-4">
+              <div className="w-11 h-11 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 border border-slate-100">
+                <Calendar size={22} className="text-slate-700" />
               </div>
               <div>
-                <span className="text-[11px] text-slate-500 font-medium block">Perkiraan Hari Lahir (HPL)</span>
+                <span className="text-xs text-slate-600 font-medium block">Perkiraan Hari Lahir</span>
                 <div className="text-base sm:text-lg font-extrabold text-[#E11D48] leading-tight mt-0.5">
-                  {hplDate}
+                  {formatTanggalIndo(hplDate)}
                 </div>
                 <span className="text-[11px] text-slate-400 font-medium block mt-0.5">
                   ({Math.max(0, 40 - usiaMinggu)} minggu lagi)
@@ -270,13 +326,13 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
           </div>
 
           {/* Sisi Kanan: Ilustrasi Ibu Hamil */}
-          <div className="lg:col-span-3 flex justify-center lg:justify-end">
+          <div className="lg:col-span-3 flex justify-center lg:justify-end items-center">
             <img 
-              src="/images/ibu-kehamilan-banner.png" 
+              src="/images/picture/buku-kia/ibu-hamil.png" 
               alt="Ilustrasi Ibu Hamil" 
-              className="h-44 sm:h-52 object-contain drop-shadow-sm"
+              className="h-44 sm:h-52 lg:h-56 object-contain drop-shadow-sm"
               onError={(e) => {
-                e.target.style.display = 'none';
+                e.target.src = '/images/ibu-kehamilan-banner.png';
               }}
             />
           </div>
@@ -284,19 +340,19 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
 
         {/* 3 Sub-Kotak Informasi Bawah Banner */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-6 pt-5 border-t border-pink-200/60">
-          <div className="bg-white/80 backdrop-blur-xs rounded-2xl p-3.5 border border-white/80">
-            <span className="text-[11px] text-slate-500 font-medium block">Hari Pertama Haid Terakhir (HPHT)</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 mt-1 block">{hphtDate}</span>
+          <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-4 border border-white/80 shadow-xs">
+            <span className="text-xs text-slate-500 font-medium block">Hari Pertama Haid Terakhir</span>
+            <span className="text-sm sm:text-base font-bold text-slate-900 mt-1 block">{formatTanggalIndo(hphtDate)}</span>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-xs rounded-2xl p-3.5 border border-white/80">
-            <span className="text-[11px] text-slate-500 font-medium block">Taksiran Persalinan</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 mt-1 block">{hplDate}</span>
+          <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-4 border border-white/80 shadow-xs">
+            <span className="text-xs text-slate-500 font-medium block">Taksiran Persalinan</span>
+            <span className="text-sm sm:text-base font-bold text-slate-900 mt-1 block">{formatTanggalIndo(hplDate)}</span>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-xs rounded-2xl p-3.5 border border-white/80">
-            <span className="text-[11px] text-slate-500 font-medium block">Usia Kehamilan Saat Ini</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 mt-1 block">{usiaMinggu} Minggu</span>
+          <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-4 border border-white/80 shadow-xs">
+            <span className="text-xs text-slate-500 font-medium block">Usia Kehamilan Saat Ini</span>
+            <span className="text-sm sm:text-base font-bold text-slate-900 mt-1 block">{getUsiaKehamilanDetail()}</span>
           </div>
         </div>
       </div>
