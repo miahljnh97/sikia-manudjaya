@@ -328,7 +328,7 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
           {/* Sisi Kanan: Ilustrasi Ibu Hamil */}
           <div className="lg:col-span-3 flex justify-center lg:justify-end items-center">
             <img 
-              src="/images/picture/buku-kia/ibu-hamil.png" 
+              src="/images/ibu-hamil-banner.png" 
               alt="Ilustrasi Ibu Hamil" 
               className="h-44 sm:h-52 lg:h-56 object-contain drop-shadow-sm"
               onError={(e) => {
