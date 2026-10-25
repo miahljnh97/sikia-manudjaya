@@ -367,11 +367,19 @@ export default function DataPesertaPage({
                 <th className="py-3.5 px-5">Tanggal Lahir</th>
                 <th className="py-3.5 px-5">Usia</th>
                 <th className="py-3.5 px-5">Alamat</th>
+                <th className="py-3.5 px-5">Status Peserta</th>
                 <th className="py-3.5 px-5 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {paginatedList.map((item, idx) => {
+              {paginatedList.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                    Tidak ada data peserta ditemukan.
+                  </td>
+                </tr>
+              ) : (
+                paginatedList.map((item, idx) => {
                 let badgeClass = 'bg-slate-100 text-slate-600 border-slate-200';
                 if (item.jenis_peserta === 'Ibu Hamil') {
                   badgeClass = 'bg-[#FEE2E2] text-[#991B1B] border-[#FECDD3]';
@@ -408,6 +416,18 @@ export default function DataPesertaPage({
                     <td className="py-3.5 px-5 text-slate-500">{item.tanggal_lahir}</td>
                     <td className="py-3.5 px-5 text-slate-600">{item.usia}</td>
                     <td className="py-3.5 px-5 text-slate-600">{item.alamat}</td>
+                    <td className="py-3.5 px-5">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
+                        (item.status || 'Aktif') === 'Tidak Aktif'
+                          ? 'bg-rose-50 text-rose-700 border-rose-200'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          (item.status || 'Aktif') === 'Tidak Aktif' ? 'bg-rose-500' : 'bg-emerald-500'
+                        }`} />
+                        {item.status || 'Aktif'}
+                      </span>
+                    </td>
                     <td className="py-3.5 px-5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
@@ -429,7 +449,7 @@ export default function DataPesertaPage({
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         </div>
