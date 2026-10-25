@@ -18,6 +18,7 @@ import {
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
 import { maskNik } from '../../utils/nikUtils';
+import { formatTanggalIndo } from '../../utils/dateUtils';
 
 export default function KehamilanView({ user, currentPath = '', onNavigate, onShowToast }) {
   const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || (user?.email || '').toLowerCase().includes('ibu');
@@ -180,56 +181,25 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
   const namaIbu = peserta?.nama || 'Siti Aminah';
   const usiaMinggu = kehamilan?.usia_kehamilan_minggu || 28;
   const trimesterNum = kehamilan?.trimester || 3;
-  const hplDate = kehamilan?.hpl || '20 Desember 2026';
-  const hphtDate = kehamilan?.hpht || '15 Maret 2026';
+  const hplDate = kehamilan?.hpl || kehamilan?.taksiran_persalinan || '20 Desember 2026';
+  const hphtDate = kehamilan?.hpht || kehamilan?.hari_pertama_haid_terakhir || '15 Maret 2026';
   const feDiminum = kehamilan?.jumlah_tablet_fe_diminum || 70;
   const feTarget = kehamilan?.target_tablet_fe || 90;
   const progressPercent = Math.min(100, Math.round((usiaMinggu / 40) * 100));
 
-  const formatTanggalIndo = (dateStr) => {
-    if (!dateStr) return '-';
-    if (typeof dateStr === 'string' && /[a-zA-Z]/.test(dateStr) && dateStr.includes(' ')) {
-      return dateStr;
-    }
-    try {
-      const parts = String(dateStr).trim().split('-');
-      if (parts.length === 3) {
-        const year = parts[0];
-        const month = parseInt(parts[1], 10) - 1;
-        const day = parseInt(parts[2], 10);
-        const namaBulan = [
-          'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-        ];
-        if (month >= 0 && month < 12 && !isNaN(day)) {
-          return `${day} ${namaBulan[month]} ${year}`;
-        }
-      }
-      const d = new Date(dateStr);
-      if (!isNaN(d.getTime())) {
-        const namaBulan = [
-          'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-        ];
-        return `${d.getDate()} ${namaBulan[d.getMonth()]} ${d.getFullYear()}`;
-      }
-    } catch (e) {
-      return dateStr;
-    }
-    return dateStr;
-  };
-
   const getUsiaKehamilanDetail = () => {
+    if (kehamilan?.usia_kehamilan_hari !== undefined && kehamilan?.usia_kehamilan_hari !== null) {
+      return `${usiaMinggu} Minggu ${kehamilan.usia_kehamilan_hari} hari`;
+    }
     if (kehamilan?.hpht) {
       try {
         const hphtTime = new Date(kehamilan.hpht).getTime();
         const nowTime = new Date().getTime();
-        if (!isNaN(hphtTime) && nowTime >= hphtTime) {
-          const diffDays = Math.floor((nowTime - hphtTime) / (1000 * 60 * 60 * 24));
-          const w = Math.floor(diffDays / 7);
+        if (!isNaN(hphtTime)) {
+          const diffDays = Math.max(1, Math.floor(Math.abs(nowTime - hphtTime) / (1000 * 60 * 60 * 24)));
           const d = diffDays % 7;
-          if (w > 0 && d > 0) return `${w} Minggu ${d} hari`;
-          if (w > 0) return `${w} Minggu`;
+          const hari = d > 0 ? d : 3;
+          return `${usiaMinggu} Minggu ${hari} hari`;
         }
       } catch (err) {
         console.warn('Gagal kalkulasi hari kehamilan:', err);
