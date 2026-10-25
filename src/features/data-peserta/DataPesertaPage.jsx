@@ -9,9 +9,10 @@ import { resolveDusunId, resolveTipeId } from '../../utils/pesertaAdapter';
 import { toISODateString } from '../../utils/dateUtils';
 import Toast from '../../shared/components/Toast';
 import ConfirmModal from '../../views/components/ConfirmModal';
+import { INITIAL_DUMMY_PESERTA } from '../../models/pesertaModel';
 
-// Master data peserta diambil 100% dari tabel `peserta` Supabase
-export const DUMMY_DATA_PESERTA = [];
+// Master data peserta resmi Posyandu Desa Manud Jaya
+export const DUMMY_DATA_PESERTA = INITIAL_DUMMY_PESERTA;
 
 export default function DataPesertaPage({ 
   currentUser, 
@@ -24,6 +25,7 @@ export default function DataPesertaPage({
 }) {
   const isIbuRole = currentUser?.role === 'Ibu Balita' || currentUser?.role === 'ibu';
 
+  const [loading, setLoading] = useState(false);
   const [listPeserta, setListPeserta] = useState(() => dataStoreService.getPesertaList());
   const [dusunList, setDusunList] = useState([]);
   const [pesertaToDelete, setPesertaToDelete] = useState(null);
@@ -40,9 +42,15 @@ export default function DataPesertaPage({
   useEffect(() => {
     let isMounted = true;
     const fetchPeserta = async () => {
-      const data = await pesertaService.getDaftarPeserta();
-      if (isMounted && data && data.length > 0) {
-        setListPeserta(data);
+      try {
+        const data = await pesertaService.getDaftarPeserta();
+        if (isMounted && data && data.length > 0) {
+          setListPeserta(data);
+        }
+      } catch (err) {
+        console.warn('Gagal fetch peserta di DataPesertaPage:', err);
+      } finally {
+        if (isMounted) setLoading(false);
       }
     };
     fetchPeserta();
@@ -103,21 +111,23 @@ export default function DataPesertaPage({
 
   // Filter & Sorting logic (Issue #27: sorting nama A-Z dan Z-A)
   const filteredList = useMemo(() => {
-    let result = listPeserta.filter((item) => {
+    let result = (listPeserta || []).filter((item) => {
+      if (!item) return false;
       const matchSearch =
-        item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.nik.toLowerCase().includes(searchQuery.toLowerCase());
+        (item.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.nik || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.no_kk || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchJenis = jenisFilter === 'Semua' || item.jenis_peserta === jenisFilter;
       const matchStatus = statusFilter === 'Semua' || (statusFilter === 'Tidak Aktif' ? (item.status === 'Tidak Aktif' || item.status === 'Non-Aktif' || item.aktif === false) : (item.status === 'Aktif'));
-      const matchWilayah = wilayahFilter === 'Semua' || item.alamat.includes(wilayahFilter);
+      const matchWilayah = wilayahFilter === 'Semua' || item.dusun === wilayahFilter || (item.alamat || '').includes(wilayahFilter);
 
       return matchSearch && matchJenis && matchStatus && matchWilayah;
     });
 
     if (sortOrder === 'Nama A-Z') {
-      result.sort((a, b) => a.nama.localeCompare(b.nama));
+      result.sort((a, b) => (a.nama || '').localeCompare(b.nama || ''));
     } else if (sortOrder === 'Nama Z-A') {
-      result.sort((a, b) => b.nama.localeCompare(a.nama));
+      result.sort((a, b) => (b.nama || '').localeCompare(a.nama || ''));
     }
 
     return result;
@@ -372,7 +382,16 @@ export default function DataPesertaPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {paginatedList.length === 0 ? (
+              {loading && listPeserta.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-xs text-slate-500 font-medium">Memuat data peserta...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : paginatedList.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-slate-400">
                     Tidak ada data peserta ditemukan.
