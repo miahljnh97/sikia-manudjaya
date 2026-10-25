@@ -108,7 +108,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
       if (list && list.length > 0) {
         setDaftarAnak(list);
         const urlId = extractAnakId();
-        const cur = (urlId ? list.find(a => a.id === urlId) : null) || list[0];
+        const cur = (urlId ? list.find(a => String(a.id) === String(urlId)) : null) || list[0];
         setActiveAnak(cur);
         setActiveAnakId(cur.id);
       } else {
@@ -130,7 +130,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
     
     // 2. Set ID dan objek anak aktif
     setActiveAnakId(newId);
-    const found = daftarAnak.find(a => a.id === newId);
+    const found = daftarAnak.find(a => String(a.id) === String(newId));
     if (found) setActiveAnak(found);
     
     // 3. Update URL dengan parameter ?anak_id=<id>
