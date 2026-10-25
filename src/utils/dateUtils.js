@@ -118,3 +118,38 @@ export function hitungUsiaString(tglLahir) {
   if (months > 0) return `${months} Bulan`;
   return 'Baru Lahir';
 }
+
+/**
+ * Memformat tanggal string (ISO yyyy-mm-dd atau Date) menjadi format Indonesia yang ramah (dd MMMM yyyy)
+ * Contoh: '2026-12-20' -> '20 Desember 2026'
+ */
+export function formatTanggalIndo(input) {
+  if (!input) return '-';
+  if (typeof input === 'string') {
+    const trimmed = input.trim();
+    if (!trimmed) return '-';
+    // Jika sudah ada nama bulan teks dan spasi (misal: "20 Desember 2026"), langsung return
+    if (/[a-zA-Z]/.test(trimmed) && trimmed.includes(' ')) {
+      return trimmed;
+    }
+    const cleanStr = trimmed.split('T')[0];
+    const parts = cleanStr.split('-');
+    if (parts.length === 3) {
+      const year = parts[0];
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      if (month >= 0 && month < 12 && !isNaN(day)) {
+        return `${day} ${NAMA_BULAN[month]} ${year}`;
+      }
+    }
+    const d = new Date(trimmed);
+    if (!isNaN(d.getTime())) {
+      return `${d.getDate()} ${NAMA_BULAN[d.getMonth()]} ${d.getFullYear()}`;
+    }
+    return trimmed;
+  }
+  if (input instanceof Date && !isNaN(input.getTime())) {
+    return `${input.getDate()} ${NAMA_BULAN[input.getMonth()]} ${input.getFullYear()}`;
+  }
+  return String(input);
+}

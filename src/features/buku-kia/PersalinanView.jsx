@@ -1,3 +1,4 @@
+import { getPesertaIdFromUser } from '../../models/pesertaModel';
 import React, { useState, useEffect } from 'react';
 import { 
   User, 
@@ -13,6 +14,7 @@ import {
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
 import { maskNik } from '../../utils/nikUtils';
+import { formatTanggalIndo } from '../../utils/dateUtils';
 
 export default function PersalinanView({ user, currentPath = '', onNavigate, onShowToast }) {
   const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || (user?.email || '').toLowerCase().includes('ibu');
@@ -28,7 +30,7 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
       if (sp.get('peserta_id')) return sp.get('peserta_id');
       if (sp.get('id')) return sp.get('id');
     }
-    return isIbuRole ? (user?.peserta_id || user?.user?.id || user?.id || '55af67c9-6695-4435-b4ea-2720efd73c92') : null;
+    return isIbuRole ? (getPesertaIdFromUser(user) || '55af67c9-6695-4435-b4ea-2720efd73c92') : null;
   };
 
   const [daftarIbu, setDaftarIbu] = useState([]);
@@ -164,11 +166,11 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
               </div>
               <div className="flex items-center gap-2 text-slate-500">
                 <span className="w-32 text-slate-400">HPHT</span>
-                <span className="font-medium text-slate-800">{hphtDate}</span>
+                <span className="font-medium text-slate-800">{formatTanggalIndo(hphtDate)}</span>
               </div>
               <div className="flex items-center gap-2 text-slate-500">
                 <span className="w-32 text-slate-400">Taksiran Persalinan</span>
-                <span className="font-medium text-slate-800">{hplDate}</span>
+                <span className="font-medium text-slate-800">{formatTanggalIndo(hplDate)}</span>
               </div>
             </div>
           </div>
@@ -207,7 +209,7 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Taksiran Persalinan</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">{hplDate}</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">{formatTanggalIndo(hplDate)}</span>
           </div>
         </div>
 

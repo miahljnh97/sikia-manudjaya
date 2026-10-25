@@ -74,8 +74,10 @@ class DataStoreService {
 
   // ================= PESERTA MASTER =================
   getPesertaList() {
-    const list = loadFromStorage(STORAGE_KEYS.PESERTA, DUMMY_DATA_PESERTA);
-    return list.filter((p) => !getIsSuspend(p));
+    const defaultData = (INITIAL_DUMMY_PESERTA && INITIAL_DUMMY_PESERTA.length > 0) ? INITIAL_DUMMY_PESERTA : (DUMMY_DATA_PESERTA || []);
+    const list = loadFromStorage(STORAGE_KEYS.PESERTA, defaultData);
+    const validList = (list && list.length > 0) ? list : defaultData;
+    return validList.filter((p) => !getIsSuspend(p));
   }
 
   getPesertaById(id) {

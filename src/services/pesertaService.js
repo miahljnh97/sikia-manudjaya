@@ -67,8 +67,10 @@ export const pesertaService = {
         console.warn('Gagal fetch data peserta dari Supabase:', err);
       }
     }
-    // Fallback: Mengembalikan data dari Central Store (LocalStorage + State)
-    return dataStoreService.getPesertaList().map(normalizePeserta);
+    // Fallback: Mengembalikan data dari Central Store (LocalStorage + State / INITIAL_DUMMY_PESERTA)
+    const local = dataStoreService.getPesertaList().map(normalizePeserta);
+    if (local && local.length > 0) return local;
+    return INITIAL_DUMMY_PESERTA.map(normalizePeserta);
   },
 
   /**
