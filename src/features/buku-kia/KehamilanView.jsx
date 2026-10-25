@@ -1,3 +1,4 @@
+import { getPesertaIdFromUser } from '../../models/pesertaModel';
 import React, { useState, useEffect } from 'react';
 import { 
   Calendar, 
@@ -35,7 +36,7 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
       if (sp.get('peserta_id')) return sp.get('peserta_id');
       if (sp.get('id')) return sp.get('id');
     }
-    return isIbuRole ? (user?.peserta_id || user?.user?.id || user?.id || '55af67c9-6695-4435-b4ea-2720efd73c92') : null;
+    return isIbuRole ? (getPesertaIdFromUser(user) || '55af67c9-6695-4435-b4ea-2720efd73c92') : null;
   };
 
   const [daftarIbu, setDaftarIbu] = useState([]);

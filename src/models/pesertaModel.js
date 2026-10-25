@@ -913,3 +913,24 @@ export const DUMMY_ACCOUNTS = {
     nama: 'Bambang Sudarmono, S.STP',
   }
 };
+
+/**
+ * Helper untuk mendapatkan peserta_id yang valid berdasarkan data user login.
+ * Memastikan persona ibu hamil, ibu balita, dan ibu hamil-balita memiliki ID peserta yang tepat.
+ */
+export function getPesertaIdFromUser(user) {
+  if (!user) return null;
+  if (user.peserta_id) return user.peserta_id;
+  const email = (user.user?.email || user.email || '').toLowerCase().trim();
+  const nama = (user.nama || '').toLowerCase().trim();
+  if (email === 'ibu.balita@manudjaya.id' || (email.includes('balita') && !email.includes('hamil')) || nama.includes('ratna')) {
+    return 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73';
+  }
+  if (email === 'ibu.hamil@manudjaya.id' || (email.includes('hamil') && !email.includes('anak') && !email.includes('balita')) || nama.includes('najwa')) {
+    return '214fbe12-2216-4e61-9b12-9fccca445e84';
+  }
+  if (email.includes('hamil.anak') || email === 'siti.aminah@manudjaya.id' || nama.includes('aminah') || nama.includes('siti')) {
+    return '55af67c9-6695-4435-b4ea-2720efd73c92';
+  }
+  return user.user?.id || user.id || null;
+}

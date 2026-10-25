@@ -29,6 +29,7 @@ import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
 import { maskNik } from '../../utils/nikUtils';
 import { hitungUsiaString } from '../../utils/dateUtils';
+import { getPesertaIdFromUser } from '../../models/pesertaModel';
 
 export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, currentPath = '', onNavigate, onShowToast }) {
   const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || (user?.email || '').toLowerCase().includes('ibu');
@@ -103,12 +104,14 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
   // Load daftar anak untuk dropdown selector Bidan/Kader atau anak milik ibu login
   useEffect(() => {
-    const ibuId = isIbuRole ? (user?.peserta_id || user?.user?.id || user?.id) : null;
+    const ibuId = isIbuRole ? getPesertaIdFromUser(user) : null;
     bukuKiaService.getDaftarAnak(ibuId).then(list => {
       if (list && list.length > 0) {
-        setDaftarAnak(list);
+        const myChildren = isIbuRole ? list.filter(c => !c.ibu_id || String(c.ibu_id) === String(ibuId)) : list;
+        const effectiveList = myChildren.length > 0 ? myChildren : list;
+        setDaftarAnak(effectiveList);
         const urlId = extractAnakId();
-        const cur = (urlId ? list.find(a => String(a.id) === String(urlId)) : null) || list[0];
+        const cur = (urlId ? effectiveList.find(a => String(a.id) === String(urlId)) : null) || effectiveList[0];
         setActiveAnak(cur);
         setActiveAnakId(cur.id);
       } else {
@@ -319,10 +322,10 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
       </div>
 
       {/* Multiple Child Tab Selector: Dinamis sesuai anak milik ibu dari Supabase */}
-      {daftarAnak.length > 0 && (
+      {daftarAnak.length > 1 && (
         <div className="bg-white/80 backdrop-blur-xs p-2 rounded-2xl border border-pink-100 shadow-xs flex items-center gap-2 overflow-x-auto scrollbar-none">
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-2 shrink-0">
-            Pilih Anak:
+            {isIbuRole ? 'Pilih Anak Anda:' : 'Pilih Anak:'}
           </span>
           <div className="flex items-center gap-2">
             {daftarAnak.map((anak, idx) => {
