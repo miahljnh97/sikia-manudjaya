@@ -92,6 +92,8 @@ export const kunjunganService = {
         return {
           id: item.id,
           posyandu_id: item.posyandu_id || item.posyandu?.id || null,
+          peserta_id: item.peserta_id || item.peserta?.id || null,
+          ibu_id: item.peserta?.ibu_id || null,
           no_registrasi: `KJ-0924-${String(idx + 185).padStart(4, '0')}`,
           no_antrean: `A-${String(idx + 12).padStart(2, '0')}`,
           nama: pesertaNorm?.nama || 'Peserta Posyandu',

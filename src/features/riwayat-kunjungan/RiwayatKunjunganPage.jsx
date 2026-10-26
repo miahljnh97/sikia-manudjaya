@@ -14,13 +14,14 @@ import { kunjunganService } from '../../services/kunjunganService';
 import DetailKunjunganModal from './components/DetailKunjunganModal';
 import { maskNik } from '../../utils/nikUtils';
 import { getTodayISODate, toISODateString } from '../../utils/dateUtils';
+import { getPesertaIdFromUser } from '../../models/pesertaModel';
 
 export default function RiwayatKunjunganPage({ currentUser }) {
   const [riwayatList, setRiwayatList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [periodeAwal, setPeriodeAwal] = useState(() => getTodayISODate());
-  const [periodeAkhir, setPeriodeAkhir] = useState(() => getTodayISODate());
+  const [periodeAwal, setPeriodeAwal] = useState('');
+  const [periodeAkhir, setPeriodeAkhir] = useState('');
   const [selectedJenisPeserta, setSelectedJenisPeserta] = useState('Semua');
   const [selectedStatusPeserta, setSelectedStatusPeserta] = useState('Aktif');
   const [selectedDusun, setSelectedDusun] = useState('Semua');
@@ -47,12 +48,22 @@ export default function RiwayatKunjunganPage({ currentUser }) {
     return () => unsubscribe();
   }, []);
 
-  const isIbuRole = currentUser?.role === 'Ibu Balita' || currentUser?.role === 'ibu';
+  const roleStr = (currentUser?.role || '').toLowerCase().trim();
+  const emailStr = (currentUser?.user?.email || currentUser?.email || '').toLowerCase().trim();
+  
+  const isPetugas = roleStr.includes('kader') || 
+                    roleStr.includes('bidan') || 
+                    roleStr.includes('admin') || 
+                    emailStr.includes('kader') || 
+                    emailStr.includes('bidan') || 
+                    emailStr.includes('admin');
+
+  const isIbuRole = !isPetugas;
 
   const handleResetFilter = () => {
     setSearchQuery('');
-    setPeriodeAwal(getTodayISODate());
-    setPeriodeAkhir(getTodayISODate());
+    setPeriodeAwal('');
+    setPeriodeAkhir('');
     setSelectedJenisPeserta('Semua');
     setSelectedStatusPeserta('Aktif');
     setSelectedDusun('Semua');
@@ -61,13 +72,25 @@ export default function RiwayatKunjunganPage({ currentUser }) {
 
   const filteredList = useMemo(() => {
     return riwayatList.filter((item) => {
-      // Role Privacy: Hanya tampilkan rekam jejak milik ibu yang sedang login
+      // Role Privacy: Hanya tampilkan rekam jejak milik ibu yang sedang login (kecuali kader, bidan, superadmin)
       if (isIbuRole) {
+        const myId = currentUser?.peserta_id || getPesertaIdFromUser(currentUser);
         const myName = (currentUser?.nama || '').toLowerCase().trim();
-        const myId = currentUser?.peserta_id || currentUser?.id;
-        const itemPesertaId = item.peserta_id || item.pesertaId || item.id;
-        const matchesId = myId && itemPesertaId && String(myId) === String(itemPesertaId);
-        const matchesName = myName && item.nama && item.nama.toLowerCase().trim() === myName;
+        const itemPesertaId = item.peserta_id || item.pesertaId;
+        const itemIbuId = item.ibu_id;
+        const itemNama = (item.nama || '').toLowerCase().trim();
+
+        const matchesId = myId && (
+          (itemPesertaId && String(myId) === String(itemPesertaId)) ||
+          (itemIbuId && String(myId) === String(itemIbuId))
+        );
+
+        const matchesName = myName && (
+          itemNama === myName || 
+          itemNama.startsWith(myName) || 
+          myName.startsWith(itemNama)
+        );
+
         if (!matchesId && !matchesName) {
           return false;
         }

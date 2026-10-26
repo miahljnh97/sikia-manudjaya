@@ -9,7 +9,7 @@ import { resolveDusunId, resolveTipeId } from '../../utils/pesertaAdapter';
 import { toISODateString } from '../../utils/dateUtils';
 import Toast from '../../shared/components/Toast';
 import ConfirmModal from '../../views/components/ConfirmModal';
-import { INITIAL_DUMMY_PESERTA } from '../../models/pesertaModel';
+import { INITIAL_DUMMY_PESERTA, getPesertaIdFromUser } from '../../models/pesertaModel';
 
 // Master data peserta resmi Posyandu Desa Manud Jaya
 export const DUMMY_DATA_PESERTA = INITIAL_DUMMY_PESERTA;
@@ -23,7 +23,17 @@ export default function DataPesertaPage({
   onBackToDashboard, 
   onShowToast 
 }) {
-  const isIbuRole = currentUser?.role === 'Ibu Balita' || currentUser?.role === 'ibu';
+  const roleStr = (currentUser?.role || '').toLowerCase().trim();
+  const emailStr = (currentUser?.user?.email || currentUser?.email || '').toLowerCase().trim();
+  
+  const isPetugas = roleStr.includes('kader') || 
+                    roleStr.includes('bidan') || 
+                    roleStr.includes('admin') || 
+                    emailStr.includes('kader') || 
+                    emailStr.includes('bidan') || 
+                    emailStr.includes('admin');
+
+  const isIbuRole = !isPetugas;
 
   const [loading, setLoading] = useState(false);
   const [listPeserta, setListPeserta] = useState(() => dataStoreService.getPesertaList());
@@ -69,7 +79,7 @@ export default function DataPesertaPage({
   }, []);
 
   // Jika user adalah Ibu Balita, ambil data pribadinya dari database Supabase
-  const targetId = currentUser?.peserta_id || currentUser?.user?.id || currentUser?.id;
+  const targetId = currentUser?.peserta_id || getPesertaIdFromUser(currentUser);
   const ibuSelfData = listPeserta.find((p) => p.user_id === currentUser?.user?.id || p.id === targetId) || listPeserta[0] || null;
 
   // Ekstrak ID dari path jika URL berbentuk /data-peserta/detail/:id
