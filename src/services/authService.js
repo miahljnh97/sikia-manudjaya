@@ -112,10 +112,22 @@ export const authService = {
             normalizedRole = 'Kader Posyandu';
           }
 
+          let pesertaId = pesertaData?.id;
+          if (!pesertaId) {
+            if (lowerEmail === 'ibu.balita@manudjaya.id' || (lowerEmail.includes('balita') && !lowerEmail.includes('hamil'))) {
+              pesertaId = 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73';
+            } else if (lowerEmail === 'ibu.hamil.anak@manudjaya.id' || lowerEmail === 'siti.aminah@manudjaya.id') {
+              pesertaId = '55af67c9-6695-4435-b4ea-2720efd73c92';
+            } else if (lowerEmail === 'ibu.hamil@manudjaya.id' || lowerEmail.includes('hamil')) {
+              pesertaId = '214fbe12-2216-4e61-9b12-9fccca445e84';
+            }
+          }
+
           return {
             user: data.user,
             role: normalizedRole,
             nama: userName || data.user.email?.split('@')[0] || 'Pengguna',
+            peserta_id: pesertaId || data.user.id
           };
         }
       } catch (authErr) {

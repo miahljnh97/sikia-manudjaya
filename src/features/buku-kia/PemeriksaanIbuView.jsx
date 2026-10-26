@@ -1,3 +1,4 @@
+import { getPesertaIdFromUser } from '../../models/pesertaModel';
 import React, { useState, useEffect } from 'react';
 import { 
   Calendar, 
@@ -22,6 +23,7 @@ import {
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
 import { maskNik } from '../../utils/nikUtils';
+import { formatTanggalIndo } from '../../utils/dateUtils';
 
 export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate, onShowToast }) {
   const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || (user?.email || '').toLowerCase().includes('ibu');
@@ -43,7 +45,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
       const last = segments[segments.length - 1];
       if (last && last.includes('-') && last.length >= 20) return last;
     }
-    return isIbuRole ? (user?.peserta_id || user?.user?.id || user?.id || '55af67c9-6695-4435-b4ea-2720efd73c92') : null;
+    return isIbuRole ? (getPesertaIdFromUser(user) || '55af67c9-6695-4435-b4ea-2720efd73c92') : null;
   };
 
   const [daftarIbu, setDaftarIbu] = useState([]);
@@ -120,7 +122,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
               setRiwayatList(ancRows.map((item, idx) => ({
                 no: idx + 1,
                 id: item.id,
-                tanggal: item.tanggal_pemeriksaan,
+                tanggal: formatTanggalIndo(item.tanggal_pemeriksaan),
                 usiaKehamilan: item.usia_kehamilan || `${item.usia_kehamilan_minggu || 28} Minggu`,
                 jenis: item.kunjungan_ke,
                 hasil: item.status_hasil || 'Normal',
@@ -345,13 +347,13 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
                   <span className="text-slate-400">NIK:</span> <span className="font-semibold text-slate-800 font-mono">{nikPasien}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400">HPHT:</span> <span className="font-semibold text-slate-800">{hphtStr}</span>
+                  <span className="text-slate-400">HPHT:</span> <span className="font-semibold text-slate-800">{formatTanggalIndo(hphtStr)}</span>
                 </div>
                 <div>
                   <span className="text-slate-400">ID Pasien:</span> <span className="font-semibold text-slate-800 font-mono text-[10px]">{activePesertaId.slice(0, 13)}...</span>
                 </div>
                 <div>
-                  <span className="text-slate-400">Taksiran Persalinan:</span> <span className="font-semibold text-slate-800">{hplStr}</span>
+                  <span className="text-slate-400">Taksiran Persalinan:</span> <span className="font-semibold text-slate-800">{formatTanggalIndo(hplStr)}</span>
                 </div>
               </div>
             </div>

@@ -29,9 +29,25 @@ import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
 import { maskNik } from '../../utils/nikUtils';
 import { hitungUsiaString } from '../../utils/dateUtils';
+import { getPesertaIdFromUser } from '../../models/pesertaModel';
 
 export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, currentPath = '', onNavigate, onShowToast }) {
   const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || (user?.email || '').toLowerCase().includes('ibu');
+
+  const formatTanggalIndo = (dateStr) => {
+    if (!dateStr) return '-';
+    if (typeof dateStr === 'string' && /[a-zA-Z]/.test(dateStr) && dateStr.includes(' ')) {
+      return dateStr;
+    }
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      const bulanList = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      return `${d.getDate()} ${bulanList[d.getMonth()]} ${d.getFullYear()}`;
+    } catch {
+      return dateStr;
+    }
+  };
 
   // Helper ekstrak anak_id dari URL query string (?anak_id=... atau path segment)
   const extractAnakId = () => {
@@ -88,12 +104,14 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
   // Load daftar anak untuk dropdown selector Bidan/Kader atau anak milik ibu login
   useEffect(() => {
-    const ibuId = isIbuRole ? (user?.peserta_id || user?.user?.id || user?.id) : null;
+    const ibuId = isIbuRole ? getPesertaIdFromUser(user) : null;
     bukuKiaService.getDaftarAnak(ibuId).then(list => {
       if (list && list.length > 0) {
-        setDaftarAnak(list);
+        const myChildren = isIbuRole ? list.filter(c => !c.ibu_id || String(c.ibu_id) === String(ibuId)) : list;
+        const effectiveList = myChildren.length > 0 ? myChildren : list;
+        setDaftarAnak(effectiveList);
         const urlId = extractAnakId();
-        const cur = (urlId ? list.find(a => a.id === urlId) : null) || list[0];
+        const cur = (urlId ? effectiveList.find(a => String(a.id) === String(urlId)) : null) || effectiveList[0];
         setActiveAnak(cur);
         setActiveAnakId(cur.id);
       } else {
@@ -115,7 +133,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
     
     // 2. Set ID dan objek anak aktif
     setActiveAnakId(newId);
-    const found = daftarAnak.find(a => a.id === newId);
+    const found = daftarAnak.find(a => String(a.id) === String(newId));
     if (found) setActiveAnak(found);
     
     // 3. Update URL dengan parameter ?anak_id=<id>
@@ -304,10 +322,10 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
       </div>
 
       {/* Multiple Child Tab Selector: Dinamis sesuai anak milik ibu dari Supabase */}
-      {daftarAnak.length > 0 && (
+      {daftarAnak.length > 1 && (
         <div className="bg-white/80 backdrop-blur-xs p-2 rounded-2xl border border-pink-100 shadow-xs flex items-center gap-2 overflow-x-auto scrollbar-none">
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-2 shrink-0">
-            Pilih Anak:
+            {isIbuRole ? 'Pilih Anak Anda:' : 'Pilih Anak:'}
           </span>
           <div className="flex items-center gap-2">
             {daftarAnak.map((anak, idx) => {
@@ -567,46 +585,65 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
       ====================================================================== */}
       {activeSub === 'Pertumbuhan' && (
         <div className="space-y-6">
-          {/* Top Banner Profil Anak */}
-          <div className="bg-gradient-to-r from-[#FFF0F4] via-[#FFE4EC] to-[#FFD6E4] border border-pink-200/70 rounded-3xl p-6 sm:p-7 relative overflow-hidden shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 min-h-[160px]">
-            <div className="space-y-4 max-w-xl">
-              <div>
-                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Usia Anak</span>
-                <div className="flex items-baseline gap-2 mt-0.5">
-                  <h2 className="text-2xl sm:text-3xl font-extrabold text-[#E11D48] tracking-tight">
-                    {activeAnak?.nama || 'Anak'}
-                  </h2>
-                  <span className="text-xs font-semibold text-slate-500">1 Tahun 2 Bulan</span>
-                </div>
+          {/* Top Banner Profil Anak (Sesuai Expected Result media_1792892624643_a2d6232f.png) */}
+          <div className="bg-gradient-to-r from-[#FFF0F4] via-[#FFE4EC] to-[#FFD6E4] border border-pink-200/70 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            {/* Sisi Kiri: Avatar Anak + Nama + Usia + Gender & Tanggal Lahir */}
+            <div className="flex items-center gap-4 sm:gap-5">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-pink-200 bg-white/80 p-1 overflow-hidden shrink-0 shadow-xs flex items-center justify-center">
+                <img 
+                  src="/images/anak-pertumbuhan.png" 
+                  alt={activeAnak?.nama || 'Farhan'} 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.target.src = '/images/baby-wreath.png';
+                  }}
+                />
               </div>
 
-              <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-600">
-                <div className="flex items-center gap-2 bg-white/80 px-3.5 py-2 rounded-2xl border border-pink-200/60">
-                  <Calendar size={16} className="text-[#E11D48]" />
-                  <div>
-                    <span className="text-[10px] text-slate-400 block">Tanggal lahir</span>
-                    <span className="font-bold text-slate-900">{activeAnak?.tgl_lahir || '20 Desember 2024'}</span>
-                  </div>
+              <div className="space-y-0.5">
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                  {activeAnak?.nama || 'Farhan'}
+                </h2>
+                <div className="text-xs font-semibold text-[#E11D48]">
+                  {activeAnak?.usia || hitungUsiaString(activeAnak?.tgl_lahir) || '1 Tahun 2 bulan'}
                 </div>
-
-                <div className="flex items-center gap-2 bg-white/80 px-3.5 py-2 rounded-2xl border border-pink-200/60">
-                  <Smile size={16} className="text-[#E11D48]" />
-                  <div>
-                    <span className="text-[10px] text-slate-400 block">Jenis Kelamin</span>
-                    <span className="font-bold text-[#E11D48]">{activeAnak?.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki–Laki'}</span>
-                  </div>
+                <div className="text-xs text-slate-500 font-medium">
+                  {activeAnak?.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki-Laki'} {formatTanggalIndo(activeAnak?.tgl_lahir) || '20 Desember 2026'}
                 </div>
               </div>
             </div>
 
-            {/* Ilustrasi Anak di Kanan (Rapi tanpa terpotong / clipped) */}
-            <div className="hidden sm:flex items-center justify-center shrink-0 pointer-events-none pr-2">
-              <img 
-                src="/images/anak-pertumbuhan.png" 
-                alt="Ilustrasi Anak Pertumbuhan" 
-                className="h-32 sm:h-36 w-auto max-w-[150px] object-contain drop-shadow-sm"
-                onError={(e) => { e.target.style.display = 'none'; }}
-              />
+            {/* Sisi Kanan: 3 Kartu Pemeriksaan */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full lg:w-auto">
+              <div className="bg-white/95 backdrop-blur-xs rounded-2xl p-3 sm:px-4 sm:py-3 border border-white/80 shadow-2xs flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <Calendar size={18} />
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Pemeriksaan Terakhir</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900">5 Okt 2026</span>
+                </div>
+              </div>
+
+              <div className="bg-white/95 backdrop-blur-xs rounded-2xl p-3 sm:px-4 sm:py-3 border border-white/80 shadow-2xs flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <Calendar size={18} />
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Pemeriksaan Berikutnya</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900">5 Jan 2027</span>
+                </div>
+              </div>
+
+              <div className="bg-white/95 backdrop-blur-xs rounded-2xl p-3 sm:px-4 sm:py-3 border border-white/80 shadow-2xs flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <Heart size={18} />
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Status Kesehatan</span>
+                  <span className="text-xs sm:text-sm font-bold text-emerald-600">Baik</span>
+                </div>
+              </div>
             </div>
           </div>
 

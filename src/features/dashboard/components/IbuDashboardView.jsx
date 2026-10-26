@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { bukuKiaService } from '../../../services/bukuKiaService';
 import { getReminderStatus } from '../../../services/whatsappService';
 import { hitungUsiaString } from '../../../utils/dateUtils';
+import { getPesertaIdFromUser } from '../../../models/pesertaModel';
 import { 
   Calendar, 
   Bell, 
@@ -22,9 +23,17 @@ import {
 } from 'lucide-react';
 
 export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
-  const ibuId = user?.peserta_id || user?.user?.id || user?.id || (
-    (user?.nama || '').toLowerCase().includes('ratna') ? 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73' :
-    (user?.nama || '').toLowerCase().includes('najwa') ? '214fbe12-2216-4e61-9b12-9fccca445e84' :
+  const email = (user?.user?.email || user?.email || '').toLowerCase().trim();
+  const nama = (user?.nama || '').toLowerCase().trim();
+
+  // Deteksi 3 Persona Pasien Ibu
+  const isIbuBalitaOnly = email === 'ibu.balita@manudjaya.id' || (email.includes('balita') && !email.includes('hamil')) || nama.includes('ratna');
+  const isIbuHamilOnly = email === 'ibu.hamil@manudjaya.id' || (email.includes('hamil') && !email.includes('anak') && !email.includes('balita')) || nama.includes('najwa');
+  const isIbuHamilBalita = email.includes('hamil.anak') || email === 'siti.aminah@manudjaya.id' || nama.includes('aminah') || (!isIbuBalitaOnly && !isIbuHamilOnly);
+
+  const ibuId = getPesertaIdFromUser(user) || (
+    isIbuBalitaOnly ? 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73' :
+    isIbuHamilOnly ? '214fbe12-2216-4e61-9b12-9fccca445e84' :
     '55af67c9-6695-4435-b4ea-2720efd73c92'
   );
 
@@ -37,24 +46,84 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
     if (!ibuId) return;
 
     // 1. Ambil data kehamilan ibu (aktif jika hamil)
-    bukuKiaService.getKehamilanIbu(ibuId).then(res => {
-      setKehamilan(res);
-    });
+    if (isIbuBalitaOnly) {
+      setKehamilan(null);
+    } else {
+      bukuKiaService.getKehamilanIbu(ibuId).then(res => {
+        setKehamilan(res);
+      });
+    }
 
     // 2. Ambil data anak milik ibu ini
-    bukuKiaService.getDaftarAnak(ibuId).then(list => {
-      if (list && list.length > 0) {
-        setDaftarAnak(list);
-        setAnak(list[0]);
-      } else {
-        setDaftarAnak([]);
-        setAnak(null);
-      }
-    }).catch(err => {
-      console.warn('Gagal load data anak di dashboard:', err);
+    if (isIbuHamilOnly) {
       setDaftarAnak([]);
       setAnak(null);
-    });
+    } else {
+      bukuKiaService.getDaftarAnak(ibuId).then(list => {
+        if (list && list.length > 0) {
+          // Strict filter: hanya anak dengan ibu_id milik ibu yang login
+          const myChildren = list.filter(c => !c.ibu_id || String(c.ibu_id) === String(ibuId));
+          const effectiveList = myChildren.length > 0 ? myChildren : list;
+          setDaftarAnak(effectiveList);
+          setAnak(effectiveList[0]);
+        } else {
+          if (isIbuBalitaOnly) {
+            const fallbackChild = {
+              id: '06b1c286-adb3-4c40-a6cf-51e7c0fa5a12',
+              nama: 'Alya Putri',
+              ibu_id: ibuId,
+              tgl_lahir: '2025-04-15',
+              jenis_kelamin: 'P',
+              usia: '1 Tahun 6 Bulan'
+            };
+            setDaftarAnak([fallbackChild]);
+            setAnak(fallbackChild);
+          } else if (isIbuHamilBalita) {
+            const fallbackChild = {
+              id: 'b2222222-2222-2222-2222-222222222222',
+              nama: 'Dian Pranata',
+              ibu_id: ibuId,
+              tgl_lahir: '2024-10-15',
+              jenis_kelamin: 'L',
+              usia: '1 Tahun 2 bulan'
+            };
+            setDaftarAnak([fallbackChild]);
+            setAnak(fallbackChild);
+          } else {
+            setDaftarAnak([]);
+            setAnak(null);
+          }
+        }
+      }).catch(err => {
+        console.warn('Gagal load data anak di dashboard:', err);
+        if (isIbuBalitaOnly) {
+          const fallbackChild = {
+            id: '06b1c286-adb3-4c40-a6cf-51e7c0fa5a12',
+            nama: 'Alya Putri',
+            ibu_id: ibuId,
+            tgl_lahir: '2025-04-15',
+            jenis_kelamin: 'P',
+            usia: '1 Tahun 6 Bulan'
+          };
+          setDaftarAnak([fallbackChild]);
+          setAnak(fallbackChild);
+        } else if (isIbuHamilBalita) {
+          const fallbackChild = {
+            id: 'b2222222-2222-2222-2222-222222222222',
+            nama: 'Dian Pranata',
+            ibu_id: ibuId,
+            tgl_lahir: '2024-10-15',
+            jenis_kelamin: 'L',
+            usia: '1 Tahun 2 bulan'
+          };
+          setDaftarAnak([fallbackChild]);
+          setAnak(fallbackChild);
+        } else {
+          setDaftarAnak([]);
+          setAnak(null);
+        }
+      });
+    }
 
     // 3. Ambil jadwal terdekat
     bukuKiaService.getJadwalPesertaList(ibuId).then(res => {
@@ -68,7 +137,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
             return {
               day,
               month,
-              title: item.jenis_kegiatan || 'Pemeriksaan Rutin',
+              title: item.jenis_kegiatan || (isIbuHamilOnly ? 'Pemeriksaan Kehamilan (ANC)' : 'Pemeriksaan Rutin Posyandu'),
               location: item.lokasi || 'Puskesmas Manud Jaya',
               tanggal: item.tanggal
             };
@@ -76,7 +145,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
             return {
               day: '20',
               month: 'Okt',
-              title: item.jenis_kegiatan || 'Pemeriksaan Rutin',
+              title: item.jenis_kegiatan || 'Pemeriksaan Rutin Posyandu',
               location: item.lokasi || 'Puskesmas Manud Jaya',
               tanggal: item.tanggal
             };
@@ -85,12 +154,66 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
         if (formatted.length > 0) {
           setJadwalList(formatted);
         }
+      } else {
+        // Default realistis per persona
+        if (isIbuHamilOnly) {
+          setJadwalList([
+            {
+              day: '20',
+              month: 'Okt',
+              title: 'Pemeriksaan Kehamilan (ANC)',
+              location: 'Puskesmas Manud Jaya',
+              tanggal: '2026-10-20'
+            },
+            {
+              day: '28',
+              month: 'Okt',
+              title: 'Kelas Ibu Hamil',
+              location: 'Balai Pertemuan Warga',
+              tanggal: '2026-10-28'
+            }
+          ]);
+        } else if (isIbuBalitaOnly) {
+          setJadwalList([
+            {
+              day: '20',
+              month: 'Okt',
+              title: 'Posyandu Balita & Imunisasi',
+              location: 'Posyandu Mawar',
+              tanggal: '2026-10-20'
+            },
+            {
+              day: '25',
+              month: 'Okt',
+              title: 'Pemberian Makanan Tambahan (PMT)',
+              location: 'Balai Desa Manud Jaya',
+              tanggal: '2026-10-25'
+            }
+          ]);
+        } else {
+          setJadwalList([
+            {
+              day: '20',
+              month: 'Okt',
+              title: 'Pemeriksaan Rutin Posyandu',
+              location: 'Puskesmas Manud Jaya',
+              tanggal: '2026-10-20'
+            },
+            {
+              day: '25',
+              month: 'Okt',
+              title: 'Pemeriksaan Tumbuh Kembang',
+              location: 'Balai Pertemuan Warga',
+              tanggal: '2026-10-25'
+            }
+          ]);
+        }
       }
     });
-  }, [ibuId]);
+  }, [ibuId, isIbuBalitaOnly, isIbuHamilOnly, isIbuHamilBalita]);
 
-  const hasKehamilan = Boolean(kehamilan && (kehamilan.status_kehamilan === 'Aktif' || kehamilan.usia_kehamilan_minggu));
-  const hasAnak = Boolean(anak);
+  const hasKehamilan = !isIbuBalitaOnly && Boolean(kehamilan && (kehamilan.status_kehamilan === 'Aktif' || kehamilan.usia_kehamilan_minggu));
+  const hasAnak = !isIbuHamilOnly && Boolean(anak && daftarAnak.length > 0);
 
   // Helper standar faskes/posyandu untuk bayi baru lahir yang belum dinamai (By. Ny. [Nama Ibu] 1 / 2)
   const formatNamaAnak = (anakObj, index = 0) => {
@@ -134,7 +257,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
             <div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#E11D48] tracking-tight">
-                {user?.nama || (hasKehamilan ? 'Siti Aminah' : 'Ibu Ratna')}
+                {user?.nama || (isIbuBalitaOnly ? 'Ibu Ratna' : isIbuHamilOnly ? 'Najwa Sihab' : 'Siti Aminah')}
               </h2>
               <p className="text-xs text-slate-600 font-medium mt-1">
                 {hasKehamilan ? (
@@ -171,8 +294,8 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
         </div>
 
         {/* Card 2: Kesehatan Anak (Balita Terdaftar vs Belum Terdaftar) */}
-        {hasAnak ? (
-          /* Tampilan Anak Terdaftar */
+        {hasAnak && anak ? (
+          /* Tampilan Anak Terdaftar (Ibu Balita & Ibu Hamil & Balita) */
           <div className="bg-gradient-to-r from-[#FFF5F7] via-[#FFEBF1] to-[#FFE0EA] border border-pink-200/70 rounded-3xl p-6 sm:p-7 relative overflow-hidden shadow-xs flex flex-col justify-between items-center text-center min-h-[220px]">
             <div className="w-full flex items-center justify-between gap-2 flex-wrap">
               <div className="inline-flex items-center gap-1.5 text-pink-600 text-xs font-bold">
@@ -180,7 +303,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                 <span>Kesehatan Anak</span>
               </div>
 
-              {/* Multiple Children Tab Selector jika punya > 1 anak */}
+              {/* Multiple Children Tab Selector HANYA jika ibu ini memiliki > 1 anak */}
               {daftarAnak.length > 1 && (
                 <div className="flex items-center gap-1 bg-white/80 backdrop-blur-xs p-1 rounded-xl border border-pink-200/60 shadow-2xs">
                   {daftarAnak.map((a, idx) => {
@@ -207,20 +330,18 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
               )}
             </div>
 
-            <div className="my-1 flex flex-col items-center max-w-sm">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-pink-100/80 border-2 border-pink-200 p-1 flex items-center justify-center">
-                <img 
-                  src="/images/baby-wreath.png" 
-                  alt={anak?.nama || 'Si Kecil'} 
-                  className="w-full h-full object-contain"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              </div>
-              <h3 className="text-xl sm:text-2xl font-extrabold text-[#E11D48] tracking-tight mt-2">
-                {anak?.nama || 'Si Kecil'}
+            <div className="my-2 flex flex-col items-center max-w-sm">
+              <img 
+                src="/images/anak-pertumbuhan.png" 
+                alt={anak?.nama || 'Alya Putri'} 
+                className="h-32 sm:h-36 w-auto object-contain drop-shadow-xs"
+                onError={(e) => { e.target.src = '/images/baby-wreath.png'; }}
+              />
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-[#E11D48] tracking-tight mt-2">
+                {anak?.nama || 'Alya Putri'}
               </h3>
-              <p className="text-xs text-slate-600 font-medium mt-0.5">
-                {hitungUsiaString(anak?.tgl_lahir)}
+              <p className="text-base sm:text-lg font-bold text-slate-800 mt-0.5">
+                {anak?.usia || hitungUsiaString(anak?.tgl_lahir) || '1 Tahun 6 Bulan'}
               </p>
             </div>
 
@@ -236,7 +357,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
             </div>
           </div>
         ) : (
-          /* Tampilan Ibu Hamil: Si kecil belum terdaftar (Persis Dashboard (1).png) */
+          /* Tampilan Ibu Hamil Saja: Si kecil belum terdaftar */
           <div className="bg-[#FAF5FF]/50 border-2 border-dashed border-pink-200/90 rounded-3xl p-6 sm:p-7 relative overflow-hidden shadow-xs flex flex-col justify-between items-center text-center min-h-[220px]">
             <div className="w-full flex items-center justify-start">
               <div className="inline-flex items-center gap-1.5 text-pink-600 text-xs font-bold">
@@ -277,7 +398,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
         )}
       </div>
 
-      {/* 3. Middle Row: Jadwal Terdekat & Pengingat (Persis Figma Dashboard.png) */}
+      {/* 3. Middle Row: Jadwal Terdekat & Pengingat */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* Card Jadwal Terdekat (PBI 01A) */}
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
@@ -330,263 +451,344 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
           </div>
 
           <div className="space-y-3">
-            {/* Item 1: Konsumsi TTD */}
-            <div 
-              onClick={() => handleNav('/kesehatan-ibu/kehamilan')}
-              className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-11 h-11 rounded-2xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0 border border-pink-100">
-                  <Pill size={18} />
+            {/* Item 1: Konsumsi TTD untuk ibu hamil atau Pemberian ASI untuk ibu balita */}
+            {hasKehamilan ? (
+              <div 
+                onClick={() => handleNav('/kesehatan-ibu/kehamilan')}
+                className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-2xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0 border border-pink-100">
+                    <Pill size={18} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
+                      Konsumsi Tablet Tambah Darah
+                    </h4>
+                    <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                      Setiap hari
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
-                    Konsumsi Tablet Tambah Darah
-                  </h4>
-                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                    Setiap hari
-                  </p>
-                </div>
+                <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
               </div>
-              <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
-            </div>
+            ) : (
+              <div 
+                onClick={() => handleNav('/kesehatan-ibu/nifas-menyusui')}
+                className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-2xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0 border border-pink-100">
+                    <Heart size={18} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
+                      Pemberian ASI Eksklusif
+                    </h4>
+                    <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                      Setiap 2-3 jam
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
+              </div>
+            )}
 
-            {/* Item 2: Imunisasi Campak Rubella */}
-            <div 
-              onClick={() => handleNav('/kesehatan-anak/imunisasi')}
-              className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100">
-                  <Syringe size={18} />
+            {/* Item 2: Imunisasi Balita jika punya anak terdaftar atau ANC lanjutan jika hamil saja */}
+            {hasAnak && anak ? (
+              <div 
+                onClick={() => handleNav(`/kesehatan-anak/imunisasi?anak_id=${anak?.id}`)}
+                className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100">
+                    <Syringe size={18} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
+                      Imunisasi Campak Rubella
+                    </h4>
+                    <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                      20 Oktober 2026
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
-                    Imunisasi Campak Rubella
-                  </h4>
-                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                    20 Oktober 2026
-                  </p>
-                </div>
+                <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
               </div>
-              <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
-            </div>
+            ) : (
+              <div 
+                onClick={() => handleNav('/kesehatan-ibu/pemeriksaan')}
+                className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                    <Activity size={18} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
+                      Pemeriksaan USG Trimester 3
+                    </h4>
+                    <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                      28 Oktober 2026
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* 4. Bottom Row: Ringkasan Kesehatan Ibu & Anak (Persis Dashboard.png) */}
-      <div className="space-y-6">
-        {/* Ringkasan Kesehatan Ibu */}
-        <div className="bg-white/70 border border-pink-100/80 rounded-3xl p-6 shadow-xs space-y-4">
+      {/* 4. Bottom Row: 2 Kolom Berdampingan (Kesehatan Ibu & Kesehatan Anak - Sesuai media_1792892882392_f74ca50d.png) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        {/* Kolom 1: Ringkasan Kesehatan Ibu */}
+        <div className="bg-[#FFF5F7]/70 border border-pink-100/80 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900">Ringkasan Kesehatan Ibu</h3>
+            <h3 className="text-sm sm:text-base font-bold text-slate-900">Ringkasan Kesehatan Ibu</h3>
             <button
               type="button"
-              onClick={() => handleNav('/kesehatan-ibu/kehamilan')}
+              onClick={() => handleNav(hasKehamilan ? '/kesehatan-ibu/kehamilan' : '/kesehatan-ibu/nifas-menyusui')}
               className="text-xs font-semibold text-[#E11D48] hover:text-[#BE185D] cursor-pointer"
             >
               Lihat Detail
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* 1. Pemeriksaan Kehamilan */}
-            <div 
-              onClick={() => handleNav('/kesehatan-ibu/pemeriksaan')}
-              className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+          {hasKehamilan ? (
+            /* Metrik Kehamilan untuk Ibu Hamil & Ibu Hamil-Balita */
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {/* 1. Pemeriksaan Kehamilan */}
+              <div 
+                onClick={() => handleNav('/kesehatan-ibu/pemeriksaan')}
+                className="bg-white border border-slate-100/90 rounded-2xl p-3 shadow-2xs flex flex-col items-center text-center justify-between min-h-[125px] hover:border-pink-200 transition-all cursor-pointer group"
+              >
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
                   <Heart size={18} />
                 </div>
                 <div>
-                  <span className="text-sm font-bold text-slate-900 block leading-tight">5 dari 8 kali</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">5 dari 8 kali</span>
                   <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Pemeriksaan Kehamilan</span>
                 </div>
+                <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />
               </div>
-              <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600" />
-            </div>
 
-            {/* 2. Kenaikan Berat Badan */}
-            <div 
-              onClick={() => handleNav('/kesehatan-ibu/kehamilan')}
-              className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+              {/* 2. Kenaikan Berat Badan */}
+              <div 
+                onClick={() => handleNav('/kesehatan-ibu/kehamilan')}
+                className="bg-white border border-slate-100/90 rounded-2xl p-3 shadow-2xs flex flex-col items-center text-center justify-between min-h-[125px] hover:border-pink-200 transition-all cursor-pointer group"
+              >
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
                   <Weight size={18} />
                 </div>
                 <div>
-                  <span className="text-sm font-bold text-slate-900 block leading-tight">+7 kg</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">+7 kg</span>
                   <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Kenaikan Berat Badan</span>
                 </div>
+                <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />
               </div>
-              <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600" />
-            </div>
 
-            {/* 3. Tekanan Darah */}
-            <div 
-              onClick={() => handleNav('/kesehatan-ibu/pemeriksaan')}
-              className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+              {/* 3. Tekanan Darah */}
+              <div 
+                onClick={() => handleNav('/kesehatan-ibu/pemeriksaan')}
+                className="bg-white border border-slate-100/90 rounded-2xl p-3 shadow-2xs flex flex-col items-center text-center justify-between min-h-[125px] hover:border-pink-200 transition-all cursor-pointer group"
+              >
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
                   <Activity size={18} />
                 </div>
                 <div>
-                  <span className="text-sm font-bold text-slate-900 block leading-tight">110/70 mmHg</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">110/70 mmHg</span>
                   <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Tekanan Darah</span>
-                  <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded mt-0.5">
-                    Normal
-                  </span>
                 </div>
+                <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  Normal
+                </span>
               </div>
-              <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600" />
-            </div>
 
-            {/* 4. Hasil HB Terakhir */}
-            <div 
-              onClick={() => handleNav('/kesehatan-ibu/pemeriksaan')}
-              className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+              {/* 4. Hasil HB Terakhir */}
+              <div 
+                onClick={() => handleNav('/kesehatan-ibu/pemeriksaan')}
+                className="bg-white border border-slate-100/90 rounded-2xl p-3 shadow-2xs flex flex-col items-center text-center justify-between min-h-[125px] hover:border-pink-200 transition-all cursor-pointer group"
+              >
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
                   <Droplet size={18} />
                 </div>
                 <div>
-                  <span className="text-sm font-bold text-slate-900 block leading-tight">Normal</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">Normal</span>
                   <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Hasil HB Terakhir</span>
                 </div>
+                <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />
               </div>
-              <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600" />
             </div>
-          </div>
+          ) : (
+            /* Metrik Pasca Persalinan / Nifas & Menyusui untuk Ibu Balita */
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {/* 1. Kunjungan Nifas */}
+              <div 
+                onClick={() => handleNav('/kesehatan-ibu/nifas-menyusui')}
+                className="bg-white border border-slate-100/90 rounded-2xl p-3 shadow-2xs flex flex-col items-center text-center justify-between min-h-[125px] hover:border-pink-200 transition-all cursor-pointer group"
+              >
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <Heart size={18} />
+                </div>
+                <div>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">3 dari 4 kali</span>
+                  <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Pemeriksaan Nifas</span>
+                </div>
+                <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />
+              </div>
+
+              {/* 2. Kondisi Ibu */}
+              <div 
+                onClick={() => handleNav('/kesehatan-ibu/nifas-menyusui')}
+                className="bg-white border border-slate-100/90 rounded-2xl p-3 shadow-2xs flex flex-col items-center text-center justify-between min-h-[125px] hover:border-pink-200 transition-all cursor-pointer group"
+              >
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <Activity size={18} />
+                </div>
+                <div>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">Sehat & Pulih</span>
+                  <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Kondisi Pemulihan</span>
+                </div>
+                <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  Baik
+                </span>
+              </div>
+
+              {/* 3. Tekanan Darah */}
+              <div 
+                onClick={() => handleNav('/kesehatan-ibu/nifas-menyusui')}
+                className="bg-white border border-slate-100/90 rounded-2xl p-3 shadow-2xs flex flex-col items-center text-center justify-between min-h-[125px] hover:border-pink-200 transition-all cursor-pointer group"
+              >
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <Activity size={18} />
+                </div>
+                <div>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">120/80 mmHg</span>
+                  <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Tekanan Darah</span>
+                </div>
+                <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  Normal
+                </span>
+              </div>
+
+              {/* 4. Konseling Menyusui */}
+              <div 
+                onClick={() => handleNav('/kesehatan-ibu/nifas-menyusui')}
+                className="bg-white border border-slate-100/90 rounded-2xl p-3 shadow-2xs flex flex-col items-center text-center justify-between min-h-[125px] hover:border-pink-200 transition-all cursor-pointer group"
+              >
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <Droplet size={18} />
+                </div>
+                <div>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">ASI Eksklusif</span>
+                  <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Status Menyusui</span>
+                </div>
+                <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  Tercapai
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Ringkasan Kesehatan Anak (Jika Ibu Balita atau anak terdaftar) */}
-        {hasAnak && (
-          <div className="bg-white/70 border border-pink-100/80 rounded-3xl p-6 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h3 className="text-sm font-bold text-slate-900">
-                  Ringkasan Kesehatan Anak ({anak?.nama || 'Si Kecil'})
-                </h3>
-                {daftarAnak.length > 1 && (
-                  <div className="flex items-center gap-1 bg-pink-50 p-1 rounded-xl border border-pink-200">
-                    <span className="text-[10px] font-bold text-slate-400 px-1 uppercase tracking-wider">Pilih:</span>
-                    {daftarAnak.map((a, idx) => {
-                      const isSelected = a.id === anak?.id;
-                      const isBoy = a.jenis_kelamin === 'L';
-                      return (
-                        <button
-                          key={a.id}
-                          type="button"
-                          data-anak-id={a.id}
-                          onClick={() => setAnak(a)}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                            isSelected
-                              ? 'bg-[#E11D48] text-white shadow-xs'
-                              : 'text-slate-600 hover:text-[#E11D48] hover:bg-white/70'
-                          }`}
-                        >
-                          <span>{isBoy ? '👦' : '👧'}</span>
-                          <span>{formatNamaAnak(a, idx).split(' ')[0]}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+        {/* Kolom 2: Ringkasan Kesehatan Anak */}
+        {hasAnak && anak ? (
+          <div className="bg-[#FFF5F7]/70 border border-pink-200/60 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                Ringkasan Kesehatan Anak {daftarAnak.length > 1 ? `(${anak.nama})` : ''}
+              </h3>
               <button
                 type="button"
-                onClick={() => handleNav(`/kesehatan-anak/pertumbuhan?anak_id=${anak?.id}`)}
+                onClick={() => handleNav(`/kesehatan-anak/pertumbuhan?anak_id=${anak.id}`)}
                 className="text-xs font-semibold text-[#E11D48] hover:text-[#BE185D] cursor-pointer"
               >
                 Lihat Detail
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Berat Badan */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {/* 1. Berat Badan */}
               <div 
-                onClick={() => handleNav(`/kesehatan-anak/pertumbuhan?anak_id=${anak?.id}`)}
-                className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
+                onClick={() => handleNav(`/kesehatan-anak/pertumbuhan?anak_id=${anak.id}`)}
+                className="bg-white border border-slate-100/90 rounded-2xl p-3 shadow-2xs flex flex-col items-center text-center justify-between min-h-[125px] hover:border-pink-200 transition-all cursor-pointer group"
               >
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-                    <Weight size={18} />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-slate-900 block leading-tight">10,5 kg</span>
-                    <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Berat Badan</span>
-                    <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded mt-0.5">
-                      Sesuai Usia
-                    </span>
-                  </div>
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <Weight size={18} />
                 </div>
-                <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600" />
+                <div>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">10,5 kg</span>
+                  <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Berat Badan</span>
+                </div>
+                <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  Sesuai Usia
+                </span>
               </div>
 
-              {/* Tinggi Badan */}
+              {/* 2. Tinggi Badan */}
               <div 
-                onClick={() => handleNav(`/kesehatan-anak/pertumbuhan?anak_id=${anak?.id}`)}
-                className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
+                onClick={() => handleNav(`/kesehatan-anak/pertumbuhan?anak_id=${anak.id}`)}
+                className="bg-white border border-slate-100/90 rounded-2xl p-3 shadow-2xs flex flex-col items-center text-center justify-between min-h-[125px] hover:border-pink-200 transition-all cursor-pointer group"
               >
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-                    <Ruler size={18} />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-slate-900 block leading-tight">80 cm</span>
-                    <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Tinggi Badan</span>
-                    <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded mt-0.5">
-                      Sesuai Usia
-                    </span>
-                  </div>
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <Ruler size={18} />
                 </div>
-                <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600" />
+                <div>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">80 cm</span>
+                  <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Tinggi Badan</span>
+                </div>
+                <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  Sesuai Usia
+                </span>
               </div>
 
-              {/* Imunisasi */}
+              {/* 3. Imunisasi */}
               <div 
-                onClick={() => handleNav(`/kesehatan-anak/imunisasi?anak_id=${anak?.id}`)}
-                className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
+                onClick={() => handleNav(`/kesehatan-anak/imunisasi?anak_id=${anak.id}`)}
+                className="bg-white border border-slate-100/90 rounded-2xl p-3 shadow-2xs flex flex-col items-center text-center justify-between min-h-[125px] hover:border-pink-200 transition-all cursor-pointer group"
               >
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-                    <Syringe size={18} />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-slate-900 block leading-tight">3 dari 5</span>
-                    <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Imunisasi</span>
-                    <span className="inline-block text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded mt-0.5">
-                      Dalam Proses
-                    </span>
-                  </div>
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <Syringe size={18} />
                 </div>
-                <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600" />
+                <div>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">3 dari 5</span>
+                  <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Imunisasi</span>
+                </div>
+                <span className="inline-block text-[9px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">
+                  Dalam Proses
+                </span>
               </div>
 
-              {/* Perkembangan */}
+              {/* 4. Perkembangan */}
               <div 
-                onClick={() => handleNav(`/kesehatan-anak/perkembangan?anak_id=${anak?.id}`)}
-                className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 transition-all group"
+                onClick={() => handleNav(`/kesehatan-anak/perkembangan?anak_id=${anak.id}`)}
+                className="bg-white border border-slate-100/90 rounded-2xl p-3 shadow-2xs flex flex-col items-center text-center justify-between min-h-[125px] hover:border-pink-200 transition-all cursor-pointer group"
               >
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-                    <TrendingUp size={18} />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-slate-900 block leading-tight">Sesuai Usia</span>
-                    <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Perkembangan</span>
-                    <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded mt-0.5">
-                      Normal
-                    </span>
-                  </div>
+                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <TrendingUp size={18} />
                 </div>
-                <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600" />
+                <div>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">Sesuai Usia</span>
+                  <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Perkembangan</span>
+                </div>
+                <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  Normal
+                </span>
               </div>
+            </div>
+          </div>
+        ) : (
+          /* Placeholder Kolom Ringkasan Anak jika Ibu Hamil Saja belum punya anak */
+          <div className="bg-[#FFF5F7]/40 border-2 border-dashed border-pink-200/80 rounded-3xl p-6 shadow-xs flex flex-col justify-center items-center text-center space-y-3 min-h-[190px]">
+            <div className="w-12 h-12 rounded-2xl bg-pink-100/70 text-[#E11D48] flex items-center justify-center">
+              <Baby size={24} />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-slate-800">Ringkasan Kesehatan Anak Belum Tersedia</h4>
+              <p className="text-xs text-slate-500 max-w-xs font-medium mt-1">
+                Data pertumbuhan, imunisasi, dan perkembangan akan aktif setelah si kecil lahir dan terdaftar di posyandu.
+              </p>
             </div>
           </div>
         )}
