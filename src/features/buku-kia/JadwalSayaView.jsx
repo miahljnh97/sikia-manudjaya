@@ -24,11 +24,22 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
     { no: 6, id: 'j-6', tanggal: '2026-11-02', displayTanggal: '02 Nov 2026', waktu: '09.00 - 10.00', jenis: 'Kelas Ibu Hamil', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Koordinator', keterangan: 'Senam hamil dan edukasi IMD.' },
   ];
 
+  const [calendarDate, setCalendarDate] = useState(new Date(2026, 8, 1)); // Default: September 2026
   const [selectedDay, setSelectedDay] = useState(15);
+  const [selectedMonth, setSelectedMonth] = useState(8);
+  const [selectedYear, setSelectedYear] = useState(2026);
   const [selectedJadwal, setSelectedJadwal] = useState(null);
   const [isSendingWa, setIsSendingWa] = useState(false);
 
   const [jadwalList, setJadwalList] = useState(defaultIbuHamilJadwal);
+
+  const handlePrevMonth = () => {
+    setCalendarDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCalendarDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  };
 
   useEffect(() => {
     const targetIbuId = user?.peserta_id || (user && getPesertaIdFromUser(user)) || user?.id || null;
@@ -148,15 +159,47 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
     }
   };
 
-  const calendarDays = [
-    { day: 31, isPrev: true },
-    { day: 1 }, { day: 2 }, { day: 3 }, { day: 4 }, { day: 5 }, { day: 6 },
-    { day: 7 }, { day: 8 }, { day: 9 }, { day: 10 }, { day: 11 }, { day: 12 }, { day: 13 },
-    { day: 14 }, { day: 15 }, { day: 16 }, { day: 17 }, { day: 18 }, { day: 19 }, { day: 20 },
-    { day: 21 }, { day: 22 }, { day: 23 }, { day: 24 }, { day: 25 }, { day: 26 }, { day: 27 },
-    { day: 28 }, { day: 29 }, { day: 30 },
-    { day: 1, isNext: true }, { day: 2, isNext: true }, { day: 3, isNext: true }, { day: 4, isNext: true }
+  const NAMA_BULAN_IND = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
   ];
+  const currentMonthTitle = `${NAMA_BULAN_IND[calendarDate.getMonth()]} ${calendarDate.getFullYear()}`;
+
+  const calendarDays = useMemo(() => {
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+
+    // Khusus September 2026 persis sesuai layout Figma Sprint 2
+    if (year === 2026 && month === 8) {
+      return [
+        { day: 31, isPrev: true },
+        { day: 1 }, { day: 2 }, { day: 3 }, { day: 4 }, { day: 5 }, { day: 6 },
+        { day: 7 }, { day: 8 }, { day: 9 }, { day: 10 }, { day: 11 }, { day: 12 }, { day: 13 },
+        { day: 14 }, { day: 15 }, { day: 16 }, { day: 17 }, { day: 18 }, { day: 19 }, { day: 20 },
+        { day: 21 }, { day: 22 }, { day: 23 }, { day: 24 }, { day: 25 }, { day: 26 }, { day: 27 },
+        { day: 28 }, { day: 29 }, { day: 30 },
+        { day: 1, isNext: true }, { day: 2, isNext: true }, { day: 3, isNext: true }, { day: 4, isNext: true }
+      ];
+    }
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    const days = [];
+
+    for (let i = firstDay - 1; i >= 0; i--) {
+      days.push({ day: daysInPrevMonth - i, isPrev: true });
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      days.push({ day: d });
+    }
+    const totalSlots = Math.ceil(days.length / 7) * 7;
+    const remaining = totalSlots - days.length;
+    for (let i = 1; i <= remaining; i++) {
+      days.push({ day: i, isNext: true });
+    }
+    return days;
+  }, [calendarDate]);
 
   return (
     <div className="space-y-6">
@@ -232,14 +275,18 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
           <div className="flex items-center justify-between">
             <button 
               type="button" 
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+              onClick={handlePrevMonth}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer transition-colors"
+              title="Bulan Sebelumnya"
             >
               <ChevronLeft size={18} />
             </button>
-            <h3 className="text-sm font-bold text-slate-900">September 2026</h3>
+            <h3 className="text-sm font-bold text-slate-900">{currentMonthTitle}</h3>
             <button 
               type="button" 
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+              onClick={handleNextMonth}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer transition-colors"
+              title="Bulan Berikutnya"
             >
               <ChevronRight size={18} />
             </button>
@@ -259,8 +306,10 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
           {/* Grid Tanggal */}
           <div className="grid grid-cols-7 gap-y-2 gap-x-1 text-center text-xs">
             {calendarDays.map((item, idx) => {
-              const hasEvent = !item.isPrev && !item.isNext && eventDays.has(item.day);
-              const isSelected = item.day === selectedDay && !item.isPrev && !item.isNext;
+              const isSelected = !item.isPrev && !item.isNext &&
+                item.day === selectedDay &&
+                calendarDate.getMonth() === selectedMonth &&
+                calendarDate.getFullYear() === selectedYear;
 
               return (
                 <button
@@ -268,8 +317,9 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
                   type="button"
                   onClick={() => {
                     if (!item.isPrev && !item.isNext) {
-                      // Toggle seleksi tanggal
-                      setSelectedDay(prev => prev === item.day ? null : item.day);
+                      setSelectedDay(item.day);
+                      setSelectedMonth(calendarDate.getMonth());
+                      setSelectedYear(calendarDate.getFullYear());
                     }
                   }}
                   className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center transition-all cursor-pointer font-medium relative ${
