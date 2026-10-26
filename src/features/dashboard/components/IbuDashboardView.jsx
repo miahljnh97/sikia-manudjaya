@@ -41,6 +41,8 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
   const [daftarAnak, setDaftarAnak] = useState([]);
   const [anak, setAnak] = useState(null);
   const [jadwalList, setJadwalList] = useState([]);
+  const [ancList, setAncList] = useState([]);
+  const [nifasList, setNifasList] = useState([]);
 
   useEffect(() => {
     if (!ibuId) return;
@@ -48,9 +50,23 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
     // 1. Ambil data kehamilan ibu (aktif jika hamil)
     if (isIbuBalitaOnly) {
       setKehamilan(null);
+      setAncList([]);
+      bukuKiaService.getPemeriksaanNifasList(ibuId).then(list => {
+        setNifasList(list || []);
+      });
     } else {
       bukuKiaService.getKehamilanIbu(ibuId).then(res => {
         setKehamilan(res);
+        if (res?.id) {
+          bukuKiaService.getPemeriksaanAncList(res.id).then(list => {
+            setAncList(list || []);
+          });
+        } else {
+          setAncList([]);
+        }
+      });
+      bukuKiaService.getPemeriksaanNifasList(ibuId).then(list => {
+        setNifasList(list || []);
       });
     }
 
@@ -567,7 +583,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                   <Heart size={18} />
                 </div>
                 <div>
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">5 dari 8 kali</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">{ancList.length} dari 6 Standar Kemenkes</span>
                   <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Pemeriksaan Kehamilan</span>
                 </div>
                 <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />
@@ -597,7 +613,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                   <Activity size={18} />
                 </div>
                 <div>
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">110/70 mmHg</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">{latestAnc?.tekanan_darah ? `${latestAnc.tekanan_darah} mmHg` : '110/70 mmHg'}</span>
                   <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Tekanan Darah</span>
                 </div>
                 <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
@@ -614,7 +630,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                   <Droplet size={18} />
                 </div>
                 <div>
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">Normal</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">{latestAnc?.hemoglobin ? `${latestAnc.hemoglobin} g/dL` : 'Normal'}</span>
                   <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Hasil HB Terakhir</span>
                 </div>
                 <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />
@@ -632,7 +648,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                   <Heart size={18} />
                 </div>
                 <div>
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">3 dari 4 kali</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">{nifasList.filter(n => n.status_pemeriksaan === 'Sudah').length || (nifasList.length > 0 ? nifasList.length : 3)} dari 4 kali</span>
                   <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Pemeriksaan Nifas</span>
                 </div>
                 <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />

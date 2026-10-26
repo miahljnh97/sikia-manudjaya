@@ -19,6 +19,12 @@ import { bukuKiaService } from '../../services/bukuKiaService';
 import { sendWhatsAppReminder, getReminderStatus, normalizePhoneForWhatsApp, generateWhatsAppReminderMessage } from '../../services/whatsappService';
 
 export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
+  const userRole = (user?.role || '').toLowerCase().trim();
+  const userEmail = (user?.user?.email || user?.email || '').toLowerCase().trim();
+  const isIbuRole = userRole.includes('ibu') || userEmail.includes('ibu') || userEmail.includes('hamil') || userEmail.includes('balita');
+
+  // Tombol Kirim WA hanya untuk Bidan, Kader, dan Super Admin. Akun Ibu di-hide.
+  const canSendWa = !isIbuRole;
   const [currentDate, setCurrentDate] = useState(() => new Date(2026, 8, 1)); // September 2026
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedJadwal, setSelectedJadwal] = useState(null);
@@ -495,18 +501,20 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
                       </td>
                       <td className="py-3.5 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setBlastWaJadwal(row);
-                              setBlastTargetPhone('081234567890');
-                            }}
-                            className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition-all shadow-2xs active:scale-95 cursor-pointer"
-                            title="Kirim Blast Pengingat WhatsApp Resmi"
-                          >
-                            <MessageCircle size={13} className="text-emerald-600" />
-                            <span>Kirim WA</span>
-                          </button>
+                          {canSendWa && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setBlastWaJadwal(row);
+                                setBlastTargetPhone('081234567890');
+                              }}
+                              className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition-all shadow-2xs active:scale-95 cursor-pointer"
+                              title="Kirim Blast Pengingat WhatsApp Resmi"
+                            >
+                              <MessageCircle size={13} className="text-emerald-600" />
+                              <span>Kirim WA</span>
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => setSelectedJadwal(row)}
@@ -527,7 +535,7 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
       </div>
 
       {/* Modal Blast Pengingat WhatsApp Resmi Posyandu (Item 24) */}
-      {blastWaJadwal && (
+      {blastWaJadwal && canSendWa && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
             {/* Header Modal */}

@@ -26,7 +26,17 @@ import { maskNik } from '../../utils/nikUtils';
 import { formatTanggalIndo } from '../../utils/dateUtils';
 
 export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate, onShowToast }) {
-  const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || (user?.email || '').toLowerCase().includes('ibu');
+  const userRole = (user?.role || '').toLowerCase().trim();
+  const userEmail = (user?.user?.email || user?.email || '').toLowerCase().trim();
+
+  // Role checking
+  const isBidan = userRole.includes('bidan') || userEmail.includes('bidan');
+  const isKader = userRole.includes('kader') || userEmail.includes('kader');
+  const isAdmin = userRole.includes('admin') || userEmail.includes('admin');
+  const isIbuRole = userRole.includes('ibu') || userEmail.includes('ibu') || userEmail.includes('hamil') || userEmail.includes('balita');
+
+  // Button 'Catat Pemeriksaan' & 'Unggah Dokumen' cuma muncul di kader dan bidan. Di super admin dan ibu di-hide:
+  const canInputPemeriksaan = (isBidan || isKader) && !isAdmin && !isIbuRole;
 
   // Helper ekstrak ID dari URL path atau query string (?peserta_id=... atau /pemeriksaan/:id)
   const extractPesertaId = () => {
@@ -432,14 +442,16 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
               Daftar rekam medis kehamilan khusus untuk <strong>{namaPasien}</strong> (ID: {activePesertaId.slice(0, 8)}...)
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsModalTambahOpen(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
-          >
-            <Plus size={15} />
-            <span>Catat Pemeriksaan</span>
-          </button>
+          {canInputPemeriksaan && (
+            <button
+              type="button"
+              onClick={() => setIsModalTambahOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
+            >
+              <Plus size={15} />
+              <span>Catat Pemeriksaan</span>
+            </button>
+          )}
         </div>
 
         <div className="overflow-x-auto">
@@ -627,16 +639,18 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
             ))}
           </div>
 
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={() => setIsModalTambahOpen(true)}
-              className="w-full py-2.5 px-3 bg-slate-50 hover:bg-slate-100 border border-dashed border-slate-300 rounded-xl text-slate-600 hover:text-slate-900 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
-            >
-              <Upload size={14} className="text-[#E11D48]" />
-              <span>Unggah Dokumen Tambahan Melalui Form ANC</span>
-            </button>
-          </div>
+          {canInputPemeriksaan && (
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setIsModalTambahOpen(true)}
+                className="w-full py-2.5 px-3 bg-slate-50 hover:bg-slate-100 border border-dashed border-slate-300 rounded-xl text-slate-600 hover:text-slate-900 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              >
+                <Upload size={14} className="text-[#E11D48]" />
+                <span>Unggah Dokumen Tambahan Melalui Form ANC</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -713,8 +727,8 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
         </div>
       )}
 
-      {/* 6. Modal Input Pemeriksaan ANC Baru (PBI 02C: 4 Sections & Dokumen Upload) */}
-      {isModalTambahOpen && (
+      {/* 6. Modal Input Pemeriksaan ANC Baru (Hanya Bidan & Kader) */}
+      {isModalTambahOpen && canInputPemeriksaan && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
