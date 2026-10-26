@@ -23,7 +23,11 @@ import {
   User,
   ShieldCheck,
   FileText,
-  Baby
+  Baby,
+  ExternalLink,
+  Download,
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
@@ -197,6 +201,256 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
   // State & Data Riwayat Pertumbuhan (PBI 02C & AC 1)
   const [isModalKmsOpen, setIsModalKmsOpen] = useState(false);
   const [isSubmittingKms, setIsSubmittingKms] = useState(false);
+
+  // States untuk Modal Jadwal Imunisasi Lengkap & Tips KIPI Buku KIA
+  const [showAllJadwalImunisasi, setShowAllJadwalImunisasi] = useState(false);
+  const [showAllTipsImunisasi, setShowAllTipsImunisasi] = useState(false);
+  const [filterStatusJadwal, setFilterStatusJadwal] = useState('Semua');
+  const [filterKategoriTips, setFilterKategoriTips] = useState('Semua');
+  const [selectedVaksinDetail, setSelectedVaksinDetail] = useState(null);
+
+  const tipsKipiList = [
+    {
+      id: 'tip-1',
+      kategori: 'Perawatan di Rumah',
+      title: 'Berikan ASI Lebih Sering (On Demand)',
+      ringkasan: 'Membantu menenangkan anak dan mencegah dehidrasi.',
+      detail: 'Berikan ASI atau cairan lebih sering sesuka bayi. ASI mengandung zat anti-infeksi dan memberikan rasa aman terbaik yang efektif menenangkan bayi saat merasa nyeri atau gelisah pasca vaksinasi.',
+      urgensi: 'Sangat Dianjurkan'
+    },
+    {
+      id: 'tip-2',
+      kategori: 'Perawatan di Rumah',
+      title: 'Kompres Dingin Pada Area Bekas Suntikan',
+      ringkasan: 'Meredakan bengkak, kemerahan, dan rasa nyeri lokal.',
+      detail: 'Jika area suntikan di paha atau lengan tampak merah, hangat, atau bengkak, kompreslah dengan kain bersih yang dibasahi air dingin atau air biasa selama 10-15 menit. PENTING: Jangan memijat, mengurut, atau mengoleskan ramuan tradisional pada bekas suntikan.',
+      urgensi: 'Dianjurkan'
+    },
+    {
+      id: 'tip-3',
+      kategori: 'Perawatan di Rumah',
+      title: 'Kompres Air Hangat Bila Anak Demam',
+      ringkasan: 'Membantu menurunkan suhu tubuh secara bertahap.',
+      detail: 'Bila anak mengalami demam (suhu > 37,5°C), kompres dahi, leher, ketiak, atau lipatan paha anak dengan kain bersih yang dibasahi air hangat (bukan air dingin atau alkohol). Kompres hangat membantu pembuluh darah melebar sehingga panas tubuh keluar lebih cepat.',
+      urgensi: 'Dianjurkan'
+    },
+    {
+      id: 'tip-4',
+      kategori: 'Perawatan di Rumah',
+      title: 'Gunakan Pakaian Tipis dan Longgar',
+      ringkasan: 'Mencegah terperangkapnya panas di dalam tubuh anak.',
+      detail: 'Pakaikan pakaian berbahan katun yang longgar, tipis, dan menyerap keringat. Jangan membungkus anak dengan selimut atau jaket tebal saat demam karena dapat memicu kenaikan suhu tubuh mendadak.',
+      urgensi: 'Dianjurkan'
+    },
+    {
+      id: 'tip-5',
+      kategori: 'Perawatan di Rumah',
+      title: 'Berikan Obat Penurun Panas Sesuai Dosis',
+      ringkasan: 'Gunakan parasetamol drop/sirup sesuai resep tenaga kesehatan.',
+      detail: 'Bila suhu anak mencapai > 38°C atau anak sangat rewel dan tidak nyaman, berikan parasetamol sesuai dosis yang telah dianjurkan oleh bidan atau dokter saat imunisasi. Jangan melebihi dosis anjuran dan perhatikan jarak pemberian minimal 4-6 jam.',
+      urgensi: 'Bila Diperlukan'
+    },
+    {
+      id: 'tip-6',
+      kategori: 'Reaksi Normal',
+      title: 'Demam Ringan (Sumer-sumer) 1-2 Hari',
+      ringkasan: 'Tanda alami sistem kekebalan tubuh sedang aktif membentuk antibodi.',
+      detail: 'Demam ringan pasca imunisasi (terutama setelah DPT atau Campak) adalah reaksi normal yang menandakan tubuh anak sedang merespons vaksin untuk membentuk kekebalan jangka panjang. Umumnya berlangsung 24 hingga 48 jam.',
+      urgensi: 'Reaksi Normal'
+    },
+    {
+      id: 'tip-7',
+      kategori: 'Reaksi Normal',
+      title: 'Kemerahan dan Benjolan Kecil di Tempat Suntik',
+      ringkasan: 'Reaksi jaringan lokal yang akan hilang dengan sendirinya.',
+      detail: 'Bercak kemerahan atau benjolan kecil teraba keras di tempat suntik adalah reaksi lokal yang sering terjadi. Biasanya akan mengecil dan hilang dengan sendirinya dalam waktu 1-2 minggu tanpa pengobatan khusus.',
+      urgensi: 'Reaksi Normal'
+    },
+    {
+      id: 'tip-8',
+      kategori: 'Tanda Bahaya KIPI',
+      title: 'Demam Tinggi Di Atas 39°C',
+      ringkasan: 'Demam tinggi yang tidak kunjung turun setelah diberi obat.',
+      detail: 'Jika suhu tubuh anak melebihi 39°C dan tidak turun meskipun sudah diberikan parasetamol dan kompres, segera bawa anak ke Puskesmas Manud Jaya atau fasilitas kesehatan terdekat.',
+      urgensi: 'BAHAYA / SEGERA KE FASKES'
+    },
+    {
+      id: 'tip-9',
+      kategori: 'Tanda Bahaya KIPI',
+      title: 'Menangis Melengking Tanpa Henti (> 3 Jam)',
+      ringkasan: 'Persistent crying yang tidak dapat ditenangkan sama sekali.',
+      detail: 'Anak menangis terus-menerus dengan nada melengking tinggi (inconsolable crying) lebih dari 3 jam berturut-turut meskipun sudah digendong, disusui, dan diberi pereda nyeri.',
+      urgensi: 'BAHAYA / SEGERA KE FASKES'
+    },
+    {
+      id: 'tip-10',
+      kategori: 'Tanda Bahaya KIPI',
+      title: 'Kejang, Anak Lemas Terkulai, atau Sesak Napas',
+      ringkasan: 'Tanda kegawatdaruratan alergi berat (anafilaktik) atau neurologis.',
+      detail: 'Terjadi kejang demam, anak terkulai lemas dan tidak merespon saat dipanggil, bibir/kelopak mata membengkak hebat, atau tampak sesak napas. SEGERA bawa ke IGD rumah sakit terdekat!',
+      urgensi: 'DARURAT / IGD 24 JAM'
+    }
+  ];
+
+  const getJadwalLengkapImunisasi = () => {
+    const defaultMasterVaksin = [
+      {
+        id: 'vax-hb0',
+        nama_vaksin: 'Hepatitis B (HB0)',
+        jadwal_usia: '0 - 24 Jam',
+        usia_rekomendasi: 'Bayi baru lahir (0 hari)',
+        tanggal_diberikan: '15 Jul 2025',
+        status: 'Selesai',
+        lokasi: 'Puskesmas Manud Jaya',
+        petugas: 'Bidan Siti, S.Tr.Keb',
+        no_batch_vaksin: 'HB-2025-01',
+        keterangan: 'Mencegah penularan virus Hepatitis B dari ibu ke bayi baru lahir yang dapat menyebabkan kerusakan hati kronis.'
+      },
+      {
+        id: 'vax-bcg',
+        nama_vaksin: 'BCG',
+        jadwal_usia: '1 Bulan',
+        usia_rekomendasi: 'Usia 1 bulan',
+        tanggal_diberikan: '14 Agu 2025',
+        status: 'Selesai',
+        lokasi: 'Puskesmas Manud Jaya',
+        petugas: 'Bidan Siti, S.Tr.Keb',
+        no_batch_vaksin: 'BCG-2025-08',
+        keterangan: 'Mencegah penularan kuman Tuberkulosis (TBC) berat seperti TBC milier dan TBC selaput otak (meningitis).'
+      },
+      {
+        id: 'vax-opv1',
+        nama_vaksin: 'Polio Tetes 1 (bOPV 1)',
+        jadwal_usia: '1 Bulan',
+        usia_rekomendasi: 'Usia 1 bulan',
+        tanggal_diberikan: '14 Agu 2025',
+        status: 'Selesai',
+        lokasi: 'Puskesmas Manud Jaya',
+        petugas: 'Bidan Siti, S.Tr.Keb',
+        no_batch_vaksin: 'OPV-2025-04',
+        keterangan: 'Memberikan kekebalan mukosa usus terhadap virus polio tipe 1 dan tipe 3 untuk mencegah kelumpuhan layu akut.'
+      },
+      {
+        id: 'vax-dpt1',
+        nama_vaksin: 'DPT-HB-Hib 1 (Pentavalent 1)',
+        jadwal_usia: '2 Bulan',
+        usia_rekomendasi: 'Usia 2 bulan',
+        tanggal_diberikan: '18 Sep 2025',
+        status: 'Selesai',
+        lokasi: 'Puskesmas Manud Jaya',
+        petugas: 'Bidan Siti, S.Tr.Keb',
+        no_batch_vaksin: 'DPT-2025-11',
+        keterangan: 'Perlindungan kombinasi 5 penyakit: Difteri, Pertusis (batuk rejan), Tetanus, Hepatitis B, dan infeksi bakteri Hib.'
+      },
+      {
+        id: 'vax-opv2',
+        nama_vaksin: 'Polio Tetes 2 (bOPV 2)',
+        jadwal_usia: '2 Bulan',
+        usia_rekomendasi: 'Usia 2 bulan',
+        tanggal_diberikan: '18 Sep 2025',
+        status: 'Selesai',
+        lokasi: 'Puskesmas Manud Jaya',
+        petugas: 'Bidan Siti, S.Tr.Keb',
+        no_batch_vaksin: 'OPV-2025-09',
+        keterangan: 'Dosis penguat kedua untuk antibodi saluran pencernaan terhadap virus polio.'
+      },
+      {
+        id: 'vax-pcv1',
+        nama_vaksin: 'PCV 1 (Pneumokokus Konyugasi)',
+        jadwal_usia: '2 Bulan',
+        usia_rekomendasi: 'Usia 2 bulan',
+        tanggal_diberikan: '18 Sep 2025',
+        status: 'Selesai',
+        lokasi: 'Puskesmas Manud Jaya',
+        petugas: 'Bidan Siti, S.Tr.Keb',
+        no_batch_vaksin: 'PCV-2025-02',
+        keterangan: 'Mencegah radang paru-paru (pneumonia berat) dan infeksi telinga tengah akibat bakteri pneumokokus.'
+      },
+      {
+        id: 'vax-rv1',
+        nama_vaksin: 'Rotavirus 1 (RV 1)',
+        jadwal_usia: '2 Bulan',
+        usia_rekomendasi: 'Usia 2 bulan',
+        tanggal_diberikan: '18 Sep 2025',
+        status: 'Selesai',
+        lokasi: 'Puskesmas Manud Jaya',
+        petugas: 'Bidan Siti, S.Tr.Keb',
+        no_batch_vaksin: 'RV-2025-03',
+        keterangan: 'Vaksin tetes oral untuk mencegah diare dehidrasi berat yang mematikan pada bayi akibat infeksi rotavirus.'
+      },
+      {
+        id: 'vax-dpt2',
+        nama_vaksin: 'DPT-HB-Hib 2 & Polio Tetes 3',
+        jadwal_usia: '3 Bulan',
+        usia_rekomendasi: 'Usia 3 bulan',
+        tanggal_diberikan: '20 Okt 2025',
+        status: 'Selesai',
+        lokasi: 'Puskesmas Manud Jaya',
+        petugas: 'Bidan Siti, S.Tr.Keb',
+        no_batch_vaksin: 'DPT-2025-18',
+        keterangan: 'Lanjutan dosis imunisasi pentavalen untuk mempertahankan titer antibodi difteri dan pertusis.'
+      },
+      {
+        id: 'vax-dpt3',
+        nama_vaksin: 'DPT-HB-Hib 3 & Polio Suntik (IPV 1)',
+        jadwal_usia: '4 Bulan',
+        usia_rekomendasi: 'Usia 4 bulan',
+        tanggal_diberikan: '22 Nov 2025',
+        status: 'Selesai',
+        lokasi: 'Puskesmas Manud Jaya',
+        petugas: 'Bidan Siti, S.Tr.Keb',
+        no_batch_vaksin: 'IPV-2025-05',
+        keterangan: 'Kombinasi pentavalen dosis ke-3 dan vaksin polio suntik inaktif untuk kekebalan serum darah menyeluruh.'
+      },
+      {
+        id: 'vax-mr',
+        nama_vaksin: 'Campak Rubella (MR 1)',
+        jadwal_usia: '9 Bulan',
+        usia_rekomendasi: 'Usia 9 bulan',
+        tanggal_diberikan: null,
+        tanggal_rencana: '20 Desember 2026',
+        status: 'Akan Datang',
+        lokasi: 'Puskesmas Manud Jaya',
+        petugas: 'Bidan Koordinator Puskesmas',
+        no_batch_vaksin: '-',
+        keterangan: 'Melindungi anak dari penyakit campak dengan komplikasi diare, pneumonia, radang otak, serta mencegah sindrom rubella kongenital.'
+      },
+      {
+        id: 'vax-booster',
+        nama_vaksin: 'DPT-HB-Hib 4 & MR 2 (Booster Lanjutan)',
+        jadwal_usia: '18 Bulan',
+        usia_rekomendasi: 'Usia 18 bulan',
+        tanggal_diberikan: null,
+        tanggal_rencana: '15 Mei 2027',
+        status: 'Akan Datang',
+        lokasi: 'Posyandu Manud Jaya',
+        petugas: 'Bidan Desa & Kader Posyandu',
+        no_batch_vaksin: '-',
+        keterangan: 'Imunisasi penguat (booster) untuk memastikan perlindungan optimal jangka panjang sebelum memasuki usia prasekolah.'
+      }
+    ];
+
+    if (daftarImunisasi && daftarImunisasi.length > 0) {
+      return defaultMasterVaksin.map(mv => {
+        const found = daftarImunisasi.find(di => 
+          (di.nama_vaksin || '').toLowerCase().includes(mv.nama_vaksin.toLowerCase().slice(0, 4))
+        );
+        if (found) {
+          return {
+            ...mv,
+            status: found.status || mv.status,
+            tanggal_diberikan: found.tanggal_diberikan || mv.tanggal_diberikan,
+            lokasi: found.lokasi || mv.lokasi,
+            petugas: found.petugas || mv.petugas,
+            no_batch_vaksin: found.no_batch_vaksin || mv.no_batch_vaksin
+          };
+        }
+        return mv;
+      });
+    }
+
+    return defaultMasterVaksin;
+  };
 
   const [formKms, setFormKms] = useState({
     tanggal_ukur: new Date().toISOString().split('T')[0],
@@ -1218,7 +1472,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                 <h3 className="text-sm font-bold text-slate-900">Jadwal Imunisasi Sesuai Usia</h3>
                 <button 
                   type="button"
-                  onClick={() => onShowToast && onShowToast('Membuka jadwal imunisasi lengkap...', 'info')}
+                  onClick={() => setShowAllJadwalImunisasi(true)}
                   className="text-xs font-semibold text-[#FF4D80] hover:text-[#E11D48] cursor-pointer"
                 >
                   Lihat Semua
@@ -1289,7 +1543,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                   <h3 className="text-sm font-bold text-slate-900">Tips Setelah Imunisasi</h3>
                   <button 
                     type="button"
-                    onClick={() => onShowToast && onShowToast('Membuka panduan KIPI Buku KIA...', 'info')}
+                    onClick={() => setShowAllTipsImunisasi(true)}
                     className="text-xs font-semibold text-[#FF4D80] hover:text-[#E11D48] cursor-pointer"
                   >
                     Lihat Semua
@@ -1466,6 +1720,305 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
         </div>
       )}
     
+      {/* Modal Jadwal Imunisasi Lengkap Sesuai Usia */}
+      {showAllJadwalImunisasi && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-4 border-b border-slate-100 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <Calendar size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                    Jadwal Imunisasi Lengkap ({activeAnak?.nama || 'Anak'})
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Program Imunisasi Nasional (PIN) Kemenkes RI & Rekam Medis Posyandu
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowAllJadwalImunisasi(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer shrink-0"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Child Info Badge & Filter Tabs */}
+            <div className="space-y-3 shrink-0">
+              <div className="p-3 bg-pink-50/50 rounded-2xl border border-pink-100/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-4">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Nama Anak:</span>
+                    <span className="font-bold text-slate-800">{activeAnak?.nama || 'Anak'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Usia Saat Ini:</span>
+                    <span className="font-bold text-[#E11D48]">{activeAnak?.usia || '1 Tahun 2 bulan'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Tanggal Lahir:</span>
+                    <span className="font-medium text-slate-700">{formatTanggalIndo(activeAnak?.tgl_lahir || '2024-10-15')}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-pink-100 shadow-2xs">
+                  <Syringe size={14} className="text-[#E11D48]" />
+                  <span className="text-[11px] font-bold text-slate-700">
+                    {getJadwalLengkapImunisasi().filter(v => v.status === 'Selesai').length} dari {getJadwalLengkapImunisasi().length} Imunisasi Selesai
+                  </span>
+                </div>
+              </div>
+
+              {/* Status Filter Tabs */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {['Semua', 'Selesai', 'Akan Datang'].map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setFilterStatusJadwal(st)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      filterStatusJadwal === st
+                        ? 'bg-[#E11D48] text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {st === 'Semua' ? `Semua (${getJadwalLengkapImunisasi().length})` :
+                     st === 'Selesai' ? `Sudah Diberikan (${getJadwalLengkapImunisasi().filter(v => v.status === 'Selesai').length})` :
+                     `Akan Datang (${getJadwalLengkapImunisasi().filter(v => v.status === 'Akan Datang').length})`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* List Jadwal Vaksin */}
+            <div className="space-y-3 overflow-y-auto pr-1 flex-1">
+              {getJadwalLengkapImunisasi()
+                .filter(v => filterStatusJadwal === 'Semua' || v.status === filterStatusJadwal)
+                .map((vaksin) => (
+                  <div 
+                    key={vaksin.id}
+                    className="p-4 rounded-2xl border border-slate-100 bg-white hover:border-pink-200 transition-all shadow-2xs space-y-2.5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        {vaksin.status === 'Selesai' ? (
+                          <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                            <CheckCircle2 size={18} />
+                          </div>
+                        ) : (
+                          <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                            <Clock size={18} />
+                          </div>
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-sm font-bold text-slate-900">{vaksin.nama_vaksin}</h4>
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-pink-50 text-[#E11D48] border border-pink-100">
+                              {vaksin.jadwal_usia}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                            {vaksin.keterangan}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 whitespace-nowrap ${
+                        vaksin.status === 'Selesai' 
+                          ? 'bg-[#DCFCE7] text-[#15803D]' 
+                          : 'bg-amber-50 text-amber-700 border border-amber-200'
+                      }`}>
+                        {vaksin.status}
+                      </span>
+                    </div>
+
+                    {/* Metadata Detail Row */}
+                    <div className="p-3 bg-slate-50/70 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-slate-600">
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">Tanggal:</span>
+                        <span className="font-semibold text-slate-800">
+                          {vaksin.status === 'Selesai' 
+                            ? (vaksin.tanggal_diberikan || '15 Jul 2025')
+                            : (vaksin.tanggal_rencana || 'Sesuai Jadwal Posyandu')}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">Lokasi Faskes:</span>
+                        <span className="font-semibold text-slate-800">{vaksin.lokasi}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">Petugas / Batch:</span>
+                        <span className="font-semibold text-slate-800">
+                          {vaksin.petugas} {vaksin.no_batch_vaksin !== '-' ? `(${vaksin.no_batch_vaksin})` : ''}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
+              <a
+                href="https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-[#E11D48] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <BookOpen size={14} />
+                <span>Lihat Jadwal Resmi Buku KIA 2024</span>
+                <ExternalLink size={12} />
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowAllJadwalImunisasi(false)}
+                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Panduan & Tips Setelah Imunisasi (KIPI) Buku KIA 2024 */}
+      {showAllTipsImunisasi && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-4 border-b border-slate-100 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <Zap size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                    Panduan & Tips Perawatan Setelah Imunisasi (KIPI)
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Rangkuman Resmi Buku KIA Kemenkes RI 2024 & Panduan Komnas PP-KIPI
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowAllTipsImunisasi(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer shrink-0"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Quick Banner PDF Buku KIA */}
+            <div className="p-3.5 bg-gradient-to-r from-pink-50 via-rose-50 to-pink-50 rounded-2xl border border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <BookOpen size={18} className="text-[#E11D48] shrink-0" />
+                <div>
+                  <span className="text-xs font-bold text-slate-900 block">Dokumen Resmi Buku KIA 2024</span>
+                  <span className="text-[11px] text-slate-500">Materi lengkap Kejadian Ikutan Pasca Imunisasi (KIPI) dari Kementerian Kesehatan RI</span>
+                </div>
+              </div>
+              <a
+                href="https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-[#E11D48] hover:bg-[#BE185D] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer shrink-0"
+              >
+                <Download size={13} />
+                <span>Buka PDF Buku KIA</span>
+                <ExternalLink size={12} />
+              </a>
+            </div>
+
+            {/* Filter Kategori Tips */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none shrink-0">
+              {['Semua', 'Perawatan di Rumah', 'Reaksi Normal', 'Tanda Bahaya KIPI'].map((kat) => (
+                <button
+                  key={kat}
+                  type="button"
+                  onClick={() => setFilterKategoriTips(kat)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    filterKategoriTips === kat
+                      ? 'bg-[#E11D48] text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {kat === 'Semua' ? `Semua Tips (${tipsKipiList.length})` :
+                   kat === 'Perawatan di Rumah' ? `Perawatan di Rumah (${tipsKipiList.filter(t => t.kategori === 'Perawatan di Rumah').length})` :
+                   kat === 'Reaksi Normal' ? `Reaksi Normal (${tipsKipiList.filter(t => t.kategori === 'Reaksi Normal').length})` :
+                   `Tanda Bahaya (${tipsKipiList.filter(t => t.kategori === 'Tanda Bahaya KIPI').length})`}
+                </button>
+              ))}
+            </div>
+
+            {/* List Tips & Panduan */}
+            <div className="space-y-3 overflow-y-auto pr-1 flex-1">
+              {tipsKipiList
+                .filter(t => filterKategoriTips === 'Semua' || t.kategori === filterKategoriTips)
+                .map((tip) => (
+                  <div 
+                    key={tip.id}
+                    className={`p-4 rounded-2xl border transition-all space-y-2 ${
+                      tip.kategori === 'Tanda Bahaya KIPI'
+                        ? 'bg-rose-50/40 border-rose-200 hover:border-rose-300'
+                        : 'bg-white border-slate-100 hover:border-pink-200 shadow-2xs'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                          tip.kategori === 'Tanda Bahaya KIPI'
+                            ? 'bg-rose-100 text-rose-800 border-rose-200'
+                            : tip.kategori === 'Reaksi Normal'
+                            ? 'bg-blue-50 text-blue-700 border-blue-100'
+                            : 'bg-pink-50 text-[#E11D48] border-pink-100'
+                        }`}>
+                          {tip.kategori}
+                        </span>
+                        <h4 className="text-sm font-bold text-slate-900">{tip.title}</h4>
+                      </div>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 ${
+                        tip.urgensi.includes('BAHAYA') || tip.urgensi.includes('DARURAT')
+                          ? 'bg-red-600 text-white'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {tip.urgensi}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                      {tip.ringkasan}
+                    </p>
+
+                    <div className="p-3 bg-slate-50/80 rounded-xl text-xs text-slate-700 leading-relaxed">
+                      {tip.detail}
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
+              <div className="text-[11px] text-slate-500">
+                Puskesmas Manud Jaya: Hotline KIPI 24 Jam siap siaga
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAllTipsImunisasi(false)}
+                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal Input Penimbangan KMS Baru (PBI 02C) */}
       {isModalKmsOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
