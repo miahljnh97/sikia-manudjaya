@@ -25,15 +25,14 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
   const email = (user?.user?.email || user?.email || '').toLowerCase().trim();
   const nama = (user?.nama || '').toLowerCase().trim();
 
-    // Deteksi persona
-  const isIbuBalitaOnly = email === 'ibu.balita@manudjaya.id' || (email.includes('balita') && !email.includes('hamil')) || nama.includes('ratna');
-  const isIbuHamilOnly = email === 'ibu.hamil@manudjaya.id' || (email.includes('hamil') && !email.includes('anak') && !email.includes('balita')) || nama.includes('najwa');
-  const isIbuHamilBalita = email.includes('hamil.anak') || email === 'siti.aminah@manudjaya.id' || nama.includes('aminah') || (!isIbuBalitaOnly && !isIbuHamilOnly);
-  
-  // Nama default yang sesuai dengan rubrik desain Figma dashboard
-  const displayName = (user?.nama && user.nama !== 'Ibu Ratna' && !user.nama.toLowerCase().includes('ratna')) 
-    ? user.nama 
-    : 'Siti Aminah';
+    // Deteksi persona murni dari role dan email (tanpa hardcode nama)
+  const userRole = (user?.role || '').toLowerCase().trim();
+  const isIbuBalitaOnly = userRole === 'ibu balita' || email === 'ibu.balita@manudjaya.id' || (email.includes('balita') && !email.includes('hamil'));
+  const isIbuHamilOnly = userRole === 'ibu hamil' || email === 'ibu.hamil@manudjaya.id' || (email.includes('hamil') && !email.includes('anak') && !email.includes('balita'));
+  const isIbuHamilBalita = userRole === 'ibu hamil & balita' || email === 'ibu.hamil.anak@manudjaya.id' || email.includes('hamil.anak') || (!isIbuBalitaOnly && !isIbuHamilOnly);
+
+  // Tampilkan nama akun asli pengguna secara dinamis dari profil (bukan hardcoded)
+  const displayName = user?.nama || user?.user_metadata?.nama || (email ? email.split('@')[0] : 'Ibu');
 
   const ibuId = getPesertaIdFromUser(user) || (
     isIbuBalitaOnly ? 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73' :

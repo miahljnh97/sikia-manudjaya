@@ -18,21 +18,11 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
     return role || 'Kader Posyandu';
   };
 
-  const getDisplayName = () => {
-    if (userEmail === 'ibu.balita@manudjaya.id' || (userEmail.includes('balita') && !userEmail.includes('hamil')) || rawNama.toLowerCase().includes('ratna')) {
-      return 'Ibu Ratna';
-    }
-    if (userEmail === 'ibu.hamil@manudjaya.id' || (userEmail.includes('hamil') && !userEmail.includes('anak') && !userEmail.includes('balita')) || rawNama.toLowerCase().includes('najwa')) {
-      return 'Najwa Sihab';
-    }
-    if (userEmail.includes('hamil.anak') || userEmail.includes('siti.aminah') || rawNama.toLowerCase().includes('aminah')) {
-      return 'Siti Aminah';
-    }
-    return rawNama || (userEmail ? userEmail.split('@')[0] : 'Pengguna');
-  };
+  // Gunakan nama asli pengguna dari sesi profil, fallback ke username email
+  const displayName = rawNama || (userEmail ? userEmail.split('@')[0] : 'Pengguna');
 
   const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || userEmail.includes('ibu') || userEmail.includes('hamil') || userEmail.includes('balita');
-  const displayName = getDisplayName();
+  // displayName sudah didefinisikan secara dinamis
   const roleName = getNormalizedRole(user?.role, userEmail);
 
   // State Notifikasi dengan LocalStorage Persistence
@@ -216,7 +206,7 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
               {isIbuRole ? (
                 <img 
                   src={
-                    (userEmail.includes('balita') || rawNama.toLowerCase().includes('ratna'))
+                    (userEmail.includes('balita') || (user?.role || '').toLowerCase().includes('balita'))
                       ? "/images/ibu-balita-avatar.png"
                       : (userEmail.includes('hamil') && !userEmail.includes('anak'))
                       ? "/images/najwa-avatar.png"

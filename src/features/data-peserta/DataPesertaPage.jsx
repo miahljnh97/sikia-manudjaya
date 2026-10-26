@@ -69,7 +69,8 @@ export default function DataPesertaPage({
   }, []);
 
   // Jika user adalah Ibu Balita, ambil data pribadinya dari database Supabase
-  const ibuSelfData = listPeserta.find((p) => p.user_id === currentUser?.user?.id || p.nama.toLowerCase().includes('aminah')) || listPeserta[0] || null;
+  const targetId = currentUser?.peserta_id || currentUser?.user?.id || currentUser?.id;
+  const ibuSelfData = listPeserta.find((p) => p.user_id === currentUser?.user?.id || p.id === targetId) || listPeserta[0] || null;
 
   // Ekstrak ID dari path jika URL berbentuk /data-peserta/detail/:id
   const getPesertaIdFromPath = (path) => {

@@ -113,9 +113,10 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
   useEffect(() => {
     const email = (user?.user?.email || user?.email || '').toLowerCase().trim();
     const nama = (user?.nama || '').toLowerCase().trim();
-    const isIbuHamilOnly = email === 'ibu.hamil@manudjaya.id' || (email.includes('hamil') && !email.includes('anak') && !email.includes('balita')) || nama.includes('najwa');
-    const isIbuBalitaOnly = email === 'ibu.balita@manudjaya.id' || (email.includes('balita') && !email.includes('hamil')) || nama.includes('ratna');
-    const isIbuHamilBalita = email.includes('hamil.anak') || email.includes('siti.aminah') || nama.includes('aminah');
+    const userRole = (user?.role || '').toLowerCase().trim();
+    const isIbuBalitaOnly = userRole === 'ibu balita' || email === 'ibu.balita@manudjaya.id' || (email.includes('balita') && !email.includes('hamil'));
+    const isIbuHamilOnly = userRole === 'ibu hamil' || email === 'ibu.hamil@manudjaya.id' || (email.includes('hamil') && !email.includes('anak') && !email.includes('balita'));
+    const isIbuHamilBalita = userRole === 'ibu hamil & balita' || email === 'ibu.hamil.anak@manudjaya.id' || email.includes('hamil.anak') || (!isIbuBalitaOnly && !isIbuHamilOnly);
 
     // Jika akun Ibu Hamil Saja (Najwa Sihab), belum memiliki anak terdaftar di sistem
     if (isIbuRole && isIbuHamilOnly) {
@@ -131,13 +132,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
       if (list && list.length > 0) {
         let myChildren = list;
         if (isIbuRole) {
-          if (isIbuBalitaOnly) {
-            myChildren = list.filter(c => (c.nama || '').toLowerCase().includes('alya') || String(c.ibu_id) === String(targetIbuId));
-          } else if (isIbuHamilBalita) {
-            myChildren = list.filter(c => (c.nama || '').toLowerCase().includes('dian') || String(c.ibu_id) === String(targetIbuId));
-          } else {
-            myChildren = list.filter(c => !c.ibu_id || String(c.ibu_id) === String(targetIbuId));
-          }
+          myChildren = list.filter(c => !c.ibu_id || String(c.ibu_id) === String(targetIbuId));
         }
         const effectiveList = (isIbuRole && myChildren.length > 0) ? myChildren : (isIbuRole ? [] : list);
         if (effectiveList.length > 0) {

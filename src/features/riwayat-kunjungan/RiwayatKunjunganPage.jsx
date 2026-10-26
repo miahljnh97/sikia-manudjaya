@@ -61,9 +61,16 @@ export default function RiwayatKunjunganPage({ currentUser }) {
 
   const filteredList = useMemo(() => {
     return riwayatList.filter((item) => {
-      // Role Privacy
-      if (isIbuRole && item.nama !== 'Siti Aminah') {
-        return false;
+      // Role Privacy: Hanya tampilkan rekam jejak milik ibu yang sedang login
+      if (isIbuRole) {
+        const myName = (currentUser?.nama || '').toLowerCase().trim();
+        const myId = currentUser?.peserta_id || currentUser?.id;
+        const itemPesertaId = item.peserta_id || item.pesertaId || item.id;
+        const matchesId = myId && itemPesertaId && String(myId) === String(itemPesertaId);
+        const matchesName = myName && item.nama && item.nama.toLowerCase().trim() === myName;
+        if (!matchesId && !matchesName) {
+          return false;
+        }
       }
 
       // Filter Pencarian (nama, NIK, No Registrasi)
