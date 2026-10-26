@@ -28,7 +28,8 @@ import {
   Download,
   Clock,
   AlertTriangle,
-  Check
+  Check,
+  ClipboardCheck
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
@@ -557,6 +558,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
           <p className="text-xs text-slate-500 font-medium mt-1">
             {activeSub === 'Perkembangan'
               ? 'Pantau tumbuh kembang anak sesuai tahap usianya dengan panduan buku KIA'
+              : activeSub === 'Imunisasi'
+              ? 'Pantau jadwal, riwayat, dan status imunisasi anak sesuai dengan panduan Buku KIA'
               : 'Pantau pertumbuhan dan perkembangan anak sesuai panduan buku KIA'}
           </p>
         </div>
@@ -1402,244 +1405,262 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
       )}
 
       {/* =====================================================================
-          SUB-PAGE 3: IMUNISASI (Image 3)
+          SUB-PAGE 3: IMUNISASI (Image 3 - Sesuai Figma QA)
       ====================================================================== */}
-      {activeSub === 'Imunisasi' && (
-        <div className="space-y-6">
-          {/* Top Card: Profil Anak Dian Pranata */}
-          <div className="bg-gradient-to-r from-[#FFF0F4] via-[#FFE4EC] to-[#FFD6E4] border border-pink-200/70 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-white shadow-xs overflow-hidden shrink-0">
-                <img 
-                  src="/images/farhan-avatar.png" 
-                  alt={activeAnak?.nama || 'Anak'} 
-                  className="w-full h-full object-cover"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              </div>
+      {activeSub === 'Imunisasi' && (() => {
+        const defaultJadwalRingkas = [
+          { nama_vaksin: 'Hepatitis B', jadwal_usia: 'Usia 0–7 Hari', tanggal_diberikan: '20 Feb 2026', status: 'Selesai' },
+          { nama_vaksin: 'BCG', jadwal_usia: 'Usia 1 Bulan', tanggal_diberikan: '20 Feb 2026', status: 'Selesai' },
+          { nama_vaksin: 'Polio 1', jadwal_usia: 'Usia 0–7 Hari', tanggal_diberikan: '20 Feb 2026', status: 'Selesai' },
+          { nama_vaksin: 'Polio 2', jadwal_usia: 'Usia 0–7 Hari', tanggal_diberikan: '20 Feb 2026', status: 'Selesai' }
+        ];
 
-              <div>
-                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-                  {activeAnak?.nama || 'Anak'}
-                </h2>
-                <p className="text-xs font-bold text-[#E11D48] mt-0.5">
-                  1 Tahun 2 bulan
-                </p>
-                <p className="text-[11px] text-slate-500 font-medium mt-1">
-                  {activeAnak?.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki – Laki'} &nbsp;{activeAnak?.tgl_lahir || '20 Desember 2024'}
-                </p>
-              </div>
-            </div>
+        const displayJadwalRingkas = daftarImunisasi.length > 0
+          ? daftarImunisasi.slice(0, 4).map(i => ({
+              nama_vaksin: i.nama_vaksin ? i.nama_vaksin.replace(/\s*\(.*?\)/g, '') : 'Hepatitis B',
+              jadwal_usia: i.jadwal_usia ? (i.jadwal_usia.toLowerCase().startsWith('usia') ? i.jadwal_usia : 'Usia ' + i.jadwal_usia) : 'Usia 0–7 Hari',
+              tanggal_diberikan: formatTanggalIndo(i.tanggal_diberikan) || '20 Feb 2026',
+              status: i.status || 'Selesai'
+            }))
+          : defaultJadwalRingkas;
 
-            {/* 2 Quick Cards di Kanan */}
-            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-              {/* Card 1: Imunisasi Selesai */}
-              <div className="bg-white/90 rounded-2xl p-3.5 px-4 border border-pink-100 flex items-center gap-3 flex-1 sm:flex-none">
-                <Syringe size={18} className="text-[#E11D48]" />
-                <div>
-                  <span className="text-[10px] text-slate-400 font-medium block">Imunisasi Selesai</span>
-                  <span className="text-xs sm:text-sm font-bold text-slate-900">{daftarImunisasi.length > 0 ? `${daftarImunisasi.filter(i => i.status === 'Selesai').length} / ${daftarImunisasi.length}` : '7 / 9'}</span>
+        const defaultRiwayatImunisasi = [
+          { no: 1, tanggal: '12 Sep 2026', usia: '14 Bulan', jenis: 'DPT-HB-Hb 3', lokasi: 'Puskesmas Maju Jaya', petugas: 'Bidan Sari' },
+          { no: 1, tanggal: '12 Sep 2026', usia: '14 Bulan', jenis: 'DPT-HB-Hb 3', lokasi: 'Puskesmas Maju Jaya', petugas: 'Bidan Sari' }
+        ];
+
+        const riwayatSelesai = daftarImunisasi.filter(i => i.status === 'Selesai' || i.tanggal_diberikan);
+        const displayRiwayatImunisasi = riwayatSelesai.length > 0
+          ? riwayatSelesai.map((vax, idx) => ({
+              no: idx + 1,
+              tanggal: formatTanggalIndo(vax.tanggal_diberikan) || vax.tanggal_diberikan || '12 Sep 2026',
+              usia: vax.jadwal_usia || '14 Bulan',
+              jenis: vax.nama_vaksin || 'DPT-HB-Hb 3',
+              lokasi: vax.lokasi || 'Puskesmas Maju Jaya',
+              petugas: vax.petugas || 'Bidan Sari'
+            }))
+          : defaultRiwayatImunisasi;
+
+        return (
+          <div className="space-y-6">
+            {/* Top Card: Profil Anak (Sesuai Expected Result Figma QA) */}
+            <div className="bg-[#FFF0F4] border border-pink-100 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+              <div className="flex items-center gap-4.5">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-pink-200 overflow-hidden shrink-0 bg-white p-0.5 shadow-2xs">
+                  <img 
+                    src="/images/farhan-avatar.png" 
+                    alt={activeAnak?.nama || 'Farhan'} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.src = '/images/anak-pertumbuhan.png'; }}
+                  />
+                </div>
+
+                <div className="space-y-0.5">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                    {activeAnak?.nama || 'Farhan'}
+                  </h2>
+                  <p className="text-xs font-bold text-[#E11D48] mt-0.5">
+                    1 Tahun 2 bulan
+                  </p>
+                  <p className="text-[11px] text-slate-500 font-medium mt-1">
+                    {activeAnak?.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki – Laki'} &nbsp;{formatTanggalIndo(activeAnak?.tgl_lahir) || '20 Desember 2026'}
+                  </p>
                 </div>
               </div>
 
-              {/* Card 2: Status Imunisasi */}
-              <div className="bg-white/90 rounded-2xl p-3.5 px-4 border border-pink-100 flex items-center gap-3 flex-1 sm:flex-none">
-                <CheckCircle2 size={18} className="text-emerald-500" />
-                <div>
-                  <span className="text-[10px] text-slate-400 font-medium block">Status Imunisasi</span>
-                  <span className="text-xs sm:text-sm font-bold text-emerald-600">Sesuai Jadwal</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Baris Tengah: Jadwal Imunisasi Sesuai Usia & Tips Imunisasi */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Kolom Kiri: Jadwal Imunisasi Sesuai Usia */}
-            <div className="lg:col-span-5 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-900">Jadwal Imunisasi Sesuai Usia</h3>
-                <button 
-                  type="button"
-                  onClick={() => setShowAllJadwalImunisasi(true)}
-                  className="text-xs font-semibold text-[#FF4D80] hover:text-[#E11D48] cursor-pointer"
-                >
-                  Lihat Semua
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {(daftarImunisasi.length > 0 ? daftarImunisasi : [
-                  { nama_vaksin: 'Hepatitis B (HB0)', jadwal_usia: '0 - 24 Jam', tanggal_diberikan: '15 Jul 2025', status: 'Selesai' },
-                  { nama_vaksin: 'BCG', jadwal_usia: '1 Bulan', tanggal_diberikan: '14 Agu 2025', status: 'Selesai' },
-                  { nama_vaksin: 'Polio Tetes 1', jadwal_usia: '1 Bulan', tanggal_diberikan: '14 Agu 2025', status: 'Selesai' },
-                  { nama_vaksin: 'Polio Tetes 2', jadwal_usia: '2 Bulan', tanggal_diberikan: '18 Sep 2025', status: 'Selesai' },
-                ]).map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/70 border border-slate-100 group hover:border-pink-200 transition-all cursor-pointer">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2 size={18} className={item.status === 'Selesai' ? 'text-emerald-500 fill-emerald-100 shrink-0' : 'text-slate-300 shrink-0'} />
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">{item.nama_vaksin}</h4>
-                        <span className="text-[10px] text-slate-400 font-medium">{item.jadwal_usia}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        item.status === 'Selesai' ? 'bg-[#DCFCE7] text-[#15803D]' : 'bg-amber-50 text-amber-700'
-                      }`}>
-                        {item.status}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-medium">{item.tanggal_diberikan || 'Akan Datang'}</span>
-                      <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Kolom Kanan: Detail Campak Rubella & Tips Setelah Imunisasi */}
-            <div className="lg:col-span-7 space-y-4">
-              {/* 2 Kartu Atas: Jadwal Campak & Manfaat */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex items-start gap-3.5">
-                  <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                    <Calendar size={18} />
-                  </div>
+              {/* 2 Quick Cards di Kanan */}
+              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                {/* Card 1: Imunisasi Selesai */}
+                <div className="bg-white rounded-2xl p-4 border border-pink-100/80 shadow-xs flex items-center gap-3.5 flex-1 sm:flex-none min-w-[150px]">
+                  <Syringe size={22} className="text-[#FF168B] shrink-0" />
                   <div>
-                    <span className="text-[10px] text-slate-400 font-medium block">Campak Rubella</span>
-                    <span className="text-xs sm:text-sm font-bold text-[#E11D48] leading-tight block mt-0.5">
-                      20 Desember 2026
+                    <span className="text-[10px] text-slate-500 font-medium block">Imunisasi Selesai</span>
+                    <span className="text-base sm:text-lg font-extrabold text-slate-900 block leading-tight">
+                      {daftarImunisasi.length > 0 ? `${daftarImunisasi.filter(i => i.status === 'Selesai').length} / ${daftarImunisasi.length}` : '7/9'}
                     </span>
                   </div>
                 </div>
 
-                <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex items-start gap-3.5">
-                  <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                    <Heart size={18} />
-                  </div>
+                {/* Card 2: Status Imunisasi */}
+                <div className="bg-white rounded-2xl p-4 border border-pink-100/80 shadow-xs flex items-center gap-3.5 flex-1 sm:flex-none min-w-[160px]">
+                  <ClipboardCheck size={22} className="text-[#FF168B] shrink-0" />
                   <div>
-                    <span className="text-[10px] text-slate-400 font-medium block">Manfaat</span>
-                    <p className="text-[11px] text-slate-600 leading-snug mt-0.5">
-                      Melindungi anak dari penyakit campak dan rubella yang dapat menyebabkan komplikasi serius
-                    </p>
+                    <span className="text-[10px] text-slate-500 font-medium block">Status Imunisasi</span>
+                    <span className="text-xs sm:text-sm font-bold text-emerald-600 block leading-tight">
+                      Sesuai Jadwal
+                    </span>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Tips Setelah Imunisasi */}
-              <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
+            {/* Baris Tengah: Jadwal Imunisasi Sesuai Usia & Tips Imunisasi */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Kolom Kiri: Jadwal Imunisasi Sesuai Usia */}
+              <div className="lg:col-span-5 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-900">Tips Setelah Imunisasi</h3>
+                  <h3 className="text-sm font-bold text-slate-900">Jadwal Imunisasi Sesuai Usia</h3>
                   <button 
                     type="button"
-                    onClick={() => setShowAllTipsImunisasi(true)}
-                    className="text-xs font-semibold text-[#FF4D80] hover:text-[#E11D48] cursor-pointer"
+                    onClick={() => setShowAllJadwalImunisasi(true)}
+                    className="text-xs font-semibold text-[#FF168B] hover:text-[#E11D48] cursor-pointer"
                   >
                     Lihat Semua
                   </button>
                 </div>
 
+                <div className="space-y-3.5">
+                  {displayJadwalRingkas.map((item, idx) => (
+                    <div 
+                      key={idx} 
+                      onClick={() => setShowAllJadwalImunisasi(true)}
+                      className="flex items-center justify-between py-1 group cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                          <Check size={12} className="stroke-[3]" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#FF168B] transition-colors">{item.nama_vaksin}</h4>
+                          <span className="text-[10px] text-slate-400 font-medium block">{item.jadwal_usia}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2.5">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#DCFCE7] text-[#15803D]">
+                          {item.status || 'Selesai'}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">{item.tanggal_diberikan || '20 Feb 2026'}</span>
+                        <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600 shrink-0" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Kolom Kanan: Detail Campak Rubella & Tips Setelah Imunisasi */}
+              <div className="lg:col-span-7 space-y-4">
+                {/* 2 Kartu Atas: Jadwal Campak & Manfaat */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Tip 1 */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-pink-50 text-[#FF4D80] flex items-center justify-center shrink-0 mt-0.5">
-                      <Zap size={14} />
-                    </div>
+                  <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex items-start gap-3.5">
+                    <Calendar size={22} className="text-[#8B5CF6] shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-xs font-bold text-slate-900">Berikan ASI lebih sering</h4>
-                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">Membantu menenangkan anak.</p>
+                      <span className="text-xs font-bold text-slate-800 block">Campak Rubella</span>
+                      <span className="text-sm font-bold text-[#FF168B] leading-tight block mt-0.5">
+                        20 Desember 2026
+                      </span>
                     </div>
                   </div>
 
-                  {/* Tip 2 */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-pink-50 text-[#FF4D80] flex items-center justify-center shrink-0 mt-0.5">
-                      <Zap size={14} />
-                    </div>
+                  <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex items-start gap-3.5">
+                    <Heart size={22} className="text-[#8B5CF6] shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-xs font-bold text-slate-900">Segera ke Faskes</h4>
-                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">Jika demam tinggi, kejang atau reaksi berat lainnya</p>
+                      <span className="text-xs font-bold text-slate-800 block">Manfaat</span>
+                      <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
+                        Melindungi anak dari penyakit campak dan rubella yang dapat menyebabkan komplikasi serius
+                      </p>
                     </div>
                   </div>
+                </div>
 
-                  {/* Tip 3 */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-pink-50 text-[#FF4D80] flex items-center justify-center shrink-0 mt-0.5">
-                      <Zap size={14} />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-900">Kompres hangat jika demam</h4>
-                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">Rekomendasi pemberian makan sesuai usia anak</p>
-                    </div>
+                {/* Tips Setelah Imunisasi */}
+                <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-slate-900">Tips Setelah Imunisasi</h3>
+                    <button 
+                      type="button"
+                      onClick={() => setShowAllTipsImunisasi(true)}
+                      className="text-xs font-semibold text-[#FF168B] hover:text-[#E11D48] cursor-pointer"
+                    >
+                      Lihat Semua
+                    </button>
                   </div>
 
-                  {/* Tip 4 */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-pink-50 text-[#FF4D80] flex items-center justify-center shrink-0 mt-0.5">
-                      <Zap size={14} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 pt-1">
+                    {/* Tip 1 */}
+                    <div className="flex items-start gap-3">
+                      <Clock size={18} className="text-[#FF168B] shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900">Berikan ASI lebih sering</h4>
+                        <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">Membantu menenangkan anak.</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-900">Pantau Suhu tubuh Anak</h4>
-                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">Demam ringan adalah hal yang umum setelah imunisasi</p>
+
+                    {/* Tip 2 */}
+                    <div className="flex items-start gap-3">
+                      <Clock size={18} className="text-[#FF168B] shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900">Segera ke Faskes</h4>
+                        <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">Jika demam tinggi, kejang atau reaksi berat lainnya</p>
+                      </div>
+                    </div>
+
+                    {/* Tip 3 */}
+                    <div className="flex items-start gap-3">
+                      <Clock size={18} className="text-[#FF168B] shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900">Kompres hangat jika demam</h4>
+                        <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">Rekomendasi pemberian makan sesuai usia anak</p>
+                      </div>
+                    </div>
+
+                    {/* Tip 4 */}
+                    <div className="flex items-start gap-3">
+                      <Clock size={18} className="text-[#FF168B] shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900">Pantau Suhu tubuh Anak</h4>
+                        <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">Demam ringan adalah hal yang umum setelah imunisasi</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Tabel: Riwayat Imunisasi */}
-          <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-xs">
-            <div className="p-6 border-b border-slate-50">
-              <h3 className="text-sm font-bold text-slate-900">Riwayat Imunisasi</h3>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-[#FFE4EC]/70 text-slate-800 font-bold border-b border-pink-100">
-                    <th className="py-3 px-4 w-12 text-center">No</th>
-                    <th className="py-3 px-4 w-32">Tanggal</th>
-                    <th className="py-3 px-4 w-28">Usia</th>
-                    <th className="py-3 px-4">Jenis Imunisasi</th>
-                    <th className="py-3 px-4">Lokasi</th>
-                    <th className="py-3 px-4">Petugas</th>
-                    <th className="py-3 px-4 w-20 text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {(daftarImunisasi.filter(i => i.status === 'Selesai').length > 0 
-                    ? daftarImunisasi.filter(i => i.status === 'Selesai')
-                    : [
-                        { nama_vaksin: 'Hepatitis B (HB0)', tanggal_diberikan: '2025-07-15', jadwal_usia: '0 - 24 Jam', lokasi: 'Puskesmas Manud Jaya', petugas: 'Bidan Siti, S.Tr.Keb', no_batch_vaksin: 'HB-2025-01' },
-                        { nama_vaksin: 'BCG', tanggal_diberikan: '2025-08-14', jadwal_usia: '1 Bulan', lokasi: 'Puskesmas Manud Jaya', petugas: 'Bidan Siti, S.Tr.Keb', no_batch_vaksin: 'BCG-2025-08' }
-                      ]
-                  ).map((vax, idx) => (
-                    <tr key={vax.id || idx} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3.5 px-4 text-center font-medium">{idx + 1}</td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-900">{vax.tanggal_diberikan || '-'}</td>
-                      <td className="py-3.5 px-4 text-slate-600">{vax.jadwal_usia}</td>
-                      <td className="py-3.5 px-4 font-bold text-slate-900">{vax.nama_vaksin}</td>
-                      <td className="py-3.5 px-4 text-slate-600">{vax.lokasi || 'Puskesmas Manud Jaya'}</td>
-                      <td className="py-3.5 px-4 text-slate-600">{vax.petugas || 'Bidan Siti'}</td>
-                      <td className="py-3.5 px-4 text-center">
-                        <button
-                          type="button"
-                          onClick={() => onShowToast && onShowToast(`Detail vaksin: ${vax.nama_vaksin} No. Batch ${vax.no_batch_vaksin || '-'}, kondisi anak sehat pasca vaksinasi.`, 'info')}
-                          className="text-xs font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
-                        >
-                          Detail
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {/* Tabel: Riwayat Imunisasi */}
+            <div className="space-y-3">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900">Riwayat Imunisasi</h3>
+              <div className="bg-white border border-pink-100/60 rounded-3xl overflow-hidden shadow-xs">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-[#FFE8EF] text-slate-900 font-bold border-b border-pink-100">
+                        <th className="py-3 px-4 w-12 text-center">No</th>
+                        <th className="py-3 px-4 w-32">Tanggal</th>
+                        <th className="py-3 px-4 w-28">Usia</th>
+                        <th className="py-3 px-4">Jenis Imunisasi</th>
+                        <th className="py-3 px-4">Lokasi</th>
+                        <th className="py-3 px-4">Petugas</th>
+                        <th className="py-3 px-4 w-20 text-center">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                      {displayRiwayatImunisasi.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-pink-50/20 transition-colors">
+                          <td className="py-3.5 px-4 text-center font-medium text-slate-700">{row.no || idx + 1}</td>
+                          <td className="py-3.5 px-4 font-semibold text-slate-900">{row.tanggal}</td>
+                          <td className="py-3.5 px-4 text-slate-600">{row.usia}</td>
+                          <td className="py-3.5 px-4 font-bold text-slate-900">{row.jenis}</td>
+                          <td className="py-3.5 px-4 text-slate-600">{row.lokasi}</td>
+                          <td className="py-3.5 px-4 text-slate-600">{row.petugas}</td>
+                          <td className="py-3.5 px-4 text-center">
+                            <button
+                              type="button"
+                              onClick={() => onShowToast && onShowToast(`Detail vaksin: ${row.jenis} tanggal ${row.tanggal} di ${row.lokasi} oleh ${row.petugas}.`, 'info')}
+                              className="text-xs font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
+                            >
+                              Detail
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
+        );
+      })()}
       {/* =====================================================================
           SUB-PAGE 4: PEMERIKSAAN ANAK
       ====================================================================== */}
