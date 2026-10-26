@@ -26,7 +26,9 @@ import { maskNik } from '../../utils/nikUtils';
 import { formatTanggalIndo } from '../../utils/dateUtils';
 
 export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate, onShowToast }) {
-  const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || (user?.email || '').toLowerCase().includes('ibu');
+  const role = (user?.role || user?.user?.role || '').toLowerCase();
+  const email = (user?.email || user?.user?.email || '').toLowerCase();
+  const isIbuRole = role.includes('ibu') || email.includes('ibu') || role === 'pasien';
 
   // Helper ekstrak ID dari URL path atau query string (?peserta_id=... atau /pemeriksaan/:id)
   const extractPesertaId = () => {
@@ -290,10 +292,10 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-            Kesehatan Ibu / Pemeriksaan (ANC)
+            Kesehatan Ibu / Pemeriksaan
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-1">
-            Pantau rekam medis pemeriksaan kehamilan berkala sesuai Buku KIA
+            Pantau riwayat pemeriksaan kehamilan dan kondisi ibu secara menyeluruh
           </p>
         </div>
 
@@ -441,19 +443,18 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
       <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-xs">
         <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Riwayat Pemeriksaan ANC ({namaPasien})</h3>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              Daftar rekam medis kehamilan khusus untuk <strong>{namaPasien}</strong> (ID: {activePesertaId.slice(0, 8)}...)
-            </p>
+            <h3 className="text-sm font-bold text-slate-900">Riwayat Pemeriksaan</h3>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsModalTambahOpen(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
-          >
-            <Plus size={15} />
-            <span>Catat Pemeriksaan</span>
-          </button>
+          {!isIbuRole && (
+            <button
+              type="button"
+              onClick={() => setIsModalTambahOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
+            >
+              <Plus size={15} />
+              <span>Catat Pemeriksaan</span>
+            </button>
+          )}
         </div>
 
         <div className="overflow-x-auto">
