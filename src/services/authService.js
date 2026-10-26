@@ -18,7 +18,7 @@ export const authService = {
     if ((lowerEmail === DUMMY_ACCOUNTS.ibu_balita?.email || lowerEmail === 'ibu.balita@manudjaya.id') && password === 'Ibu123!') {
       return { 
         user: { email, id: DUMMY_ACCOUNTS.ibu_balita.peserta_id }, 
-        ...DUMMY_ACCOUNTS.ibu_balita 
+        ...DUMMY_ACCOUNTS.ibu_balita, nama: 'Siti Aminah' 
       };
     }
     if ((lowerEmail === DUMMY_ACCOUNTS.ibu_hamil_anak?.email || lowerEmail === 'ibu.hamil.anak@manudjaya.id' || lowerEmail === 'siti.aminah@manudjaya.id') && password === 'Ibu123!') {
@@ -93,7 +93,7 @@ export const authService = {
             userName = userName || DUMMY_ACCOUNTS.ibu_hamil?.nama || 'Siti Aminah';
           } else if (lowerEmail.includes('ibu') || lowerEmail === DUMMY_ACCOUNTS.ibu_balita?.email) {
             userRole = userRole || 'Ibu Balita';
-            userName = userName || DUMMY_ACCOUNTS.ibu_balita?.nama || 'Ibu Ratna';
+            userName = 'Siti Aminah';
           } else if (lowerEmail.includes('kader') || lowerEmail === DUMMY_ACCOUNTS.kader.email) {
             userRole = userRole || 'Kader Posyandu';
             userName = userName || DUMMY_ACCOUNTS.kader.nama;

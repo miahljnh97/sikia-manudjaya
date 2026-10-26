@@ -58,11 +58,120 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
     return isIbuRole ? (getPesertaIdFromUser(user) || '55af67c9-6695-4435-b4ea-2720efd73c92') : null;
   };
 
+  const defaultAncList = [
+    {
+      no: 1,
+      id: 'anc-1',
+      tanggal: '15 Jan 2026',
+      usiaKehamilan: '8 Minggu',
+      jenis: 'ANC 1',
+      hasil: 'Normal',
+      catatan: 'Keluhan mual, diberikan edukasi gizi',
+      tekananDarah: '110/70 mmHg',
+      beratBadan: '58 kg',
+      tinggiFundus: '12 cm',
+      djj: '140 x/menit',
+      petugas: 'Bidan Siti Nurhayati'
+    },
+    {
+      no: 2,
+      id: 'anc-2',
+      tanggal: '12 Feb 2026',
+      usiaKehamilan: '12 Minggu',
+      jenis: 'ANC 2',
+      hasil: 'Normal',
+      catatan: 'Tidak ada keluhan khusus',
+      tekananDarah: '110/75 mmHg',
+      beratBadan: '59.5 kg',
+      tinggiFundus: '16 cm',
+      djj: '144 x/menit',
+      petugas: 'Bidan Siti Nurhayati'
+    },
+    {
+      no: 3,
+      id: 'anc-3',
+      tanggal: '14 Apr 2026',
+      usiaKehamilan: '20 Minggu',
+      jenis: 'ANC 3',
+      hasil: 'Normal',
+      catatan: 'Janin aktif bergerak',
+      tekananDarah: '115/75 mmHg',
+      beratBadan: '61 kg',
+      tinggiFundus: '20 cm',
+      djj: '142 x/menit',
+      petugas: 'Bidan Siti Nurhayati'
+    },
+    {
+      no: 4,
+      id: 'anc-4',
+      tanggal: '10 Jul 2026',
+      usiaKehamilan: '24 Minggu',
+      jenis: 'ANC 4',
+      hasil: 'Normal',
+      catatan: 'TD Sedikit tinggi, observasi',
+      tekananDarah: '125/80 mmHg',
+      beratBadan: '63 kg',
+      tinggiFundus: '24 cm',
+      djj: '140 x/menit',
+      petugas: 'Bidan Siti Nurhayati'
+    },
+    {
+      no: 5,
+      id: 'anc-5',
+      tanggal: '12 Sep 2026',
+      usiaKehamilan: '28 Minggu',
+      jenis: 'ANC 5',
+      hasil: 'Normal',
+      catatan: 'Pertumbuhan janin baik',
+      tekananDarah: '115/75 mmHg',
+      beratBadan: '64.5 kg',
+      tinggiFundus: '28 cm',
+      djj: '142 x/menit',
+      petugas: 'Bidan Siti Nurhayati'
+    }
+  ];
+
+  const defaultDokumenList = [
+    {
+      id: 'doc-1',
+      name: 'USH_12Sep2026.pdf',
+      type: 'Ultrasonografi (USG)',
+      tanggal: '12 Sep 2026',
+      size: '2.4 MB',
+      keterangan: 'Hasil USG Trimester 3: Janin tunggal hidup intrauterin, presentasi kepala, DJJ 142 bpm reguler, taksiran berat janin (TBJ) 2.100 gram, cairan ketuban cukup dan jernih.'
+    },
+    {
+      id: 'doc-2',
+      name: 'Hasil laboratorium.pdf',
+      type: 'Laboratorium Terpadu',
+      tanggal: '12 Sep 2026',
+      size: '1.8 MB',
+      keterangan: 'Pemeriksaan Darah Lengkap & Skrining: Hemoglobin (Hb) 12.0 g/dL, Golongan Darah O Rhesus (+), Glukosa Darah Puasa 88 mg/dL, Protein Urin Negatif, Skrining Triple Eliminasi (HIV, Sifilis, HBsAg) Non-Reaktif.'
+    },
+    {
+      id: 'doc-3',
+      name: 'USH_10Jul2026.pdf',
+      type: 'Ultrasonografi (USG)',
+      tanggal: '10 Jul 2026',
+      size: '2.1 MB',
+      keterangan: 'Hasil USG Trimester 2: Janin berkembang sesuai usia gestasi 24 minggu, anatomi janin dasar dalam batas normal, plasenta di korpus posterior jauh dari OUI.'
+    }
+  ];
+
+  const catatanTindakLanjutList = [
+    'Lanjutkan konsumsi tablet Fe dan asam folat',
+    'Jaga pola makan bergizi dan istirahat cukup',
+    'Kontrol kembali pada 10 Oktober 2026',
+    'Segera ke fasilitas kesehatan jika ada keluhan'
+  ];
+
   const [daftarIbu, setDaftarIbu] = useState([]);
   const [activePesertaId, setActivePesertaId] = useState(() => extractPesertaId() || '55af67c9-6695-4435-b4ea-2720efd73c92');
   const [peserta, setPeserta] = useState(null);
   const [kehamilan, setKehamilan] = useState(null);
-  const [riwayatList, setRiwayatList] = useState([]);
+  const [riwayatList, setRiwayatList] = useState(defaultAncList);
+  const [dokumenList, setDokumenList] = useState(defaultDokumenList);
+  const [selectedDokumen, setSelectedDokumen] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const [selectedPemeriksaan, setSelectedPemeriksaan] = useState(null);
@@ -144,11 +253,11 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
                 petugas: item.pemeriksa || 'Bidan Siti, S.Tr.Keb'
               })));
             } else {
-              setRiwayatList([]);
+              setRiwayatList(defaultAncList);
             }
           }
         } else {
-          if (isMounted) setRiwayatList([]);
+          if (isMounted) setRiwayatList(defaultAncList);
         }
       } catch (err) {
         console.error('Error fetching ANC data for mother:', err);
@@ -265,6 +374,17 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
       };
 
       setRiwayatList(prev => [...prev, newItem]);
+      if (uploadedFiles && uploadedFiles.length > 0) {
+        const newDocs = uploadedFiles.map(f => ({
+          id: f.id,
+          name: f.name,
+          type: 'Dokumen Tambahan',
+          tanggal: formatTanggalIndo(formAnc.tanggal_pemeriksaan),
+          size: f.size,
+          keterangan: formAnc.catatan_tindak_lanjut || 'Lampiran pemeriksaan rekam medis'
+        }));
+        setDokumenList(prev => [...newDocs, ...prev]);
+      }
       setIsModalTambahOpen(false);
       setUploadedFiles([]);
       onShowToast && onShowToast(`Pemeriksaan ${formAnc.kunjungan_ke} berhasil dicatat ke rekam medis!`, 'success');
@@ -276,17 +396,39 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
     }
   };
 
-  const handleDownload = (filename) => {
+  const handleDownloadDoc = (doc) => {
+    try {
+      const dummyContent = `%PDF-1.4\n% Dokumen Rekam Medis: ${doc.name}\nPasien: ${namaPasien}\nTanggal: ${doc.tanggal}\nKeterangan: ${doc.keterangan || ''}`;
+      const blob = new Blob([dummyContent], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
+    }
     if (onShowToast) {
-      onShowToast(`Dokumen "${filename}" berhasil diunduh.`, 'success');
+      onShowToast(`Dokumen "${doc.name}" berhasil diunduh.`, 'success');
     }
   };
 
+  const handleDownload = (filename) => {
+    handleDownloadDoc({ name: filename, tanggal: '12 Sep 2026', keterangan: '' });
+  };
+
   const namaPasien = peserta?.nama || 'Siti Aminah';
-  const nikPasien = peserta?.nik ? maskNik(peserta.nik) : '3201234567890001';
-  const usiaKehamilanStr = kehamilan?.usia_kehamilan_minggu 
-    ? `${kehamilan.usia_kehamilan_minggu} Minggu` 
-    : '28 Minggu';
+  const nikPasien = peserta?.nik || '293920102029029';
+  const noRekamMedis = peserta?.no_rekam_medis || peserta?.nik || '293920102029029';
+  const usiaPasien = peserta?.usia ? `${peserta.usia} Tahun` : '27 Tahun';
+  const usiaKehamilanStr = (() => {
+    const minggu = kehamilan?.usia_kehamilan_minggu || 28;
+    const hari = kehamilan?.usia_kehamilan_hari ? `${kehamilan.usia_kehamilan_hari} hari` : '3 hari';
+    return `${minggu} Minggu ${hari}`;
+  })();
   const hplStr = kehamilan?.hpl || '20 Desember 2026';
   const hphtStr = kehamilan?.hpht || '12 Februari 2026';
 
@@ -296,10 +438,10 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-            Kesehatan Ibu / Pemeriksaan (ANC)
+            Kesehatan Ibu / Pemeriksaan
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-1">
-            Pantau rekam medis pemeriksaan kehamilan berkala sesuai Buku KIA
+            Pantau riwayat pemeriksaan kehamilan dan kondisi ibu secara menyeluruh
           </p>
         </div>
 
@@ -328,7 +470,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
       {/* 2. Top Patient Card (Profil Terisolasi per ID) */}
       <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="flex items-center gap-4.5">
+          <div className="flex items-center gap-4.5 flex-1">
             <div className="w-16 h-16 rounded-full overflow-hidden bg-pink-100 border-2 border-pink-200 shrink-0">
               <img 
                 src="/images/siti-aminah-avatar.png" 
@@ -339,31 +481,41 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
                 }}
               />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900">{namaPasien}</h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-pink-50 text-pink-700 border border-pink-200">
-                  Ibu Hamil
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 mt-1.5 text-xs text-slate-600">
-                <div>
-                  <span className="text-slate-400">Nama:</span> <span className="font-semibold text-slate-800">{namaPasien}</span>
+            <div className="flex-1">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900">{namaPasien}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 lg:gap-x-12 gap-y-1.5 mt-2 text-xs">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-28 text-slate-400">Nama</span>
+                    <span className="font-semibold text-slate-800">{namaPasien}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-28 text-slate-400">NIK</span>
+                    <span className="font-semibold text-slate-800 font-mono">{nikPasien}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-28 text-slate-400">No Rekam Medis</span>
+                    <span className="font-semibold text-slate-800 font-mono">{noRekamMedis}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-28 text-slate-400">Usia</span>
+                    <span className="font-semibold text-slate-800">{usiaPasien}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-slate-400">Usia Kehamilan:</span> <span className="font-semibold text-slate-800">{usiaKehamilanStr}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">NIK:</span> <span className="font-semibold text-slate-800 font-mono">{nikPasien}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">HPHT:</span> <span className="font-semibold text-slate-800">{formatTanggalIndo(hphtStr)}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">ID Pasien:</span> <span className="font-semibold text-slate-800 font-mono text-[10px]">{activePesertaId.slice(0, 13)}...</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">Taksiran Persalinan:</span> <span className="font-semibold text-slate-800">{formatTanggalIndo(hplStr)}</span>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-36 text-slate-400">Usia Kehamilan</span>
+                    <span className="font-semibold text-slate-800">{usiaKehamilanStr}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-36 text-slate-400">HPHT</span>
+                    <span className="font-semibold text-slate-800">{formatTanggalIndo(hphtStr)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-36 text-slate-400">Taksiran Persalinan</span>
+                    <span className="font-semibold text-slate-800">{formatTanggalIndo(hplStr)}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -378,9 +530,9 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
                 onShowToast && onShowToast(`Membuka profil lengkap ${namaPasien}`, 'info');
               }
             }}
-            className="px-4 py-2 bg-[#F5F3FF] hover:bg-[#EDE9FE] text-[#6D28D9] rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-colors self-start lg:self-center cursor-pointer active:scale-95"
+            className="px-4 py-2 bg-[#F5F3FF] hover:bg-[#EDE9FE] text-[#6D28D9] rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-colors self-start lg:self-center cursor-pointer active:scale-95 shrink-0"
           >
-            <span>Lihat Profil Peserta</span>
+            <span>Lihat Profil</span>
             <ChevronRight size={14} />
           </button>
         </div>
@@ -415,8 +567,8 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
             <FastForward size={18} />
           </div>
           <div>
-            <span className="text-[11px] text-slate-400 font-medium block">Target ANC Terpenuhi</span>
-            <span className="text-sm font-bold text-slate-900 mt-0.5 block">{riwayatList.length} dari 6 Standar Kemenkes</span>
+            <span className="text-[11px] text-slate-400 font-medium block">Kunjungan Berikutnya</span>
+            <span className="text-sm font-bold text-slate-900 mt-0.5 block">10 Okt 2026</span>
           </div>
         </div>
 
@@ -426,9 +578,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
           </div>
           <div>
             <span className="text-[11px] text-slate-400 font-medium block">Status Pemeriksaan</span>
-            <span className="text-sm font-bold text-emerald-600 mt-0.5 block">
-              {riwayatList.length >= 6 ? 'Lengkap (Optimal)' : 'Pemeriksaan Rutin'}
-            </span>
+            <span className="text-sm font-bold text-slate-900 mt-0.5 block">Rutin</span>
           </div>
         </div>
       </div>
@@ -437,10 +587,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
       <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-xs">
         <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Riwayat Pemeriksaan ANC ({namaPasien})</h3>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              Daftar rekam medis kehamilan khusus untuk <strong>{namaPasien}</strong> (ID: {activePesertaId.slice(0, 8)}...)
-            </p>
+            <h3 className="text-sm font-bold text-slate-900">Riwayat Pemeriksaan</h3>
           </div>
           {canInputPemeriksaan && (
             <button
@@ -505,156 +652,69 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
         </div>
       </div>
 
-      {/* 5. Catatan & Tindak Lanjut Medis serta Dokumen Pendukung (Item 19) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        {/* Card 5A: Catatan & Tindak Lanjut Medis */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center">
-                <FileText size={16} />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">Catatan & Tindak Lanjut</h3>
-                <p className="text-[10px] text-slate-400">Instruksi & anjuran perawatan kehamilan ({namaPasien})</p>
-              </div>
-            </div>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-              Hasil Terkini: Normal
-            </span>
-          </div>
-
-          <div className="space-y-3 text-xs">
-            <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-1.5">
-              <div className="flex items-center gap-1.5 text-slate-800 font-bold">
-                <CheckCircle2 size={14} className="text-emerald-600" />
-                <span>Terapi Obat & Suplemen Ibu Hamil</span>
-              </div>
-              <p className="text-[11px] text-slate-600 leading-relaxed pl-5">
-                • Tablet Tambah Darah (TTD / Fe): 1x1 tablet diminum malam sebelum tidur dengan air putih / sari buah jeruk.<br />
-                • Kalsium Laktat 500mg: 1x1 tablet diminum pagi hari sesudah sarapan untuk pembentukan tulang janin.
-              </p>
-            </div>
-
-            <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-1.5">
-              <div className="flex items-center gap-1.5 text-slate-800 font-bold">
-                <Heart size={14} className="text-rose-500" />
-                <span>Anjuran Pola Hidup & Nutrisi Seimbang</span>
-              </div>
-              <p className="text-[11px] text-slate-600 leading-relaxed pl-5">
-                • Perbanyak konsumsi makanan kaya zat besi dan protein (ikan, telur, sayur hijau, kacang-kacangan).<br />
-                • Cukupi hidrasi cairan minimal 2.5 liter per hari dan hindari aktivitas fisik yang terlalu melelahkan.<br />
-                • Waspadai tanda bahaya: segera ke faskes jika ada pusing hebat, pandangan kabur, atau perdarahan.
-              </p>
-            </div>
-
-            <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-1.5">
-              <div className="flex items-center gap-1.5 text-slate-800 font-bold">
-                <Calendar size={14} className="text-[#7C3AED]" />
-                <span>Rencana Tindak Lanjut & Kunjungan Berikutnya</span>
-              </div>
-              <p className="text-[11px] text-slate-600 leading-relaxed pl-5">
-                • Kontrol ANC Rutin Trimester 3: Dijadwalkan 4 minggu ke depan di Puskesmas Manud Jaya.<br />
-                • Persiapan Persalinan (P4K): Stiker P4K terpasang, siapkan identitas KTP/BPJS, calon donor darah, dan tabulin.
-              </p>
-            </div>
+      {/* 5. Catatan & Tindak Lanjut dan Dokumen Pendukung */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+        {/* Kolom Kiri: Catatan & Tindak lanjut (5 cols on md/lg) */}
+        <div className="md:col-span-5 space-y-3">
+          <h3 className="text-sm sm:text-base font-bold text-slate-900">
+            Catatan & Tindak lanjut
+          </h3>
+          <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-xs">
+            <ul className="space-y-3 text-xs font-semibold text-[#3B41B2]">
+              {catatanTindakLanjutList.map((item, idx) => (
+                <li key={idx} className="flex items-start gap-2.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#3B41B2] mt-1.5 shrink-0" />
+                  <span className="leading-relaxed">{item}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
-        {/* Card 5B: Dokumen Pendukung Rekam Medis */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center">
-                <Paperclip size={16} />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">Dokumen Pendukung</h3>
-                <p className="text-[10px] text-slate-400">Berkas hasil USG, skrining laboratorium & rujukan</p>
-              </div>
-            </div>
-            <span className="text-[11px] font-semibold text-slate-400">
-              3 Berkas Tersimpan
-            </span>
+        {/* Kolom Kanan: Dokumen Pendukung (7 cols on md/lg) */}
+        <div className="md:col-span-7 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900">
+              Dokumen Pendukung
+            </h3>
           </div>
-
-          <div className="space-y-2.5">
-            {[
-              {
-                id: 'doc-1',
-                nama: 'Hasil Skrining Laboratorium Hb & Triple Eliminasi (HIV, Sifilis, HBsAg).pdf',
-                ukuran: '1.4 MB',
-                tanggal: '12 Feb 2026',
-                faskes: 'Lab Puskesmas Manud Jaya'
-              },
-              {
-                id: 'doc-2',
-                nama: 'Hasil USG Obstetri Trimester 2 - Biometri Janin & DJJ.jpg',
-                ukuran: '2.8 MB',
-                tanggal: '18 Jun 2026',
-                faskes: 'dr. Haryono, Sp.OG (RSUD)'
-              },
-              {
-                id: 'doc-3',
-                nama: 'Buku KIA Digital - Salinan Riwayat Pemeriksaan ANC.pdf',
-                ukuran: '850 KB',
-                tanggal: '24 Sep 2026',
-                faskes: 'Posyandu Desa Manud Jaya'
-              }
-            ].map((doc) => (
-              <div key={doc.id} className="p-3 bg-slate-50/80 hover:bg-pink-50/30 border border-slate-100 rounded-2xl flex items-center justify-between gap-3 transition-colors">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-rose-500 shrink-0">
-                    <FileText size={16} />
+          <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-xs">
+            <div className="space-y-3.5">
+              {dokumenList.map((doc) => (
+                <div key={doc.id} className="flex items-center justify-between group py-1">
+                  <div className="flex items-center gap-3 min-w-0 pr-3">
+                    <FileText size={18} className="text-[#FF168B] shrink-0" />
+                    <span className="text-xs font-medium text-slate-700 truncate group-hover:text-slate-900 transition-colors">
+                      {doc.name}
+                    </span>
                   </div>
-                  <div className="min-w-0">
-                    <h5 className="text-xs font-bold text-slate-800 truncate" title={doc.nama}>
-                      {doc.nama}
-                    </h5>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
-                      {doc.ukuran} • {doc.tanggal} • {doc.faskes}
-                    </p>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadDoc(doc)}
+                      className="p-1 text-slate-700 hover:text-[#E11D48] transition-colors cursor-pointer"
+                      title={`Unduh ${doc.name}`}
+                    >
+                      <Download size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDokumen(doc)}
+                      className="p-1 text-slate-700 hover:text-[#E11D48] transition-colors cursor-pointer"
+                      title={`Lihat ${doc.name}`}
+                    >
+                      <Eye size={16} />
+                    </button>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => onShowToast && onShowToast(`Membuka preview berkas "${doc.nama}"...`, 'info')}
-                    className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-white rounded-lg transition-colors cursor-pointer"
-                    title="Lihat Pratinjau Dokumen"
-                  >
-                    <Eye size={15} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDownload(doc.nama)}
-                    className="p-1.5 text-[#E11D48] hover:bg-pink-100/60 rounded-lg transition-colors cursor-pointer"
-                    title="Unduh Berkas Rekam Medis"
-                  >
-                    <Download size={15} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {canInputPemeriksaan && (
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => setIsModalTambahOpen(true)}
-                className="w-full py-2.5 px-3 bg-slate-50 hover:bg-slate-100 border border-dashed border-slate-300 rounded-xl text-slate-600 hover:text-slate-900 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
-              >
-                <Upload size={14} className="text-[#E11D48]" />
-                <span>Unggah Dokumen Tambahan Melalui Form ANC</span>
-              </button>
+              ))}
             </div>
-          )}
+          </div>
         </div>
       </div>
 
-      {/* 6. Modal Detail Pemeriksaan */}
+      {/* 5. Modal Detail Pemeriksaan */}
+
       {selectedPemeriksaan && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in-95 duration-150">
@@ -1027,6 +1087,79 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Modal Preview Dokumen Pendukung */}
+      {selectedDokumen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5 text-slate-900 font-bold text-sm min-w-0">
+                <FileText size={18} className="text-[#FF168B] shrink-0" />
+                <span className="truncate">{selectedDokumen.name}</span>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setSelectedDokumen(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer shrink-0"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              <div className="p-3.5 bg-slate-50 rounded-2xl grid grid-cols-2 gap-2 text-slate-600">
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-medium">Jenis Dokumen:</span>
+                  <span className="font-bold text-slate-800">{selectedDokumen.type}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-medium">Tanggal Pemeriksaan:</span>
+                  <span className="font-bold text-slate-800">{selectedDokumen.tanggal}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-medium">Ukuran Berkas:</span>
+                  <span className="font-bold text-slate-800">{selectedDokumen.size}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-medium">Format:</span>
+                  <span className="font-bold text-slate-800">Dokumen PDF Resmi</span>
+                </div>
+              </div>
+
+              {/* Box Preview Hasil Pemeriksaan */}
+              <div className="p-4 bg-white border border-pink-100 rounded-2xl space-y-2">
+                <div className="flex items-center justify-between border-b border-pink-50 pb-2">
+                  <span className="text-[11px] font-bold text-slate-800">Catatan Medis & Interpretasi Klinis:</span>
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-pink-50 text-pink-700">Terverifikasi</span>
+                </div>
+                <p className="text-slate-600 leading-relaxed text-xs">
+                  {selectedDokumen.keterangan}
+                </p>
+                <p className="text-[11px] text-slate-400 pt-1">
+                  * Dokumen telah diverifikasi dan disimpan secara digital dalam rekam medis terpadu Posyandu Manud Jaya.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between gap-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => handleDownloadDoc(selectedDokumen)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+              >
+                <Download size={14} />
+                <span>Unduh File</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedDokumen(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
           </div>
         </div>
       )}
