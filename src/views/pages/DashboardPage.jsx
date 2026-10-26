@@ -102,8 +102,13 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
 
   const [selectedPesertaIdForDetail, setSelectedPesertaIdForDetail] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-  const userEmail = currentUser?.user?.email || currentUser?.email || '';
-  const isIbuRole = (currentUser?.role || '').toLowerCase().includes('ibu') || userEmail.toLowerCase().includes('ibu');
+  const roleNormalized = (currentUser?.role || '').toLowerCase().trim();
+  const emailNormalized = (currentUser?.user?.email || currentUser?.email || '').toLowerCase().trim();
+  const isSuperAdmin = roleNormalized.includes('admin') || roleNormalized === 'superadmin' || roleNormalized === 'super admin' || emailNormalized.includes('admin');
+  const isBidan = (roleNormalized.includes('bidan') || emailNormalized.includes('bidan')) && !roleNormalized.includes('ibu') && !emailNormalized.includes('ibu');
+  const isKader = (roleNormalized.includes('kader') || emailNormalized.includes('kader')) && !roleNormalized.includes('ibu') && !emailNormalized.includes('ibu');
+  const isStaff = isSuperAdmin || isBidan || isKader;
+  const isIbuRole = !isStaff;
 
   // Di desktop default terbuka, di HP default tertutup
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {

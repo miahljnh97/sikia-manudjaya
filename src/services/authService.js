@@ -39,18 +39,20 @@ export const authService = {
           let userRole = null;
           let userName = null;
           let pesertaData = null;
+          let kaderData = null;
 
           // 1. Coba ambil dari tabel kader (dengan relasi roles)
           try {
-            const { data: kaderData } = await supabase
+            const { data: kData } = await supabase
               .from('kader')
               .select('*, roles:role_id(id, kode, nama)')
               .or(`user_id.eq.${data.user.id},email.eq.${lowerEmail}`)
               .maybeSingle();
 
-            if (kaderData) {
-              userName = kaderData.nama;
-              userRole = kaderData.roles?.nama || kaderData.peran;
+            if (kData) {
+              kaderData = kData;
+              userName = kData.nama;
+              userRole = kData.roles?.nama || kData.peran;
             }
           } catch (err) {
             console.warn('Gagal cek tabel kader:', err);
