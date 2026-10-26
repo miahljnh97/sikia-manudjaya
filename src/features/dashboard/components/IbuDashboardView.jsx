@@ -212,7 +212,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
     });
   }, [ibuId, isIbuBalitaOnly, isIbuHamilOnly, isIbuHamilBalita]);
 
-  const hasKehamilan = !isIbuBalitaOnly && Boolean(kehamilan && (kehamilan.status_kehamilan === 'Aktif' || kehamilan.usia_kehamilan_minggu));
+  const hasKehamilan = !isIbuBalitaOnly;
   const hasAnak = !isIbuHamilOnly && Boolean(anak && daftarAnak.length > 0);
 
   // Helper standar faskes/posyandu untuk bayi baru lahir yang belum dinamai (By. Ny. [Nama Ibu] 1 / 2)
@@ -338,10 +338,10 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                 onError={(e) => { e.target.src = '/images/baby-wreath.png'; }}
               />
               <h3 className="text-2xl sm:text-3xl font-extrabold text-[#E11D48] tracking-tight mt-2">
-                {anak?.nama || 'Alya Putri'}
+                {anak?.nama || (isIbuBalitaOnly ? 'Alya Putri' : 'Dian Pranata')}
               </h3>
               <p className="text-base sm:text-lg font-bold text-slate-800 mt-0.5">
-                {anak?.usia || hitungUsiaString(anak?.tgl_lahir) || '1 Tahun 6 Bulan'}
+                {anak?.usia || hitungUsiaString(anak?.tgl_lahir) || (isIbuBalitaOnly ? '1 Tahun 6 Bulan' : '1 Tahun 2 Bulan')}
               </p>
             </div>
 

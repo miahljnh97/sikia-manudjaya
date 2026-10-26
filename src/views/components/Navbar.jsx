@@ -2,19 +2,37 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Menu, Bell, User, Check, Calendar, AlertCircle, Baby, LogOut, ChevronDown } from 'lucide-react';
 
 export default function Navbar({ user, onLogout, onToggleSidebar }) {
+  const userEmail = (user?.user?.email || user?.email || '').toLowerCase().trim();
+  const rawNama = user?.nama || '';
+
   const getNormalizedRole = (role, email = '') => {
     const e = (email || '').toLowerCase();
     const r = (role || '').toLowerCase();
     if (r.includes('admin') || e.includes('admin')) return 'Super Admin';
     if (r.includes('bidan') || e.includes('bidan')) return 'Bidan Desa';
     if (r.includes('kader') || e.includes('kader')) return 'Kader Posyandu';
+    if (e === 'ibu.hamil@manudjaya.id' || (e.includes('hamil') && !e.includes('anak') && !e.includes('balita'))) return 'Ibu Hamil';
+    if (e === 'ibu.balita@manudjaya.id' || (e.includes('balita') && !e.includes('hamil'))) return 'Ibu Balita';
+    if (e.includes('hamil.anak') || e.includes('aminah')) return 'Ibu Hamil & Balita';
     if (r.includes('ibu') || e.includes('ibu') || r.includes('peserta')) return 'Ibu';
     return role || 'Kader Posyandu';
   };
 
-  const userEmail = user?.user?.email || user?.email || '';
-  const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || userEmail.toLowerCase().includes('ibu');
-  const displayName = user?.nama || (userEmail ? userEmail.split('@')[0] : 'Pengguna');
+  const getDisplayName = () => {
+    if (userEmail === 'ibu.balita@manudjaya.id' || (userEmail.includes('balita') && !userEmail.includes('hamil')) || rawNama.toLowerCase().includes('ratna')) {
+      return 'Ibu Ratna';
+    }
+    if (userEmail === 'ibu.hamil@manudjaya.id' || (userEmail.includes('hamil') && !userEmail.includes('anak') && !userEmail.includes('balita')) || rawNama.toLowerCase().includes('najwa')) {
+      return 'Najwa Sihab';
+    }
+    if (userEmail.includes('hamil.anak') || userEmail.includes('siti.aminah') || rawNama.toLowerCase().includes('aminah')) {
+      return 'Siti Aminah';
+    }
+    return rawNama || (userEmail ? userEmail.split('@')[0] : 'Pengguna');
+  };
+
+  const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || userEmail.includes('ibu') || userEmail.includes('hamil') || userEmail.includes('balita');
+  const displayName = getDisplayName();
   const roleName = getNormalizedRole(user?.role, userEmail);
 
   // State Notifikasi dengan LocalStorage Persistence
@@ -197,10 +215,16 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-500 font-semibold shrink-0 overflow-hidden">
               {isIbuRole ? (
                 <img 
-                  src="/images/siti-aminah-avatar.png" 
+                  src={
+                    (userEmail.includes('balita') || rawNama.toLowerCase().includes('ratna'))
+                      ? "/images/ibu-balita-avatar.png"
+                      : (userEmail.includes('hamil') && !userEmail.includes('anak'))
+                      ? "/images/najwa-avatar.png"
+                      : "/images/siti-aminah-avatar.png"
+                  }
                   alt={displayName} 
                   className="w-full h-full object-cover" 
-                  onError={(e) => { e.target.style.display = 'none'; }}
+                  onError={(e) => { e.target.src = '/images/siti-aminah-avatar.png'; }}
                 />
               ) : (
                 <User size={18} />

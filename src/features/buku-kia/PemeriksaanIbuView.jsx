@@ -493,7 +493,154 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
         </div>
       </div>
 
-      {/* 5. Modal Detail Pemeriksaan */}
+      {/* 5. Catatan & Tindak Lanjut Medis serta Dokumen Pendukung (Item 19) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Card 5A: Catatan & Tindak Lanjut Medis */}
+        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center">
+                <FileText size={16} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Catatan & Tindak Lanjut</h3>
+                <p className="text-[10px] text-slate-400">Instruksi & anjuran perawatan kehamilan ({namaPasien})</p>
+              </div>
+            </div>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Hasil Terkini: Normal
+            </span>
+          </div>
+
+          <div className="space-y-3 text-xs">
+            <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-1.5">
+              <div className="flex items-center gap-1.5 text-slate-800 font-bold">
+                <CheckCircle2 size={14} className="text-emerald-600" />
+                <span>Terapi Obat & Suplemen Ibu Hamil</span>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-relaxed pl-5">
+                • Tablet Tambah Darah (TTD / Fe): 1x1 tablet diminum malam sebelum tidur dengan air putih / sari buah jeruk.<br />
+                • Kalsium Laktat 500mg: 1x1 tablet diminum pagi hari sesudah sarapan untuk pembentukan tulang janin.
+              </p>
+            </div>
+
+            <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-1.5">
+              <div className="flex items-center gap-1.5 text-slate-800 font-bold">
+                <Heart size={14} className="text-rose-500" />
+                <span>Anjuran Pola Hidup & Nutrisi Seimbang</span>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-relaxed pl-5">
+                • Perbanyak konsumsi makanan kaya zat besi dan protein (ikan, telur, sayur hijau, kacang-kacangan).<br />
+                • Cukupi hidrasi cairan minimal 2.5 liter per hari dan hindari aktivitas fisik yang terlalu melelahkan.<br />
+                • Waspadai tanda bahaya: segera ke faskes jika ada pusing hebat, pandangan kabur, atau perdarahan.
+              </p>
+            </div>
+
+            <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-1.5">
+              <div className="flex items-center gap-1.5 text-slate-800 font-bold">
+                <Calendar size={14} className="text-[#7C3AED]" />
+                <span>Rencana Tindak Lanjut & Kunjungan Berikutnya</span>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-relaxed pl-5">
+                • Kontrol ANC Rutin Trimester 3: Dijadwalkan 4 minggu ke depan di Puskesmas Manud Jaya.<br />
+                • Persiapan Persalinan (P4K): Stiker P4K terpasang, siapkan identitas KTP/BPJS, calon donor darah, dan tabulin.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 5B: Dokumen Pendukung Rekam Medis */}
+        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center">
+                <Paperclip size={16} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Dokumen Pendukung</h3>
+                <p className="text-[10px] text-slate-400">Berkas hasil USG, skrining laboratorium & rujukan</p>
+              </div>
+            </div>
+            <span className="text-[11px] font-semibold text-slate-400">
+              3 Berkas Tersimpan
+            </span>
+          </div>
+
+          <div className="space-y-2.5">
+            {[
+              {
+                id: 'doc-1',
+                nama: 'Hasil Skrining Laboratorium Hb & Triple Eliminasi (HIV, Sifilis, HBsAg).pdf',
+                ukuran: '1.4 MB',
+                tanggal: '12 Feb 2026',
+                faskes: 'Lab Puskesmas Manud Jaya'
+              },
+              {
+                id: 'doc-2',
+                nama: 'Hasil USG Obstetri Trimester 2 - Biometri Janin & DJJ.jpg',
+                ukuran: '2.8 MB',
+                tanggal: '18 Jun 2026',
+                faskes: 'dr. Haryono, Sp.OG (RSUD)'
+              },
+              {
+                id: 'doc-3',
+                nama: 'Buku KIA Digital - Salinan Riwayat Pemeriksaan ANC.pdf',
+                ukuran: '850 KB',
+                tanggal: '24 Sep 2026',
+                faskes: 'Posyandu Desa Manud Jaya'
+              }
+            ].map((doc) => (
+              <div key={doc.id} className="p-3 bg-slate-50/80 hover:bg-pink-50/30 border border-slate-100 rounded-2xl flex items-center justify-between gap-3 transition-colors">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-rose-500 shrink-0">
+                    <FileText size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <h5 className="text-xs font-bold text-slate-800 truncate" title={doc.nama}>
+                      {doc.nama}
+                    </h5>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {doc.ukuran} • {doc.tanggal} • {doc.faskes}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => onShowToast && onShowToast(`Membuka preview berkas "${doc.nama}"...`, 'info')}
+                    className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-white rounded-lg transition-colors cursor-pointer"
+                    title="Lihat Pratinjau Dokumen"
+                  >
+                    <Eye size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDownload(doc.nama)}
+                    className="p-1.5 text-[#E11D48] hover:bg-pink-100/60 rounded-lg transition-colors cursor-pointer"
+                    title="Unduh Berkas Rekam Medis"
+                  >
+                    <Download size={15} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => setIsModalTambahOpen(true)}
+              className="w-full py-2.5 px-3 bg-slate-50 hover:bg-slate-100 border border-dashed border-slate-300 rounded-xl text-slate-600 hover:text-slate-900 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            >
+              <Upload size={14} className="text-[#E11D48]" />
+              <span>Unggah Dokumen Tambahan Melalui Form ANC</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 6. Modal Detail Pemeriksaan */}
       {selectedPemeriksaan && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in-95 duration-150">
