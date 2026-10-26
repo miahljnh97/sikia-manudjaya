@@ -14,7 +14,8 @@ export default function PencarianPasien({
   onResetFilter,
   pesertaList = [],
   onSelectPeserta,
-  onTambahPesertaBaru
+  onTambahPesertaBaru,
+  isIbuRole = false
 }) {
   const [sortOrder, setSortOrder] = useState('Nama A-Z');
   const [currentPage, setCurrentPage] = useState(1);
@@ -145,28 +146,47 @@ export default function PencarianPasien({
           </div>
         </div>
 
-        {/* Right CTA Box: Tidak menemukan peserta? Sesuai Figma media_1791225071580.jpg */}
-        <div className="bg-[#FFF1F2] border border-[#FDA4AF] rounded-2xl p-6 flex flex-col justify-between shadow-xs">
-          <div className="flex items-start gap-4">
-            <div className="w-11 h-11 rounded-full bg-[#FFE4E6] flex items-center justify-center shrink-0">
-              <Plus size={20} className="text-[#991B1B]" />
+        {/* Right CTA Box: Hanya untuk Kader/Bidan, atau panduan mandiri untuk Ibu */}
+        {!isIbuRole ? (
+          <div className="bg-[#FFF1F2] border border-[#FDA4AF] rounded-2xl p-6 flex flex-col justify-between shadow-xs">
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-full bg-[#FFE4E6] flex items-center justify-center shrink-0">
+                <Plus size={20} className="text-[#991B1B]" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-[#991B1B]">Tidak menemukan peserta?</h4>
+                <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                  Daftarkan sebagai peserta baru terlebih dahulu di sistem.
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-xs font-bold text-[#991B1B]">Tidak menemukan peserta?</h4>
-              <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                Daftarkan sebagai peserta baru terlebih dahulu di sistem.
-              </p>
+            <button
+              type="button"
+              onClick={onTambahPesertaBaru}
+              className="mt-4 w-full py-2.5 px-4 bg-[#881337] hover:bg-[#70102d] active:bg-[#4c0519] text-[#FFFFFF] rounded-xl text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+            >
+              <Plus size={15} strokeWidth={2.5} />
+              <span>Tambah Peserta Baru</span>
+            </button>
+          </div>
+        ) : (
+          <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-2xl p-6 flex flex-col justify-between shadow-xs">
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                <User size={20} className="text-blue-700" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-blue-900">Registrasi Kunjungan Mandiri</h4>
+                <p className="text-[11px] text-blue-700 mt-1 leading-relaxed">
+                  Pilih kartu profil Anda atau balita Anda di tabel untuk mendaftarkan kehadiran dan memilih pelayanan Posyandu.
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 pt-3 border-t border-blue-200/60 text-[11px] text-blue-600 font-medium flex items-center gap-1.5">
+              <span>✓ Data profil Anda terlindungi secara privat</span>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onTambahPesertaBaru}
-            className="mt-4 w-full py-2.5 px-4 bg-[#881337] hover:bg-[#70102d] active:bg-[#4c0519] text-[#FFFFFF] rounded-xl text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-          >
-            <Plus size={15} strokeWidth={2.5} />
-            <span>Tambah Peserta Baru</span>
-          </button>
-        </div>
+        )}
       </div>
 
       {/* Tabel Hasil Pencarian */}
@@ -174,7 +194,7 @@ export default function PencarianPasien({
         <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h4 className="text-sm font-bold text-slate-900">
-              Hasil Pencarian
+              {isIbuRole ? 'Daftar Profil Anda & Keluarga' : 'Hasil Pencarian'}
             </h4>
             <span className="text-[11px] text-slate-400 mt-0.5 block">
               Menampilkan {sortedList.length > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + itemsPerPage, sortedList.length)} dari {sortedList.length} hasil pencarian{searchQuery ? ` untuk "${searchQuery}"` : ''}

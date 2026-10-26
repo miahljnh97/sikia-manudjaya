@@ -90,31 +90,44 @@ export const authService = {
           } else if (lowerEmail.includes('bidan') || lowerEmail === DUMMY_ACCOUNTS.bidan.email) {
             userRole = userRole || 'Bidan Desa';
             userName = userName || DUMMY_ACCOUNTS.bidan.nama;
-          } else if (lowerEmail.includes('hamil') || lowerEmail === DUMMY_ACCOUNTS.ibu_hamil?.email) {
-            userRole = 'Ibu Hamil';
-            userName = userName || DUMMY_ACCOUNTS.ibu_hamil?.nama || 'Ibu Hamil';
-          } else if (lowerEmail.includes('ibu') || lowerEmail === DUMMY_ACCOUNTS.ibu_balita?.email) {
-            userRole = userRole || 'Ibu Balita';
-            userName = userName || DUMMY_ACCOUNTS.ibu_balita?.nama || 'Ibu Balita';
           } else if (lowerEmail.includes('kader') || lowerEmail === DUMMY_ACCOUNTS.kader.email) {
             userRole = userRole || 'Kader Posyandu';
             userName = userName || DUMMY_ACCOUNTS.kader.nama;
+          } else if (lowerEmail.includes('hamil.anak') || lowerEmail.includes('siti.aminah') || lowerEmail === DUMMY_ACCOUNTS.ibu_hamil_anak?.email) {
+            userRole = 'Ibu';
+            userName = userName || DUMMY_ACCOUNTS.ibu_hamil_anak?.nama || 'Siti Aminah';
+          } else if (lowerEmail.includes('hamil') || lowerEmail === DUMMY_ACCOUNTS.ibu_hamil?.email) {
+            userRole = 'Ibu';
+            userName = userName || DUMMY_ACCOUNTS.ibu_hamil?.nama || 'Najwa Sihab';
+          } else if (lowerEmail.includes('ibu') || lowerEmail.includes('balita') || lowerEmail === DUMMY_ACCOUNTS.ibu_balita?.email) {
+            userRole = 'Ibu';
+            userName = userName || DUMMY_ACCOUNTS.ibu_balita?.nama || 'Ibu Ratna';
           }
 
-          // Normalisasi role string
-          const r = (userRole || 'kader').toLowerCase();
-          let normalizedRole = 'Kader Posyandu';
-          if (r.includes('admin') || r === 'superadmin' || r === 'super_admin') {
+          // Normalisasi role string (default ke 'Ibu' demi privasi kecuali terbukti staff)
+          const r = (userRole || '').toLowerCase();
+          let normalizedRole = 'Ibu';
+          if (r.includes('admin') || r === 'superadmin' || r === 'super_admin' || lowerEmail.includes('admin')) {
             normalizedRole = 'Super Admin';
-          } else if (r.includes('bidan') || r === 'bidan_desa') {
+          } else if (r.includes('bidan') || r === 'bidan_desa' || lowerEmail.includes('bidan')) {
             normalizedRole = 'Bidan Desa';
-          } else if (r.includes('ibu') || r.includes('hamil') || r.includes('balita') || lowerEmail.includes('ibu')) {
-            normalizedRole = 'Ibu';
-          } else {
+          } else if (r.includes('kader') || lowerEmail.includes('kader') || Boolean(kaderData)) {
             normalizedRole = 'Kader Posyandu';
+          } else {
+            normalizedRole = 'Ibu';
           }
 
-          let pesertaId = pesertaData?.id || data.user.id;
+          let pesertaId = pesertaData?.id;
+          if (!pesertaId) {
+            if (lowerEmail === 'ibu.balita@manudjaya.id' || (lowerEmail.includes('balita') && !lowerEmail.includes('hamil'))) {
+              pesertaId = 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73';
+            } else if (lowerEmail === 'ibu.hamil.anak@manudjaya.id' || lowerEmail === 'siti.aminah@manudjaya.id' || lowerEmail.includes('hamil.anak')) {
+              pesertaId = '55af67c9-6695-4435-b4ea-2720efd73c92';
+            } else if (lowerEmail === 'ibu.hamil@manudjaya.id' || lowerEmail.includes('hamil')) {
+              pesertaId = '214fbe12-2216-4e61-9b12-9fccca445e84';
+            }
+          }
+          pesertaId = pesertaId || data.user.id;
 
           return {
             user: data.user,

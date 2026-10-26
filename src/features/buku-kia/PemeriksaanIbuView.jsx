@@ -30,10 +30,10 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
   const userEmail = (user?.user?.email || user?.email || '').toLowerCase().trim();
 
   // Role checking
-  const isBidan = userRole.includes('bidan') || userEmail.includes('bidan');
-  const isKader = userRole.includes('kader') || userEmail.includes('kader');
+  const isBidan = (userRole.includes('bidan') || userEmail.includes('bidan')) && !userRole.includes('ibu') && !userEmail.includes('ibu');
+  const isKader = (userRole.includes('kader') || userEmail.includes('kader')) && !userRole.includes('ibu') && !userEmail.includes('ibu');
   const isAdmin = userRole.includes('admin') || userEmail.includes('admin');
-  const isIbuRole = userRole.includes('ibu') || userEmail.includes('ibu') || userEmail.includes('hamil') || userEmail.includes('balita');
+  const isIbuRole = !isBidan && !isKader && !isAdmin;
 
   // Button 'Catat Pemeriksaan' & 'Unggah Dokumen' cuma muncul di kader dan bidan. Di super admin dan ibu di-hide:
   const canInputPemeriksaan = (isBidan || isKader) && !isAdmin && !isIbuRole;
@@ -618,7 +618,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
               {riwayatList.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-slate-400">
-                    Belum ada rekam medis ANC untuk <strong>{namaPasien}</strong>. Klik tombol <strong>"+ Input Pemeriksaan ANC"</strong> untuk menambahkan.
+                    Belum ada rekam medis ANC untuk <strong>{namaPasien}</strong>.{canInputPemeriksaan ? ' Klik tombol "+ Catat Pemeriksaan" untuk menambahkan.' : ''}
                   </td>
                 </tr>
               ) : (

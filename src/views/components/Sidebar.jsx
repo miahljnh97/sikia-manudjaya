@@ -24,7 +24,11 @@ export default function Sidebar({
   currentUser
 }) {
   const roleNormalized = (currentUser?.role || '').toLowerCase();
-  const isSuperAdmin = roleNormalized.includes('admin') || roleNormalized === 'superadmin' || roleNormalized === 'super admin';
+  const emailNormalized = (currentUser?.user?.email || currentUser?.email || '').toLowerCase();
+  const isSuperAdmin = roleNormalized.includes('admin') || roleNormalized === 'superadmin' || roleNormalized === 'super admin' || emailNormalized.includes('admin');
+  const isBidan = (roleNormalized.includes('bidan') || emailNormalized.includes('bidan')) && !roleNormalized.includes('ibu') && !emailNormalized.includes('ibu');
+  const isKader = (roleNormalized.includes('kader') || emailNormalized.includes('kader')) && !roleNormalized.includes('ibu') && !emailNormalized.includes('ibu');
+  const isStaff = isSuperAdmin || isBidan || isKader;
 
   // State Accordion Submenu Kesehatan Ibu & Anak
   const [isIbuExpanded, setIsIbuExpanded] = useState(true);
@@ -139,31 +143,35 @@ export default function Sidebar({
               <span>Registrasi Kunjungan</span>
             </button>
 
-            {/* 3. Data Peserta */}
-            <button
-              onClick={() => handleSelect('Data Peserta')}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
-                activeMenu === 'Data Peserta'
-                  ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <Users size={18} className={activeMenu === 'Data Peserta' ? 'text-[#2563EB]' : 'text-slate-400'} />
-              <span>Data Peserta</span>
-            </button>
+            {/* 3. Data Peserta (Hanya untuk Super Admin, Bidan, Kader) */}
+            {isStaff && (
+              <button
+                onClick={() => handleSelect('Data Peserta')}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                  activeMenu === 'Data Peserta'
+                    ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <Users size={18} className={activeMenu === 'Data Peserta' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                <span>Data Peserta</span>
+              </button>
+            )}
 
             {/* Menu Pemeriksaan untuk Bidan / Kader (PBI 02C & Figma Bidan View) */}
-            <button
-              onClick={() => handleSelect('Pemeriksaan')}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
-                activeMenu === 'Pemeriksaan' || activeMenu === 'Pemeriksaan Ibu'
-                  ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <Stethoscope size={18} className={activeMenu === 'Pemeriksaan' || activeMenu === 'Pemeriksaan Ibu' ? 'text-[#2563EB]' : 'text-slate-400'} />
-              <span>Pemeriksaan</span>
-            </button>
+            {(isBidan || isKader) && (
+              <button
+                onClick={() => handleSelect('Pemeriksaan')}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                  activeMenu === 'Pemeriksaan' || activeMenu === 'Pemeriksaan Ibu'
+                    ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <Stethoscope size={18} className={activeMenu === 'Pemeriksaan' || activeMenu === 'Pemeriksaan Ibu' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                <span>Pemeriksaan</span>
+              </button>
+            )}
 
             {/* 4. Riwayat Kunjungan */}
             <button

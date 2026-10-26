@@ -41,7 +41,8 @@ export default function RegistrasiPage({
     catatan,
     setCatatan,
     submitting,
-    handleSubmitRegistrasi
+    handleSubmitRegistrasi,
+    isIbuRole
   } = useRegistrasiController(currentUser, onBackToDashboard, currentPath, onNavigate);
 
   const steps = [
@@ -91,7 +92,7 @@ export default function RegistrasiPage({
         </h1>
         <p className="text-xs text-slate-500 mt-1">
           {mode === 'pencarian'
-            ? 'Cari peserta yang akan melakukan kunjungan Posyandu.'
+            ? (isIbuRole ? 'Pilih profil Anda atau anak untuk melakukan pendaftaran kunjungan Posyandu.' : 'Cari peserta yang akan melakukan kunjungan Posyandu.')
             : 'Lengkapi data kunjungan peserta Posyandu.'}
         </p>
       </div>
@@ -151,6 +152,7 @@ export default function RegistrasiPage({
           pesertaList={pesertaList}
           onSelectPeserta={handleSelectPeserta}
           onTambahPesertaBaru={onTambahPesertaBaru}
+          isIbuRole={isIbuRole}
         />
       ) : (
         <div className="flex flex-col lg:flex-row gap-6 items-start">

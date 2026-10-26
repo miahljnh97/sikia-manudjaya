@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { registrasiService } from './registrasiService';
 import { pesertaService } from '../../services/pesertaService';
+import { getPesertaIdFromUser } from '../../models/pesertaModel';
 import { dataStoreService } from '../../services/dataStoreService';
 import { getTanggalFormatStandar, getJamMenitSekarang, getTodayISODate } from '../../utils/dateUtils';
 
@@ -86,9 +87,44 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi, curren
   const [catatan, setCatatan] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Filter daftar peserta di pencarian
+  const roleStr = (currentUser?.role || '').toLowerCase().trim();
+  const emailStr = (currentUser?.user?.email || currentUser?.email || '').toLowerCase().trim();
+  const isPetugas = roleStr.includes('kader') || 
+                    roleStr.includes('bidan') || 
+                    emailStr.includes('kader') || 
+                    emailStr.includes('bidan');
+  const isIbuRole = !isPetugas;
+
+  const myId = currentUser?.peserta_id || getPesertaIdFromUser(currentUser);
+  const myName = (currentUser?.nama || '').toLowerCase().trim();
+
+  // Filter daftar peserta di pencarian:
+  // Hanya menampilkan profil pengguna sendiri (dan anaknya) jika peran adalah Ibu (bukan kader/bidan)
   const filteredPeserta = useMemo(() => {
     return rawPesertaList.filter((item) => {
+      if (isIbuRole) {
+        const itemPesertaId = item.id || item.peserta_id;
+        const itemIbuId = item.ibu_id;
+        const itemNama = (item.nama || '').toLowerCase().trim();
+        const itemNamaIbu = (item.nama_ibu || '').toLowerCase().trim();
+
+        const matchesId = myId && (
+          String(myId) === String(itemPesertaId) ||
+          (itemIbuId && String(myId) === String(itemIbuId))
+        );
+
+        const matchesName = myName && (
+          itemNama === myName ||
+          itemNama.startsWith(myName) ||
+          myName.startsWith(itemNama) ||
+          (itemNamaIbu && (itemNamaIbu === myName || itemNamaIbu.includes(myName)))
+        );
+
+        if (!matchesId && !matchesName) {
+          return false;
+        }
+      }
+
       const matchSearch =
         (item.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.nik || '').includes(searchQuery) ||
@@ -98,7 +134,7 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi, curren
       const matchWilayah = wilayahFilter === 'Semua' || item.dusun === wilayahFilter || item.alamat?.includes(wilayahFilter);
       return matchSearch && matchJenis && matchStatus && matchWilayah;
     });
-  }, [rawPesertaList, searchQuery, jenisFilter, statusFilter, wilayahFilter]);
+  }, [rawPesertaList, searchQuery, jenisFilter, statusFilter, wilayahFilter, isIbuRole, myId, myName]);
 
   // Sinkronisasi mode, step, dan peserta saat URL browser berganti atau pesertaList terisi
   useEffect(() => {
@@ -257,6 +293,8 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi, curren
     catatan,
     setCatatan,
     submitting,
-    handleSubmitRegistrasi
+    handleSubmitRegistrasi,
+    isIbuRole,
+    isPetugas
   };
 }

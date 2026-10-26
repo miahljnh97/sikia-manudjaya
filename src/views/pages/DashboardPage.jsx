@@ -185,18 +185,34 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
 
         <main className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
           {activeMenu === 'Data Peserta' ? (
-            <DataPesertaPage
-              currentUser={currentUser}
-              initialSelectedId={selectedPesertaIdForDetail}
-              currentPath={currentPath}
-              onNavigate={onNavigate}
-              onBackToDashboard={() => {
-                setSelectedPesertaIdForDetail(null);
-                handleMenuChange('Dashboard');
-              }}
-              onTambahPesertaBaru={() => setIsModalOpen(true)}
-              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
-            />
+            !isStaff ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-3xl p-8 text-center text-amber-800 shadow-xs max-w-xl mx-auto my-12">
+                <h3 className="font-bold text-lg mb-2 text-amber-900">Akses Terbatas</h3>
+                <p className="text-xs text-amber-700 mb-6 leading-relaxed">
+                  Fitur Data Peserta hanya dapat diakses oleh Bidan Desa, Kader Posyandu, atau Super Admin.
+                </p>
+                <button 
+                  type="button" 
+                  onClick={() => handleMenuChange('Dashboard')}
+                  className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+                >
+                  Kembali ke Dashboard
+                </button>
+              </div>
+            ) : (
+              <DataPesertaPage
+                currentUser={currentUser}
+                initialSelectedId={selectedPesertaIdForDetail}
+                currentPath={currentPath}
+                onNavigate={onNavigate}
+                onBackToDashboard={() => {
+                  setSelectedPesertaIdForDetail(null);
+                  handleMenuChange('Dashboard');
+                }}
+                onTambahPesertaBaru={() => setIsModalOpen(true)}
+                onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
+              />
+            )
           ) : activeMenu === 'Riwayat Kunjungan' ? (
             <RiwayatKunjunganPage currentUser={currentUser} />
           ) : activeMenu === 'Kelola Kader' ? (

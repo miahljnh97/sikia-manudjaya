@@ -39,7 +39,10 @@ import { hitungUsiaString } from '../../utils/dateUtils';
 import { getPesertaIdFromUser } from '../../models/pesertaModel';
 
 export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, currentPath = '', onNavigate, onShowToast }) {
-  const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || (user?.email || '').toLowerCase().includes('ibu');
+  const roleStr = (user?.role || '').toLowerCase().trim();
+  const emailStr = (user?.email || user?.user?.email || '').toLowerCase().trim();
+  const isPetugas = roleStr.includes('kader') || roleStr.includes('bidan') || roleStr.includes('admin') || emailStr.includes('kader') || emailStr.includes('bidan') || emailStr.includes('admin');
+  const isIbuRole = !isPetugas;
 
   const formatTanggalIndo = (dateStr) => {
     if (!dateStr) return '-';
