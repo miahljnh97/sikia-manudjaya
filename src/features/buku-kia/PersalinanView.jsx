@@ -90,8 +90,24 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
   const namaPasien = peserta?.nama || 'Siti Aminah';
   const nikPasien = peserta?.nik ? maskNik(peserta.nik) : '293920102029029';
   const usiaMinggu = kehamilan?.usia_kehamilan_minggu || 28;
+  const usiaHari = kehamilan?.usia_kehamilan_hari ? `${kehamilan.usia_kehamilan_hari} Hari` : '3 Hari';
+  const usiaKehamilanStr = `${usiaMinggu} Minggu ${usiaHari}`;
   const hplDate = kehamilan?.hpl || '20 Desember 2026';
   const hphtDate = kehamilan?.hpht || '12 Februari 2026';
+  const formatHplSingkat = (input) => {
+    if (!input) return '20 Des 2026';
+    if (typeof input === 'string') {
+      const trimmed = input.trim();
+      if (trimmed.includes('Desember')) return trimmed.replace('Desember', 'Des');
+      const d = new Date(trimmed);
+      if (!isNaN(d.getTime())) {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      }
+      return trimmed;
+    }
+    return '20 Des 2026';
+  };
 
   return (
     <div className="space-y-6">
@@ -99,10 +115,10 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-            Kesehatan Ibu / Persalinan & P4K
+            Kesehatan Ibu / Persalinan
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-1">
-            Pantau rencana dan persiapan persalinan {namaPasien} sesuai standar P4K
+            Pantau riwayat pemeriksaan kehamilan dan kondisi ibu secara menyeluruh
           </p>
         </div>
 
@@ -162,7 +178,7 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
             <div className="space-y-1.5 sm:pt-6">
               <div className="flex items-center gap-2 text-slate-500">
                 <span className="w-32 text-slate-400">Usia Kehamilan</span>
-                <span className="font-medium text-slate-800">{usiaMinggu} Minggu</span>
+                <span className="font-medium text-slate-800">{usiaKehamilanStr}</span>
               </div>
               <div className="flex items-center gap-2 text-slate-500">
                 <span className="w-32 text-slate-400">HPHT</span>
@@ -183,7 +199,7 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
             onClick={() => onNavigate && onNavigate(`/data-peserta/detail/${activePesertaId}`)}
             className="px-4 py-2 bg-[#F1E8FB] hover:bg-[#E7D6FA] text-[#7E22CE] rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
           >
-            <span>Lihat Profil Lengkap</span>
+            <span>Lihat Profil</span>
             <ChevronRight size={14} />
           </button>
         </div>
@@ -193,45 +209,45 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1 */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-            <User size={18} />
+          <div className="text-[#E11D48] shrink-0">
+            <Baby size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Status Persalinan</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Belum Melahirkan</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">Belum Melahirkan</span>
           </div>
         </div>
 
         {/* Metric 2 */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-            <Calendar size={18} />
+          <div className="text-[#E11D48] shrink-0">
+            <Calendar size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Taksiran Persalinan</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">{formatTanggalIndo(hplDate)}</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">{formatHplSingkat(hplDate)}</span>
           </div>
         </div>
 
         {/* Metric 3 */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-            <Baby size={18} />
+          <div className="text-[#E11D48] shrink-0">
+            <Baby size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Usia Kehamilan</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">{usiaMinggu} Minggu</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">{usiaKehamilanStr}</span>
           </div>
         </div>
 
         {/* Metric 4 */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-            <Building2 size={18} />
+          <div className="text-[#E11D48] shrink-0">
+            <Building2 size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Rencana Tempat Persalinan</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">
               {p4k?.tempat_persalinan || 'Puskesmas Manud Jaya'}
             </span>
           </div>

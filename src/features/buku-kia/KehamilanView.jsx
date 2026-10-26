@@ -558,7 +558,6 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         <div className="lg:col-span-7 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
           <div>
             <h3 className="text-sm sm:text-base font-bold text-slate-900">Perkembangan Kehamilan</h3>
-            <p className="text-[11px] text-slate-400">Grafik tren kenaikan berat badan ibu dari minggu ke minggu</p>
           </div>
 
           {/* SVG Line / Area Chart */}
