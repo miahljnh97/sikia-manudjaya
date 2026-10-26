@@ -134,7 +134,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
     handleTambahPeserta,
     isModalOpen,
     setIsModalOpen
-  } = useDashboardController();
+  } = useDashboardController(currentUser);
 
   const handleUpdateStatusWithToast = async (id, nextStatus) => {
     await handleUpdateStatus(id, nextStatus);

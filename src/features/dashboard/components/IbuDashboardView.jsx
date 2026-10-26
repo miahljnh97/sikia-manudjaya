@@ -18,7 +18,8 @@ import {
   Syringe,
   Ruler,
   TrendingUp,
-  Baby
+  Baby,
+  FileText
 } from 'lucide-react';
 
 export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
@@ -46,6 +47,9 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
   const [jadwalList, setJadwalList] = useState([]);
   const [ancList, setAncList] = useState([]);
   const [nifasList, setNifasList] = useState([]);
+
+  // Pemeriksaan ANC terbaru dari Supabase
+  const latestAnc = ancList && ancList.length > 0 ? ancList[ancList.length - 1] : null;
 
   useEffect(() => {
     if (!ibuId) return;

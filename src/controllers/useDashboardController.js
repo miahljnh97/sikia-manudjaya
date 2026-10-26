@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { pesertaService } from '../services/pesertaService';
 import { dataStoreService } from '../services/dataStoreService';
 
-export function useDashboardController() {
+export function useDashboardController(currentUser = null) {
   const [pesertaList, setPesertaList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
