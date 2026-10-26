@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { bukuKiaService } from '../../../services/bukuKiaService';
-import { getReminderStatus } from '../../../services/whatsappService';
 import { hitungUsiaString } from '../../../utils/dateUtils';
 import { getPesertaIdFromUser } from '../../../models/pesertaModel';
 import { 
@@ -111,16 +110,17 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
     // 3. Ambil jadwal terdekat
     bukuKiaService.getJadwalPesertaList(ibuId).then(res => {
       if (res && res.length > 0) {
-        const formatted = res.slice(0, 2).map(item => {
+        const formatted = res.slice(0, 2).map((item, idx) => {
           try {
             const d = new Date(item.tanggal);
             const day = String(d.getDate()).padStart(2, '0');
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
             const month = months[d.getMonth()] || 'Okt';
+            const defaultTitle = idx === 0 ? 'Pemeriksaan Kehamilan' : 'Posyandu Balita';
             return {
               day,
               month,
-              title: item.jenis_kegiatan || (isIbuHamilOnly ? 'Pemeriksaan Kehamilan (ANC)' : 'Pemeriksaan Rutin Posyandu'),
+              title: item.jenis_kegiatan ? item.jenis_kegiatan.replace(' (ANC)', '') : defaultTitle,
               location: item.lokasi || 'Puskesmas Manud Jaya',
               tanggal: item.tanggal
             };
@@ -128,7 +128,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
             return {
               day: '20',
               month: 'Okt',
-              title: item.jenis_kegiatan || 'Pemeriksaan Rutin Posyandu',
+              title: idx === 0 ? 'Pemeriksaan Kehamilan' : 'Posyandu Balita',
               location: item.lokasi || 'Puskesmas Manud Jaya',
               tanggal: item.tanggal
             };
@@ -142,16 +142,16 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
           {
             day: '20',
             month: 'Okt',
-            title: isIbuHamilOnly ? 'Pemeriksaan Kehamilan (ANC)' : 'Pemeriksaan Rutin Posyandu',
+            title: 'Pemeriksaan Kehamilan',
             location: 'Puskesmas Manud Jaya',
             tanggal: '2026-10-20'
           },
           {
-            day: '28',
+            day: '20',
             month: 'Okt',
-            title: isIbuHamilOnly ? 'Kelas Ibu Hamil' : 'Pemberian Makanan Tambahan (PMT)',
-            location: 'Balai Pertemuan Warga',
-            tanggal: '2026-10-28'
+            title: 'Posyandu Balita',
+            location: 'Puskesmas Manud Jaya',
+            tanggal: '2026-10-20'
           }
         ]);
       }
@@ -351,7 +351,6 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
           <div className="space-y-3">
             {jadwalList.map((item, idx) => {
-              const reminder = getReminderStatus(item.tanggal);
               return (
                 <div 
                   key={idx}
@@ -364,14 +363,9 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                       <span className="text-[10px] uppercase font-semibold">{item.month}</span>
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
-                          {item.title}
-                        </h4>
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold border ${reminder.badgeColor}`}>
-                          {reminder.label}
-                        </span>
-                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
+                        {item.title}
+                      </h4>
                       <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
                         <MapPin size={12} className="text-slate-400" />
                         <span>{item.location}</span>
@@ -399,7 +393,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
               className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-11 h-11 rounded-2xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0 border border-pink-100">
+                <div className="w-11 h-11 rounded-full bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0 border border-pink-100">
                   <Pill size={18} />
                 </div>
                 <div>
@@ -414,48 +408,26 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
               <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
             </div>
 
-            {/* Item 2: Imunisasi Campak Rubella jika ada anak, atau ANC lanjutan */}
-            {hasAnak && anak ? (
-              <div 
-                onClick={() => handleNav(`/kesehatan-anak/imunisasi?anak_id=${anak?.id || '06b1c286-adb3-4c40-a6cf-51e7c0fa5a12'}`)}
-                className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
-              >
-                <div className="flex items-center gap-3.5">
-                  <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100">
-                    <Syringe size={18} />
-                  </div>
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
-                      Imunisasi Campak Rubella
-                    </h4>
-                    <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                      20 Oktober 2026
-                    </p>
-                  </div>
+            {/* Item 2: Imunisasi Campak Rubella */}
+            <div 
+              onClick={() => handleNav(hasAnak && anak ? `/kesehatan-anak/imunisasi?anak_id=${anak?.id}` : '/jadwal-saya')}
+              className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100">
+                  <Syringe size={18} />
                 </div>
-                <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
-              </div>
-            ) : (
-              <div 
-                onClick={() => handleNav('/kesehatan-ibu/pemeriksaan')}
-                className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
-              >
-                <div className="flex items-center gap-3.5">
-                  <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
-                    <Activity size={18} />
-                  </div>
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
-                      Pemeriksaan USG Trimester 3
-                    </h4>
-                    <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                      28 Oktober 2026
-                    </p>
-                  </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
+                    Imunisasi Campak Rubella
+                  </h4>
+                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                    20 Oktober 2026
+                  </p>
                 </div>
-                <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
               </div>
-            )}
+              <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
+            </div>
           </div>
         </div>
       </div>

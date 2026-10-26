@@ -489,11 +489,11 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         {/* Pemeriksaan Kehamilan ANC */}
         <div 
           onClick={() => onNavigate && onNavigate(`/kesehatan-ibu/pemeriksaan?peserta_id=${activePesertaId}`)}
-          className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 hover:shadow-sm transition-all group"
+          className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-purple-200 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-              <Stethoscope size={20} />
+            <div className="text-purple-600 shrink-0">
+              <Users size={24} />
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-medium block">Pemeriksaan Kehamilan</span>
@@ -506,8 +506,8 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         {/* Konsumsi TTD/MMS */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-              <HeartPulse size={20} />
+            <div className="text-purple-600 shrink-0">
+              <HeartPulse size={24} />
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-medium block">Konsumsi TTD/MMS</span>
@@ -521,11 +521,11 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         {/* Jadwal Mendatang */}
         <div 
           onClick={() => onNavigate && onNavigate('/jadwal-saya')}
-          className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 hover:shadow-sm transition-all group"
+          className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-purple-200 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-              <Calendar size={20} />
+            <div className="text-purple-600 shrink-0">
+              <Calendar size={24} />
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-medium block">Jadwal Mendatang</span>
@@ -539,8 +539,8 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         {/* Berat Badan */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-              <Weight size={20} />
+            <div className="text-purple-600 shrink-0">
+              <Weight size={24} />
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-medium block">Berat badan</span>
