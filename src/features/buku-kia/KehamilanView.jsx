@@ -14,7 +14,10 @@ import {
   Users,
   Activity,
   Heart,
-  Baby
+  Baby,
+  ExternalLink,
+  BookOpen,
+  Download
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
@@ -44,6 +47,9 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
   const [peserta, setPeserta] = useState(null);
   const [kehamilan, setKehamilan] = useState(null);
   const [selectedPanduan, setSelectedPanduan] = useState(null);
+  const [showAllPanduan, setShowAllPanduan] = useState(false);
+  const [selectedKategoriPanduan, setSelectedKategoriPanduan] = useState('Semua');
+  const [ancList, setAncList] = useState([]);
   // Jumlah janin dinamis murni dari database Supabase / URL query ?janin=N
   const jumlahJanin = (() => {
     if (typeof window !== 'undefined' && window.location.search) {
@@ -57,8 +63,16 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
   })();
   const [activeJaninId, setActiveJaninId] = useState('janin-1');
 
-  // Generator data klinis dinamis untuk Janin 1 ... Janin N (termasuk edge case kembar 19)
-  const generateJaninList = (count) => {
+  // Pemeriksaan ANC terbaru dari Supabase
+  const latestAnc = ancList && ancList.length > 0 ? ancList[ancList.length - 1] : null;
+
+  // Generator data klinis dinamis untuk Janin 1 ... Janin N (terintegrasi Supabase)
+  const generateJaninList = (count, ancRecord) => {
+    // Jika ada detail janin tersimpan di kolom JSONB kehamilan_ibu Supabase
+    if (kehamilan?.detail_janin && Array.isArray(kehamilan.detail_janin) && kehamilan.detail_janin.length > 0) {
+      return kehamilan.detail_janin;
+    }
+
     const positions = [
       'Presentasi Kepala (Preskep)',
       'Presentasi Bokong (Sungsang)',
@@ -80,26 +94,40 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
 
     return Array.from({ length: count }, (_, i) => {
       const idx = i + 1;
-      // Rumus fisiologis agar DJJ selalu aman di rentang 130 - 154 x/menit berapapun jumlah janinnya
-      const djjVal = 130 + ((idx * 7) % 25);
+      const isFirst = idx === 1;
+
+      // DJJ: Gunakan hasil rekam medis ANC riil dari Supabase bila tersedia
+      const djjVal = (isFirst && ancRecord?.djj) 
+        ? parseInt(ancRecord.djj) 
+        : (130 + ((idx * 7) % 25));
+
+      // TBJ: Dihitung secara klinis dari TFU (Tinggi Fundus Uteri) ANC terbaru (Johnson-Toshack: (TFU - 12) * 155 gram)
+      let tbjVal = Math.max(500, 1250 - ((idx * 35) % 400));
+      if (isFirst && ancRecord?.tinggi_fundus) {
+        const tfu = parseFloat(ancRecord.tinggi_fundus);
+        if (!isNaN(tfu) && tfu > 12) {
+          tbjVal = Math.round((tfu - 12) * 155);
+        }
+      }
+
       return {
         id: `janin-${idx}`,
         label: `Janin ${idx}`,
         alias: `Calon Si Kecil ${idx}`,
         djj: djjVal,
         djjStatus: 'Normal (120 - 160 x/mnt)',
-        tbj: Math.max(500, 1250 - ((idx * 35) % 400)),
+        tbj: tbjVal,
         tbjKet: count > 1 ? `Sesuai kurva kehamilan kembar (${count} janin)` : 'Sesuai kurva kehamilan tunggal',
         gerakan: `${Math.max(8, 12 - (idx % 4))} kali / 12 jam`,
         gerakanKet: 'Aktif & Responsif',
         posisi: positions[(idx - 1) % positions.length],
         letakDjj: `Punctum maximum di ${quadrants[(idx - 1) % quadrants.length]} perut ibu`,
-        catatanBidan: `Kondisi klinis Janin ${idx} sehat, detak jantung reguler dan kuat.`
+        catatanBidan: ancRecord?.catatan_tindak_lanjut || `Kondisi klinis Janin ${idx} sehat, detak jantung reguler dan kuat.`
       };
     });
   };
 
-  const dataJaninList = generateJaninList(jumlahJanin);
+  const dataJaninList = generateJaninList(jumlahJanin, latestAnc);
   const selectedJanin = dataJaninList.find(j => j.id === activeJaninId) || dataJaninList[0];
 
   // Sinkronkan saat URL berubah
@@ -129,7 +157,19 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
       if (p) setPeserta(p);
     });
     bukuKiaService.getKehamilanIbu(activePesertaId).then(k => {
-      if (k) setKehamilan(k);
+      if (k) {
+        setKehamilan(k);
+        if (k.id) {
+          bukuKiaService.getPemeriksaanAncList(k.id).then(list => {
+            setAncList(list || []);
+          });
+        } else {
+          setAncList([]);
+        }
+      } else {
+        setKehamilan(null);
+        setAncList([]);
+      }
     });
   }, [activePesertaId]);
 
@@ -140,44 +180,102 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
     }
   };
 
-  const panduanList = [
+  const semuaPanduanList = [
     {
       id: 'tanda-bahaya',
+      kategori: 'Kehamilan',
       title: 'Tanda bahaya kehamilan',
-      desc: 'Kenali tanda bahaya seperti perdarahan, sakit kepala hebat, bengkak pada wajah dan kaki, serta gerakan janin berkurang.',
+      desc: 'Kenali tanda bahaya yang memerlukan penanganan segera dari tenaga kesehatan di Puskesmas atau Rumah Sakit.',
       points: [
-        'Perdarahan dari jalan lahir',
-        'Bengkak pada kaki, tangan, dan wajah disertai sakit kepala hebat',
-        'Demam tinggi atau kejang',
-        'Gerakan janin berkurang atau tidak terasa',
-        'Air ketuban keluar sebelum waktunya'
+        'Perdarahan dari jalan lahir (bercak atau darah segar)',
+        'Bengkak pada kaki, tangan, dan wajah disertai sakit kepala hebat atau pandangan kabur',
+        'Demam tinggi (>38°C) atau kejang',
+        'Gerakan janin berkurang atau tidak terasa (kurang dari 10 gerakan dalam 12 jam)',
+        'Air ketuban keluar sebelum waktunya (merembes atau menyembur)',
+        'Muntah terus-menerus dan tidak dapat makan sama sekali'
       ]
     },
     {
       id: 'persiapan-persalinan',
-      title: 'Persiapan persalinan',
-      desc: 'Panduan persiapan P4K (Program Perencanaan Persalinan dan Pencegahan Komplikasi) menyambut kelahiran sang buah hati.',
+      kategori: 'Persiapan Persalinan',
+      title: 'Persiapan persalinan (P4K)',
+      desc: 'Program Perencanaan Persalinan dan Pencegahan Komplikasi (P4K) untuk menyambut kelahiran secara aman dan selamat.',
       points: [
-        'Tentukan tempat persalinan dan penolong persalinan (Bidan/Dokter)',
-        'Siapkan dana persalinan dan jaminan kesehatan (BPJS/KIS)',
-        'Siapkan kendaraan/transportasi siaga',
-        'Siapkan calon pendonor darah jika diperlukan',
-        'Siapkan perlengkapan ibu dan bayi baru lahir minimal 1 bulan sebelum HPL'
+        'Tentukan tempat persalinan dan penolong persalinan (Bidan/Dokter Sp.OG)',
+        'Siapkan dana cadangan persalinan dan pastikan kepesertaan jaminan kesehatan (BPJS/KIS) aktif',
+        'Siapkan kendaraan dan rute transportasi siaga 24 jam',
+        'Siapkan minimal 2 orang calon pendonor darah yang bergolongan darah sama',
+        'Siapkan tas siaga persalinan berisi dokumen (KTP, KK, Buku KIA) dan perlengkapan ibu & bayi minimal 1 bulan sebelum HPL'
+      ]
+    },
+    {
+      id: 'perawatan-sehari-hari',
+      kategori: 'Gizi & Pola Hidup',
+      title: 'Perawatan sehari-hari & gizi ibu hamil',
+      desc: 'Panduan pola makan gizi seimbang, konsumsi suplemen TTD/MMS, dan kebersihan diri selama kehamilan.',
+      points: [
+        'Makan makanan bergizi seimbang dengan porsi bertambah: karbohidrat, protein hewani/nabati, sayuran hijau, dan buah',
+        'Konsumsi Tablet Tambah Darah (TTD) minimal 90 tablet selama kehamilan, diminum malam hari dengan air putih atau jus buah',
+        'Istirahat cukup: tidur malam 6-7 jam dan tidur siang 1-2 jam dengan posisi miring ke kiri',
+        'Jaga kebersihan diri: mandi teratur, gosok gigi 2x sehari, dan ganti pakaian dalam jika lembab',
+        'Hindari paparan asap rokok, minuman beralkohol, dan obat-obatan tanpa anjuran dokter/bidan'
+      ]
+    },
+    {
+      id: 'aktivitas-senam-hamil',
+      kategori: 'Gizi & Pola Hidup',
+      title: 'Aktivitas fisik & senam hamil',
+      desc: 'Panduan menjaga kebugaran, postur tubuh, serta latihan relaksasi pernapasan menjelang kelahiran.',
+      points: [
+        'Tetap beraktivitas ringan sehari-hari, hindari mengangkat beban berat atau berdiri terlalu lama',
+        'Jalan kaki pagi selama 20-30 menit secara rutin untuk melancarkan sirkulasi darah',
+        'Lakukan senam hamil terpandu setelah usia kehamilan di atas 28 minggu',
+        'Latihan teknik pernapasan dan relaksasi untuk persiapan menghadapi proses persalinan',
+        'Segera istirahat bila merasakan lelah, pusing, nyeri perut, atau sesak napas'
+      ]
+    },
+    {
+      id: 'kesehatan-jiwa',
+      kategori: 'Kehamilan',
+      title: 'Kesehatan jiwa & dukungan keluarga',
+      desc: 'Pentingnya menjaga kenyamanan psikologis ibu hamil dan peran aktif suami dalam mendampingi kehamilan.',
+      points: [
+        'Suami aktif mendampingi ibu saat kontrol kehamilan (ANC) ke fasilitas kesehatan',
+        'Ungkapkan perasaan cemas atau ketidaknyamanan kepada suami, keluarga, atau tenaga kesehatan',
+        'Luangkan waktu untuk relaksasi, meditasi ringan, atau mendengarkan murottal/musik menenangkan',
+        'Dukungan pembagian tugas rumah tangga dari anggota keluarga',
+        'Pencegahan dan deteksi dini gejala kecemasan atau depresi masa kehamilan'
       ]
     },
     {
       id: 'perawatan-pasca-persalinan',
-      title: 'Perawatan pasca persalinan',
-      desc: 'Langkah awal perawatan masa nifas, inisiasi menyusu dini (IMD), dan perawatan tali pusat bayi baru lahir.',
+      kategori: 'Pasca Bersalin & Bayi',
+      title: 'Perawatan pasca persalinan (Masa Nifas)',
+      desc: 'Pemantauan masa nifas selama 42 hari, inisiasi menyusu dini, dan perawatan kesehatan ibu pasca melahirkan.',
       points: [
-        'Inisiasi Menyusu Dini (IMD) segera dalam 1 jam pertama setelah lahir',
-        'Pemberian ASI Eksklusif selama 6 bulan pertama',
-        'Menjaga kebersihan area intim dan luka jahitan pasca bersalin',
-        'Istirahat yang cukup saat bayi sedang tidur',
-        'Kontrol nifas (KF 1 - KF 4) sesuai anjuran bidan'
+        'Inisiasi Menyusu Dini (IMD) segera dalam 1 jam pertama setelah bayi lahir',
+        'Pemberian ASI Eksklusif selama 6 bulan pertama tanpa tambahan makanan atau minuman lain',
+        'Menjaga kebersihan area jalan lahir dan perawatan luka jahitan pasca persalinan',
+        'Kontrol kesehatan masa nifas (KF 1 - KF 4) sesuai anjuran bidan untuk evaluasi rahim dan laktasi',
+        'Konsumsi makanan tinggi protein, sayuran berdaun hijau, dan minum air minimal 2,5 - 3 liter/hari'
+      ]
+    },
+    {
+      id: 'perawatan-bayi-baru-lahir',
+      kategori: 'Pasca Bersalin & Bayi',
+      title: 'Perawatan bayi baru lahir & imunisasi',
+      desc: 'Pedoman awal merawat tali pusat, menjaga suhu bayi, serta jadwal imunisasi dasar lengkap sesuai Buku KIA.',
+      points: [
+        'Jaga kehangatan bayi melalui kontak kulit ke kulit (Metode Kanguru) dan pakaian kering yang nyaman',
+        'Rawat tali pusat dalam keadaan bersih dan kering tanpa dibubuhi alkohol, antiseptik, atau ramuan apa pun',
+        'Pastikan bayi mendapatkan suntikan Vitamin K1, salep mata antibiotik, dan imunisasi Hepatitis B0 (HB0) dalam 24 jam pertama',
+        'Ikuti Skrining Hipotiroid Kongenital (SHK) pada usia bayi 48-72 jam untuk mencegah gangguan tumbuh kembang',
+        'Waspadai tanda bahaya bayi: malas menyusu, kejang, napas cepat, badan kuning, atau demam tinggi'
       ]
     }
   ];
+
+  const panduanList = semuaPanduanList.slice(0, 3);
 
   const namaIbu = peserta?.nama || 'Siti Aminah';
   const usiaMinggu = kehamilan?.usia_kehamilan_minggu || 28;
@@ -489,15 +587,15 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         {/* Pemeriksaan Kehamilan ANC */}
         <div 
           onClick={() => onNavigate && onNavigate(`/kesehatan-ibu/pemeriksaan?peserta_id=${activePesertaId}`)}
-          className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 hover:shadow-sm transition-all group"
+          className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-purple-200 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-              <Stethoscope size={20} />
+            <div className="text-purple-600 shrink-0">
+              <Users size={24} />
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-medium block">Pemeriksaan Kehamilan</span>
-              <span className="text-sm font-bold text-slate-900 mt-0.5 block">5 dari 8 kali</span>
+              <span className="text-sm font-bold text-slate-900 mt-0.5 block">{ancList.length} dari 6 Standar Kemenkes</span>
             </div>
           </div>
           <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
@@ -506,8 +604,8 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         {/* Konsumsi TTD/MMS */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-              <HeartPulse size={20} />
+            <div className="text-purple-600 shrink-0">
+              <HeartPulse size={24} />
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-medium block">Konsumsi TTD/MMS</span>
@@ -521,11 +619,11 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         {/* Jadwal Mendatang */}
         <div 
           onClick={() => onNavigate && onNavigate('/jadwal-saya')}
-          className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-200 hover:shadow-sm transition-all group"
+          className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between cursor-pointer hover:border-purple-200 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-              <Calendar size={20} />
+            <div className="text-purple-600 shrink-0">
+              <Calendar size={24} />
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-medium block">Jadwal Mendatang</span>
@@ -539,8 +637,8 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         {/* Berat Badan */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-              <Weight size={20} />
+            <div className="text-purple-600 shrink-0">
+              <Weight size={24} />
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-medium block">Berat badan</span>
@@ -558,7 +656,6 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         <div className="lg:col-span-7 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
           <div>
             <h3 className="text-sm sm:text-base font-bold text-slate-900">Perkembangan Kehamilan</h3>
-            <p className="text-[11px] text-slate-400">Grafik tren kenaikan berat badan ibu dari minggu ke minggu</p>
           </div>
 
           {/* SVG Line / Area Chart */}
@@ -639,8 +736,10 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
 
           {/* Chart Legend */}
           <div className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-600">
-            <span className="w-3 h-0.5 bg-[#E11D48] inline-block rounded-full"></span>
-            <span className="w-2 h-2 rounded-full border-2 border-[#E11D48] bg-white inline-block"></span>
+            <svg width="24" height="12" viewBox="0 0 24 12" className="inline-block shrink-0">
+              <line x1="0" y1="6" x2="24" y2="6" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="12" cy="6" r="3.5" fill="#FFFFFF" stroke="#E11D48" strokeWidth="2" />
+            </svg>
             <span className="font-medium text-slate-700">Berat Badan</span>
           </div>
         </div>
@@ -651,66 +750,60 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
           <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
             <h3 className="text-sm sm:text-base font-bold text-slate-900">Konsumsi TTD/MMS</h3>
 
-            <div className="flex items-center gap-6">
-              {/* SVG Donut Chart */}
-              <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  {/* Background Ring (Belum diminum - 5 hari / 18%) */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="38"
-                    fill="transparent"
-                    stroke="#E2E8F0"
-                    strokeWidth="14"
-                  />
-                  {/* Foreground Ring (Sudah diminum - 23 hari / 82%) */}
-                  {/* Circumference = 2 * PI * 38 = 238.76. 82.1% = 196 */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="38"
-                    fill="transparent"
-                    stroke="#E11D48"
-                    strokeWidth="14"
-                    strokeDasharray="238.76"
-                    strokeDashoffset="42.7"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                {/* Center Percentage Display */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-base font-extrabold text-slate-900 leading-none">82%</span>
-                  <span className="text-[9px] text-slate-400 mt-0.5">Tercapai</span>
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+              {/* SVG Donut Chart (Hollow, tanpa text center) */}
+              <div className="sm:col-span-3 flex justify-center">
+                <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="38"
+                      fill="transparent"
+                      stroke="#E2E8F0"
+                      strokeWidth="14"
+                    />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="38"
+                      fill="transparent"
+                      stroke="#E11D48"
+                      strokeWidth="14"
+                      strokeDasharray="238.76"
+                      strokeDashoffset="42.7"
+                      strokeLinecap="round"
+                    />
+                  </svg>
                 </div>
               </div>
 
               {/* Legend List */}
-              <div className="space-y-2.5 text-xs flex-1">
-                <div className="flex items-center justify-between">
+              <div className="sm:col-span-4 space-y-2.5 text-xs">
+                <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#E11D48] shrink-0" />
                     <span className="text-slate-600">Sudah diminum</span>
                   </div>
-                  <span className="font-bold text-slate-900">23 hari</span>
+                  <span className="font-bold text-slate-900 shrink-0">23 hari</span>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0" />
                     <span className="text-slate-600">Belum diminum</span>
                   </div>
-                  <span className="font-bold text-slate-900">5 hari</span>
+                  <span className="font-bold text-slate-900 shrink-0">5 hari</span>
                 </div>
               </div>
-            </div>
 
-            {/* Blue / Purple Info Callout Box */}
-            <div className="bg-[#EEF2FF] border border-[#E0E7FF] rounded-2xl p-4 flex items-start gap-3 text-xs text-[#3730A3]">
-              <Info size={18} className="shrink-0 text-[#4F46E5] mt-0.5" />
-              <p className="leading-relaxed">
-                Tablet Tambah Darah (TTD) dilanjutkan diminum setiap hari selama kehamilan, minimal 90 tablet (3 bulan) sesuai buku KIA
-              </p>
+              {/* Blue / Purple Info Callout Box */}
+              <div className="sm:col-span-5 bg-[#EEF2FF] border border-[#E0E7FF] rounded-2xl p-3 flex flex-col gap-1.5 text-[11px] text-[#3730A3]">
+                <Info size={16} className="shrink-0 text-[#4F46E5]" />
+                <p className="leading-snug">
+                  Tablet Tambah Darah (TTD) dilanjutkan diminum setiap hari selama kehamilan, minimal 90 tablet (3 bulan) sesuai buku KIA
+                </p>
+              </div>
             </div>
           </div>
 
@@ -720,7 +813,7 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
               <h3 className="text-sm sm:text-base font-bold text-slate-900">Panduan untuk Ibu</h3>
               <button 
                 type="button"
-                onClick={() => setSelectedPanduan(panduanList[0])}
+                onClick={() => setShowAllPanduan(true)}
                 className="text-xs font-bold text-[#E11D48] hover:underline cursor-pointer"
               >
                 Lihat Semua
@@ -743,6 +836,22 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
                   <ChevronRight size={15} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                 </div>
               ))}
+            </div>
+
+            {/* Opsi Akses Buku KIA 2024 Resmi Kemenkes */}
+            <div className="pt-2 border-t border-slate-100">
+              <a
+                href="https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 px-3.5 bg-gradient-to-r from-pink-50 to-rose-50 hover:from-pink-100 hover:to-rose-100 border border-pink-200/70 rounded-2xl flex items-center justify-between text-xs font-bold text-[#BE185D] transition-all cursor-pointer group shadow-2xs"
+              >
+                <div className="flex items-center gap-2">
+                  <BookOpen size={15} className="text-[#E11D48] shrink-0" />
+                  <span>Buku KIA 2024 (PDF Resmi Kemenkes)</span>
+                </div>
+                <ExternalLink size={13} className="text-[#E11D48] group-hover:translate-x-0.5 transition-transform" />
+              </a>
             </div>
           </div>
         </div>
@@ -775,11 +884,21 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
               </div>
             </div>
 
-            <div className="pt-2 flex justify-end">
+            <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+              <a
+                href="https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-[#E11D48] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <BookOpen size={14} />
+                <span>Buka di Buku KIA 2024 (PDF Resmi)</span>
+                <ExternalLink size={12} />
+              </a>
               <button
                 type="button"
                 onClick={() => setSelectedPanduan(null)}
-                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer"
               >
                 Tutup
               </button>
@@ -787,6 +906,145 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
           </div>
         </div>
       )}
+
+      {/* Modal Semua Panduan untuk Ibu (Buku KIA 2024) */}
+      {showAllPanduan && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150 overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                  Panduan Lengkap untuk Ibu (Buku KIA)
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Pedoman kesehatan resmi ibu hamil, persiapan persalinan, dan bayi dari Kementerian Kesehatan RI
+                </p>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowAllPanduan(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="p-6 overflow-y-auto space-y-5 flex-1">
+              {/* Banner Resmi Buku KIA 2024 PDF */}
+              <div className="p-4 bg-gradient-to-r from-pink-50 via-rose-50 to-purple-50 border border-pink-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-start sm:items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white text-[#E11D48] shadow-xs flex items-center justify-center shrink-0">
+                    <BookOpen size={20} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+                      Buku KIA 2024 Resmi Kemenkes RI
+                    </h4>
+                    <p className="text-[11px] text-slate-600 mt-0.5">
+                      Buka dokumen digital resmi panduan ibu dan anak langsung dari Kementerian Kesehatan RI
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href="https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer shrink-0"
+                >
+                  <Download size={13} />
+                  <span>Buka PDF Buku KIA</span>
+                  <ExternalLink size={13} />
+                </a>
+              </div>
+
+              {/* Kategori Filter Tabs */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {['Semua', 'Kehamilan', 'Gizi & Pola Hidup', 'Persiapan Persalinan', 'Pasca Bersalin & Bayi'].map((kat) => (
+                  <button
+                    key={kat}
+                    type="button"
+                    onClick={() => setSelectedKategoriPanduan(kat)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      selectedKategoriPanduan === kat
+                        ? 'bg-[#E11D48] text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {kat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Daftar Panduan */}
+              <div className="space-y-3">
+                {semuaPanduanList
+                  .filter(item => selectedKategoriPanduan === 'Semua' || item.kategori === selectedKategoriPanduan)
+                  .map((item) => (
+                    <div 
+                      key={item.id}
+                      className="p-4 rounded-2xl border border-slate-100 bg-white hover:border-pink-200/80 transition-all space-y-2.5 shadow-2xs"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-pink-50 text-pink-700 border border-pink-100 inline-block mb-1">
+                            {item.kategori}
+                          </span>
+                          <h4 className="text-sm font-bold text-slate-900">{item.title}</h4>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedPanduan(item);
+                          }}
+                          className="px-3 py-1 bg-slate-50 hover:bg-pink-50 text-[#E11D48] border border-pink-100 rounded-lg text-[11px] font-bold cursor-pointer transition-colors shrink-0"
+                        >
+                          Detail
+                        </button>
+                      </div>
+
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        {item.desc}
+                      </p>
+
+                      <div className="p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs text-slate-700">
+                        <span className="text-[11px] font-bold text-slate-800 block">Poin Penting:</span>
+                        <ul className="space-y-1 list-disc pl-4 text-[11px] text-slate-600">
+                          {item.points.slice(0, 3).map((pt, idx) => (
+                            <li key={idx}>{pt}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+              <a
+                href="https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-[#E11D48] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <BookOpen size={14} />
+                <span>Unduh Dokumen Lengkap Buku KIA 2024</span>
+                <ExternalLink size={12} />
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowAllPanduan(false)}
+                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -892,7 +892,7 @@ export const DUMMY_ACCOUNTS = {
   ibu_balita: {
     email: 'ibu.balita@manudjaya.id',
     role: 'Ibu',
-    nama: 'Ibu Ratna',
+    nama: 'Siti Aminah',
     peserta_id: 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73', // Ibu Balita Saja (Alea Shanum Almahira)
   },
   ibu_hamil_anak: {

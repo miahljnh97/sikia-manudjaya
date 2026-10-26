@@ -98,7 +98,7 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
             Kesehatan Ibu / Nifas & Menyusui
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-1">
-            Informasi, persiapan dan pemantauan masa nifas {namaPasien} serta pemberian ASI
+            Informasi, persiapan dan pemantauan masa nifas serta pemberian ASI
           </p>
         </div>
 
@@ -128,45 +128,45 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1 */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-            <Heart size={18} />
+          <div className="text-[#E11D48] shrink-0">
+            <Heart size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Status Nifas</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Belum Selesai</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">Belum</span>
           </div>
         </div>
 
         {/* Metric 2 */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-            <Calendar size={18} />
+          <div className="text-[#E11D48] shrink-0">
+            <Calendar size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Perkiraan Mulai Nifas</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Setelah Persalinan</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">Setelah Persalinan</span>
           </div>
         </div>
 
         {/* Metric 3 */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-            <Milk size={18} />
+          <div className="text-[#E11D48] shrink-0">
+            <Milk size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Rencana Menyusui</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">IMD & ASI Eksklusif</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">IMD & Asi Eksklusif</span>
           </div>
         </div>
 
         {/* Metric 4 */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-            <BookOpen size={18} />
+          <div className="text-[#E11D48] shrink-0">
+            <BookOpen size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Status Edukasi</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Sudah Diberikan</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">Sudah Diberikan</span>
           </div>
         </div>
       </div>
@@ -176,7 +176,7 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
         {/* Tentang Masa Nifas dan Menyusui */}
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col justify-between space-y-4">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Tentang Masa Nifas dan Menyusui ({namaPasien})</h3>
+            <h3 className="text-sm font-bold text-slate-900">Tentang Masa Nifas dan Menyusui</h3>
             <p className="text-xs text-slate-600 leading-relaxed mt-3">
               Masa nifas adalah periode pemulihan setelah persalinan, berlangsung selama 6 minggu. Pada masa ini, ibu perlu mendapatkan pemantauan kesehatan dan dukungan dalam pemberian ASI untuk pertumbuhan optimal bayi.
             </p>
@@ -185,21 +185,21 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
 
         {/* Informasi Tentang ASI */}
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-          <h3 className="text-sm font-bold text-slate-900">Informasi Penting Tentang ASI</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <h3 className="text-sm font-bold text-slate-900">Informasi Tentang ASI</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3.5">
             {edukasiASI.map((item, idx) => (
               <div 
                 key={idx}
                 onClick={() => setSelectedDoc(item)}
-                className="p-3 rounded-xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
+                className="flex items-center justify-between py-1 cursor-pointer group hover:opacity-80 transition-opacity"
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <FileText size={15} className="text-slate-400 group-hover:text-[#E11D48] shrink-0" />
-                  <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900 truncate">
+                <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                  <FileText size={18} className="text-slate-800 shrink-0" />
+                  <span className="text-xs font-medium text-slate-800 leading-snug">
                     {item.title}
                   </span>
                 </div>
-                <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600 shrink-0" />
+                <ChevronRight size={15} className="text-slate-700 shrink-0" />
               </div>
             ))}
           </div>
@@ -209,8 +209,7 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
       {/* 4. Tabel: Riwayat Pemeriksaan Nifas KF 1 - KF 4 */}
       <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-xs">
         <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900">Jadwal & Riwayat Pemeriksaan Nifas (KF 1 - KF 4)</h3>
-          <span className="text-[11px] text-slate-400">Standar Pelayanan Kebidanan</span>
+          <h3 className="text-sm font-bold text-slate-900">Riwayat Pemeriksaan</h3>
         </div>
 
         <div className="overflow-x-auto">
@@ -253,34 +252,72 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
         </div>
       </div>
 
-      {/* 5. Baris Bawah: Tanda Bahaya Masa Nifas */}
-      <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-        <h3 className="text-sm font-bold text-slate-900">Tanda Bahaya Masa Nifas</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-xs text-slate-700">
-          <div className="space-y-2.5">
-            <div className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
-              <span>Perdarahan banyak atau terus menerus dari jalan lahir</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
-              <span>Demam tinggi &gt; 38°C atau menggigil</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
-              <span>Nyeri perut bawah yang hebat atau bau cairan lokia tidak sedap</span>
+      {/* 5. Tanda Bahaya Masa Nifas & Catatan dan Tindak Lanjut */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Kolom Kiri: Tanda Bahaya Masa Nifas */}
+        <div className="space-y-3">
+          <h3 className="text-sm sm:text-base font-bold text-slate-900">
+            Tanda Bahaya Masa Nifas
+          </h3>
+          <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-xs h-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-xs text-slate-700">
+              <div className="space-y-2.5">
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Perdarahan banyak atau terus menerus</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Demam &gt; 38</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Nyeri perut hebat</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Keluar cairan berbau tidak sedap</span>
+                </div>
+              </div>
+
+              <div className="space-y-2.5">
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Payudara bengkak, merah, dan nyeri</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Merasa sangat sedih, cemas, atau tidak mampu merawat bayi</span>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div className="space-y-2.5">
-            <div className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
-              <span>Payudara merah, bengkak, dan sangat nyeri disertai puting lecet</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
-              <span>Merasa sangat sedih, cemas, atau sulit menjalin ikatan dengan bayi (Postpartum Blues)</span>
-            </div>
+        {/* Kolom Kanan: Catatan dan Tindak Lanjut */}
+        <div className="space-y-3">
+          <h3 className="text-sm sm:text-base font-bold text-slate-900">
+            Catatan dan Tindak Lanjut
+          </h3>
+          <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-xs h-full">
+            <ul className="space-y-3 text-xs font-semibold text-[#3B41B2]">
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3B41B2] mt-1.5 shrink-0" />
+                <span className="leading-relaxed">Siapkan rencana persalinan dan dukungan keluarga</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3B41B2] mt-1.5 shrink-0" />
+                <span className="leading-relaxed">Lanjutkan kontrol kehamilan sesuai jadwal</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3B41B2] mt-1.5 shrink-0" />
+                <span className="leading-relaxed">Diskusikan rencana menyusui pada kontrol berikutnya</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3B41B2] mt-1.5 shrink-0" />
+                <span className="leading-relaxed">Pastikan akses ke layanan konseling laktasi</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

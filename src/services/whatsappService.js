@@ -111,7 +111,7 @@ export const getReminderStatus = (targetDateStr) => {
     } else if (diffDays > 0) {
       return { label: `H-${diffDays}`, badgeColor: 'bg-blue-50 text-blue-700 border-blue-200', isUrgent: false, selisihHari: diffDays };
     } else {
-      return { label: 'Selesai / Terlewat', badgeColor: 'bg-slate-100 text-slate-500 border-slate-200', isUrgent: false, selisihHari: diffDays };
+      return { label: 'Selesai', badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200', isUrgent: false, selisihHari: diffDays };
     }
   } catch {
     return { label: 'Akan Datang', badgeColor: 'bg-slate-100 text-slate-600', isUrgent: false, selisihHari: 99 };
