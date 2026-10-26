@@ -25,8 +25,10 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
   const email = (user?.user?.email || user?.email || '').toLowerCase().trim();
   const nama = (user?.nama || '').toLowerCase().trim();
 
-  // Deteksi persona
-  const isIbuHamilOnly = email === 'ibu.hamil@manudjaya.id' || (email.includes('hamil') && !email.includes('anak') && !email.includes('balita'));
+    // Deteksi persona
+  const isIbuBalitaOnly = email === 'ibu.balita@manudjaya.id' || (email.includes('balita') && !email.includes('hamil')) || nama.includes('ratna');
+  const isIbuHamilOnly = email === 'ibu.hamil@manudjaya.id' || (email.includes('hamil') && !email.includes('anak') && !email.includes('balita')) || nama.includes('najwa');
+  const isIbuHamilBalita = email.includes('hamil.anak') || email === 'siti.aminah@manudjaya.id' || nama.includes('aminah') || (!isIbuBalitaOnly && !isIbuHamilOnly);
   
   // Nama default yang sesuai dengan rubrik desain Figma dashboard
   const displayName = (user?.nama && user.nama !== 'Ibu Ratna' && !user.nama.toLowerCase().includes('ratna')) 
@@ -34,6 +36,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
     : 'Siti Aminah';
 
   const ibuId = getPesertaIdFromUser(user) || (
+    isIbuBalitaOnly ? 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73' :
     isIbuHamilOnly ? '214fbe12-2216-4e61-9b12-9fccca445e84' :
     '55af67c9-6695-4435-b4ea-2720efd73c92'
   );
@@ -176,7 +179,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
         ]);
       }
     });
-  }, [ibuId, isIbuHamilOnly]);
+  }, [ibuId, isIbuHamilOnly, isIbuBalitaOnly]);
 
   const hasKehamilan = !isIbuBalitaOnly || Boolean(kehamilan);
   const hasAnak = !isIbuHamilOnly && Boolean(anak && daftarAnak.length > 0);
