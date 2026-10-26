@@ -6,9 +6,6 @@ import {
   Baby, 
   Building2, 
   ChevronRight, 
-  CheckCircle2, 
-  AlertCircle,
-  FileText,
   Users
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
@@ -78,13 +75,13 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
   };
 
   const persiapanList = [
-    { label: 'Kartu Identitas (KTP / KK)', status: p4k ? (p4k.checklist_identitas ? 'Sudah' : 'Belum') : 'Sudah' },
+    { label: 'Kartu Identitas', status: p4k ? (p4k.checklist_identitas ? 'Sudah' : 'Belum') : 'Sudah' },
     { label: 'Buku KIA', status: p4k ? (p4k.checklist_buku_kia ? 'Sudah' : 'Belum') : 'Sudah' },
     { label: 'BPJS / Kartu Jaminan Kesehatan', status: p4k ? (p4k.checklist_bpjs ? 'Sudah' : 'Belum') : 'Sudah' },
     { label: 'Pakaian Ibu dan Bayi', status: p4k ? (p4k.checklist_pakaian ? 'Sudah' : 'Belum') : 'Belum' },
-    { label: 'Perlengkapan Ibu Menyusui', status: p4k ? (p4k.checklist_perlengkapan ? 'Sudah' : 'Belum') : 'Belum' },
-    { label: 'Dana Cadangan Persalinan', status: p4k ? (p4k.checklist_dana_darurat ? 'Sudah' : 'Belum') : 'Belum' },
-    { label: 'Kontak Donor Darah & Kendaraan Siaga', status: p4k ? (p4k.checklist_kontak_darurat ? 'Sudah' : 'Belum') : 'Belum' },
+    { label: 'Perlengkapan Ibu', status: p4k ? (p4k.checklist_perlengkapan ? 'Sudah' : 'Belum') : 'Belum' },
+    { label: 'Dana Darurat', status: p4k ? (p4k.checklist_dana_darurat ? 'Sudah' : 'Belum') : 'Belum' },
+    { label: 'Kontak Darurat', status: p4k ? (p4k.checklist_kontak_darurat ? 'Sudah' : 'Belum') : 'Belum' },
   ];
 
   const namaPasien = peserta?.nama || 'Siti Aminah';
@@ -254,67 +251,57 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
         </div>
       </div>
 
-      {/* 4. Baris Tengah: Rencana Persalinan P4K & Checklist */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        {/* Rencana Persalinan P4K */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <h3 className="text-sm font-bold text-slate-900">Rencana Persalinan (P4K)</h3>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-pink-50 text-pink-700 border border-pink-200">
-              Tercatat
-            </span>
-          </div>
-
-          <div className="space-y-3 text-xs">
-            <div className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between">
-              <span className="text-slate-500 font-medium">Penolong Persalinan:</span>
-              <span className="font-bold text-slate-800">{p4k?.penolong_persalinan || 'Bidan Siti, S.Tr.Keb'}</span>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between">
-              <span className="text-slate-500 font-medium">Tempat Persalinan:</span>
-              <span className="font-bold text-slate-800">{p4k?.tempat_persalinan || 'Puskesmas Manud Jaya'}</span>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between">
-              <span className="text-slate-500 font-medium">Pendamping Persalinan:</span>
-              <span className="font-bold text-slate-800">{p4k?.pendamping || p4k?.pendamping_persalinan || 'Suami'}</span>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between">
-              <span className="text-slate-500 font-medium">Transportasi Siaga:</span>
-              <span className="font-bold text-slate-800">{p4k?.transportasi || 'Mobil Pribadi'}</span>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between">
-              <span className="text-slate-500 font-medium">Calon Pendonor Darah:</span>
-              <span className="font-bold text-slate-800">{p4k?.calon_donor_darah || 'Budi Santoso (Gol. O)'}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Persiapan Perlengkapan & Dokumen */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <h3 className="text-sm font-bold text-slate-900">Checklist Persiapan Persalinan</h3>
-            <span className="text-[11px] font-bold text-emerald-600">{persiapanList.filter(p => p.status === 'Sudah').length} dari {persiapanList.length} Siap</span>
-          </div>
-
-          <div className="space-y-2 text-xs">
-            {persiapanList.map((item, idx) => (
-              <div 
-                key={idx}
-                className="p-3 rounded-2xl border border-slate-100 flex items-center justify-between hover:bg-slate-50/60 transition-colors"
-              >
-                <div className="flex items-center gap-2.5">
-                  <CheckCircle2 size={15} className={item.status === 'Sudah' ? 'text-emerald-500' : 'text-slate-300'} />
-                  <span className="font-medium text-slate-800">{item.label}</span>
-                </div>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                  item.status === 'Sudah' 
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                    : 'bg-amber-50 text-amber-700 border border-amber-200'
-                }`}>
-                  {item.status}
-                </span>
+      {/* 4. Baris Tengah: Rencana Persalinan & Persiapan Persalinan */}
+      <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+          {/* Rencana Persalinan */}
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 mb-4">Rencana Persalinan</h3>
+            <div className="space-y-3.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">Jenis Persalinan</span>
+                <span className="font-semibold text-slate-800">{p4k?.jenis_persalinan || 'Persalinan normal'}</span>
               </div>
-            ))}
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">Tempat Persalinan</span>
+                <span className="font-semibold text-slate-800">{p4k?.tempat_persalinan || 'Puskesmas Manud Jaya'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">Penolong Persalinan</span>
+                <span className="font-semibold text-slate-800">{p4k?.penolong_persalinan || 'Bidan Siti Nurhayati'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">Pendamping</span>
+                <span className="font-semibold text-slate-800">{p4k?.pendamping || 'Suami'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">Transportasi</span>
+                <span className="font-semibold text-slate-800">{p4k?.transportasi || 'Mobil Pribadi'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">Rujukan jika diperlukan</span>
+                <span className="font-semibold text-slate-800">{p4k?.rujukan || 'RSUD Begawan'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Persiapan Persalinan */}
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 mb-4">Persiapan Persalinan</h3>
+            <div className="space-y-3.5 text-xs">
+              {persiapanList.map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between">
+                  <span className="text-slate-500 font-medium">{item.label}</span>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    item.status === 'Sudah'
+                      ? 'bg-emerald-50 text-emerald-600'
+                      : 'bg-slate-100 text-slate-400'
+                  }`}>
+                    {item.status}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

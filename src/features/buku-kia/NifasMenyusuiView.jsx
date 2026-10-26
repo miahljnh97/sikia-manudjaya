@@ -98,7 +98,7 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
             Kesehatan Ibu / Nifas & Menyusui
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-1">
-            Informasi, persiapan dan pemantauan masa nifas {namaPasien} serta pemberian ASI
+            Informasi, persiapan dan pemantauan masa nifas serta pemberian ASI
           </p>
         </div>
 
@@ -128,45 +128,45 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1 */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-            <Heart size={18} />
+          <div className="text-[#E11D48] shrink-0">
+            <Heart size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Status Nifas</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Belum Selesai</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">Belum</span>
           </div>
         </div>
 
         {/* Metric 2 */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-            <Calendar size={18} />
+          <div className="text-[#E11D48] shrink-0">
+            <Calendar size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Perkiraan Mulai Nifas</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Setelah Persalinan</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">Setelah Persalinan</span>
           </div>
         </div>
 
         {/* Metric 3 */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-            <Milk size={18} />
+          <div className="text-[#E11D48] shrink-0">
+            <Milk size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Rencana Menyusui</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">IMD & ASI Eksklusif</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">IMD & Asi Eksklusif</span>
           </div>
         </div>
 
         {/* Metric 4 */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-            <BookOpen size={18} />
+          <div className="text-[#E11D48] shrink-0">
+            <BookOpen size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Status Edukasi</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Sudah Diberikan</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">Sudah Diberikan</span>
           </div>
         </div>
       </div>
@@ -176,7 +176,7 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
         {/* Tentang Masa Nifas dan Menyusui */}
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col justify-between space-y-4">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Tentang Masa Nifas dan Menyusui ({namaPasien})</h3>
+            <h3 className="text-sm font-bold text-slate-900">Tentang Masa Nifas dan Menyusui</h3>
             <p className="text-xs text-slate-600 leading-relaxed mt-3">
               Masa nifas adalah periode pemulihan setelah persalinan, berlangsung selama 6 minggu. Pada masa ini, ibu perlu mendapatkan pemantauan kesehatan dan dukungan dalam pemberian ASI untuk pertumbuhan optimal bayi.
             </p>
