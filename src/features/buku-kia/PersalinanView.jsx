@@ -167,8 +167,12 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
                 <span className="font-medium text-slate-800 font-mono">{nikPasien}</span>
               </div>
               <div className="flex items-center gap-2 text-slate-500">
-                <span className="w-28 text-slate-400">No WA</span>
-                <span className="font-medium text-slate-800">{peserta?.no_wa || '081234567890'}</span>
+                <span className="w-28 text-slate-400">No Rekam Medis</span>
+                <span className="font-medium text-slate-800 font-mono">{peserta?.no_rekam_medis || peserta?.nik || '293920102029029'}</span>
+              </div>
+              <div className="flex items-center gap-2 text-slate-500">
+                <span className="w-28 text-slate-400">Usia</span>
+                <span className="font-medium text-slate-800">{peserta?.usia ? `${peserta.usia} Tahun` : '27 Tahun'}</span>
               </div>
             </div>
 
@@ -302,6 +306,80 @@ export default function PersalinanView({ user, currentPath = '', onNavigate, onS
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Tanda Bahaya Menjelang Persalinan & Catatan dan Tindak Lanjut */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Kolom Kiri: Tanda Bahaya Menjelang Persalinan */}
+        <div className="space-y-3">
+          <h3 className="text-sm sm:text-base font-bold text-slate-900">
+            Tanda Bahaya Menjelang Persalinan
+          </h3>
+          <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-xs h-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-xs text-slate-700">
+              <div className="space-y-2.5">
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Kontraksi teratur dan semakin sering</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Ketuban pecah</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Pendarahan dari jalan lahir</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Gerakan janin berkurang</span>
+                </div>
+              </div>
+
+              <div className="space-y-2.5">
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Nyeri perut hebat tidak bisa hilang</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Demam tinggi</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Pusing hebat</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Kolom Kanan: Catatan dan Tindak Lanjut */}
+        <div className="space-y-3">
+          <h3 className="text-sm sm:text-base font-bold text-slate-900">
+            Catatan dan Tindak Lanjut
+          </h3>
+          <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-xs h-full">
+            <ul className="space-y-3 text-xs font-semibold text-[#3B41B2]">
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3B41B2] mt-1.5 shrink-0" />
+                <span className="leading-relaxed">Lanjutkan kontrol sesuai jadwal</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3B41B2] mt-1.5 shrink-0" />
+                <span className="leading-relaxed">Pastikan semua persiapan persalinan sudah lengkap</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3B41B2] mt-1.5 shrink-0" />
+                <span className="leading-relaxed">Segera ke puskesmas jika ada tanda bahaya</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3B41B2] mt-1.5 shrink-0" />
+                <span className="leading-relaxed">Jaga kondisi kesehatan ibu dan janin</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

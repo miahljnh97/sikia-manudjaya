@@ -252,34 +252,72 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
         </div>
       </div>
 
-      {/* 5. Baris Bawah: Tanda Bahaya Masa Nifas */}
-      <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-        <h3 className="text-sm font-bold text-slate-900">Tanda Bahaya Masa Nifas</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-xs text-slate-700">
-          <div className="space-y-2.5">
-            <div className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
-              <span>Perdarahan banyak atau terus menerus dari jalan lahir</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
-              <span>Demam tinggi &gt; 38°C atau menggigil</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
-              <span>Nyeri perut bawah yang hebat atau bau cairan lokia tidak sedap</span>
+      {/* 5. Tanda Bahaya Masa Nifas & Catatan dan Tindak Lanjut */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Kolom Kiri: Tanda Bahaya Masa Nifas */}
+        <div className="space-y-3">
+          <h3 className="text-sm sm:text-base font-bold text-slate-900">
+            Tanda Bahaya Masa Nifas
+          </h3>
+          <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-xs h-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-xs text-slate-700">
+              <div className="space-y-2.5">
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Perdarahan banyak atau terus menerus</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Demam &gt; 38</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Nyeri perut hebat</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Keluar cairan berbau tidak sedap</span>
+                </div>
+              </div>
+
+              <div className="space-y-2.5">
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Payudara bengkak, merah, dan nyeri</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <span>Merasa sangat sedih, cemas, atau tidak mampu merawat bayi</span>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div className="space-y-2.5">
-            <div className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
-              <span>Payudara merah, bengkak, dan sangat nyeri disertai puting lecet</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
-              <span>Merasa sangat sedih, cemas, atau sulit menjalin ikatan dengan bayi (Postpartum Blues)</span>
-            </div>
+        {/* Kolom Kanan: Catatan dan Tindak Lanjut */}
+        <div className="space-y-3">
+          <h3 className="text-sm sm:text-base font-bold text-slate-900">
+            Catatan dan Tindak Lanjut
+          </h3>
+          <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-xs h-full">
+            <ul className="space-y-3 text-xs font-semibold text-[#3B41B2]">
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3B41B2] mt-1.5 shrink-0" />
+                <span className="leading-relaxed">Siapkan rencana persalinan dan dukungan keluarga</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3B41B2] mt-1.5 shrink-0" />
+                <span className="leading-relaxed">Lanjutkan kontrol kehamilan sesuai jadwal</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3B41B2] mt-1.5 shrink-0" />
+                <span className="leading-relaxed">Diskusikan rencana menyusui pada kontrol berikutnya</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3B41B2] mt-1.5 shrink-0" />
+                <span className="leading-relaxed">Pastikan akses ke layanan konseling laktasi</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
