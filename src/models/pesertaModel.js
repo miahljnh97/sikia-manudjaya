@@ -896,7 +896,7 @@ export const DUMMY_ACCOUNTS = {
   ibu_balita: {
     email: 'ibu.balita@manudjaya.id',
     role: 'Ibu',
-    nama: 'Siti Aminah',
+    nama: 'Ibu Ratna',
     peserta_id: 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73', // Ibu Balita Saja (Alea Shanum Almahira)
   },
   ibu_hamil_anak: {
@@ -925,18 +925,9 @@ export const DUMMY_ACCOUNTS = {
 export function getPesertaIdFromUser(user) {
   if (!user) return null;
   if (user.peserta_id) return user.peserta_id;
-  const role = (user.role || '').toLowerCase().trim();
   const email = (user.user?.email || user.email || '').toLowerCase().trim();
-
-  // Resolusi ID berbasis role resmi dan email sistem (tanpa hardcode nama)
-  if (role === 'ibu balita' || email === 'ibu.balita@manudjaya.id' || (email.includes('balita') && !email.includes('hamil'))) {
-    return 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73';
-  }
-  if (role === 'ibu hamil' || email === 'ibu.hamil@manudjaya.id' || (email.includes('hamil') && !email.includes('anak') && !email.includes('balita'))) {
-    return '214fbe12-2216-4e61-9b12-9fccca445e84';
-  }
-  if (role === 'ibu hamil & balita' || email === 'ibu.hamil.anak@manudjaya.id' || email.includes('hamil.anak') || email === 'siti.aminah@manudjaya.id') {
-    return '55af67c9-6695-4435-b4ea-2720efd73c92';
-  }
+  if (email === 'ibu.balita@manudjaya.id') return 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73';
+  if (email === 'ibu.hamil@manudjaya.id') return '214fbe12-2216-4e61-9b12-9fccca445e84';
+  if (email === 'ibu.hamil.anak@manudjaya.id' || email === 'siti.aminah@manudjaya.id') return '55af67c9-6695-4435-b4ea-2720efd73c92';
   return user.user?.id || user.id || null;
 }

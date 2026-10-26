@@ -55,7 +55,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
       const last = segments[segments.length - 1];
       if (last && last.includes('-') && last.length >= 20) return last;
     }
-    return isIbuRole ? (getPesertaIdFromUser(user) || '55af67c9-6695-4435-b4ea-2720efd73c92') : null;
+    return isIbuRole ? (getPesertaIdFromUser(user) || null) : null;
   };
 
   const defaultAncList = [
@@ -166,10 +166,10 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
   ];
 
   const [daftarIbu, setDaftarIbu] = useState([]);
-  const [activePesertaId, setActivePesertaId] = useState(() => extractPesertaId() || '55af67c9-6695-4435-b4ea-2720efd73c92');
+  const [activePesertaId, setActivePesertaId] = useState(() => extractPesertaId() || null);
   const [peserta, setPeserta] = useState(null);
   const [kehamilan, setKehamilan] = useState(null);
-  const [riwayatList, setRiwayatList] = useState(defaultAncList);
+  const [riwayatList, setRiwayatList] = useState([]);
   const [dokumenList, setDokumenList] = useState(defaultDokumenList);
   const [selectedDokumen, setSelectedDokumen] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -253,11 +253,11 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
                 petugas: item.pemeriksa || 'Bidan Siti, S.Tr.Keb'
               })));
             } else {
-              setRiwayatList(defaultAncList);
+              setRiwayatList([]);
             }
           }
         } else {
-          if (isMounted) setRiwayatList(defaultAncList);
+          if (isMounted) setRiwayatList([]);
         }
       } catch (err) {
         console.error('Error fetching ANC data for mother:', err);

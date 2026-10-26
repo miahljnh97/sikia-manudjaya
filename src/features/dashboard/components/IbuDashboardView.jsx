@@ -40,11 +40,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
     '55af67c9-6695-4435-b4ea-2720efd73c92'
   );
 
-  const [kehamilan, setKehamilan] = useState({
-    usia_kehamilan_minggu: 28,
-    trimester: 3,
-    status_kehamilan: 'Aktif'
-  });
+  const [kehamilan, setKehamilan] = useState(null);
   const [daftarAnak, setDaftarAnak] = useState([]);
   const [anak, setAnak] = useState(null);
   const [jadwalList, setJadwalList] = useState([]);
@@ -66,11 +62,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
         if (res && res.usia_kehamilan_minggu) {
           setKehamilan(res);
         } else {
-          setKehamilan({
-            usia_kehamilan_minggu: 28,
-            trimester: 3,
-            status_kehamilan: 'Aktif'
-          });
+          setKehamilan(null);
         }
         if (res?.id) {
           bukuKiaService.getPemeriksaanAncList(res.id).then(list => {
@@ -80,11 +72,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
           setAncList([]);
         }
       }).catch(() => {
-        setKehamilan({
-          usia_kehamilan_minggu: 28,
-          trimester: 3,
-          status_kehamilan: 'Aktif'
-        });
+        setKehamilan(null);
       });
       bukuKiaService.getPemeriksaanNifasList(ibuId).then(list => {
         setNifasList(list || []);
@@ -101,31 +89,15 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
           const myChildren = list.filter(c => !c.ibu_id || String(c.ibu_id) === String(ibuId));
           const effectiveList = myChildren.length > 0 ? myChildren : list;
           setDaftarAnak(effectiveList);
-          setAnak(effectiveList[0]);
+          setAnak(effectiveList[0] || null);
         } else {
-          const fallbackChild = {
-            id: '06b1c286-adb3-4c40-a6cf-51e7c0fa5a12',
-            nama: 'Alya Putri',
-            ibu_id: ibuId,
-            tgl_lahir: '2025-04-15',
-            jenis_kelamin: 'P',
-            usia: '1 Tahun 6 Bulan'
-          };
-          setDaftarAnak([fallbackChild]);
-          setAnak(fallbackChild);
+          setDaftarAnak([]);
+          setAnak(null);
         }
       }).catch(err => {
         console.warn('Gagal load data anak di dashboard:', err);
-        const fallbackChild = {
-          id: '06b1c286-adb3-4c40-a6cf-51e7c0fa5a12',
-          nama: 'Alya Putri',
-          ibu_id: ibuId,
-          tgl_lahir: '2025-04-15',
-          jenis_kelamin: 'P',
-          usia: '1 Tahun 6 Bulan'
-        };
-        setDaftarAnak([fallbackChild]);
-        setAnak(fallbackChild);
+        setDaftarAnak([]);
+        setAnak(null);
       });
     }
 
@@ -160,22 +132,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
           setJadwalList(formatted);
         }
       } else {
-        setJadwalList([
-          {
-            day: '20',
-            month: 'Okt',
-            title: 'Pemeriksaan Kehamilan',
-            location: 'Puskesmas Manud Jaya',
-            tanggal: '2026-10-20'
-          },
-          {
-            day: '20',
-            month: 'Okt',
-            title: 'Posyandu Balita',
-            location: 'Puskesmas Manud Jaya',
-            tanggal: '2026-10-20'
-          }
-        ]);
+        setJadwalList([]);
       }
     });
   }, [ibuId, isIbuHamilOnly, isIbuBalitaOnly]);
@@ -259,7 +216,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
         {/* Card 2: Kesehatan Anak (Balita Terdaftar vs Belum Terdaftar) */}
         {hasAnak && anak ? (
-          /* Tampilan Anak Terdaftar (Alya Putri) */
+          /* Tampilan Anak Terdaftar */
           <div className="bg-gradient-to-r from-[#FFF5F7] via-[#FFEBF1] to-[#FFE0EA] border border-pink-200/70 rounded-3xl p-6 sm:p-7 relative overflow-hidden shadow-xs flex flex-col justify-between items-center text-center min-h-[220px]">
             <div className="w-full flex items-center justify-between gap-2 flex-wrap">
               <div className="inline-flex items-center gap-2 text-xs font-bold">
@@ -297,12 +254,12 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
             <div className="my-2 flex flex-col items-center max-w-sm">
               <img 
                 src="/images/anak-pertumbuhan.png" 
-                alt={anak?.nama || 'Alya Putri'} 
+                alt={anak?.nama || 'Buah Hati'} 
                 className="h-32 sm:h-36 w-auto object-contain drop-shadow-xs"
                 onError={(e) => { e.target.src = '/images/baby-wreath.png'; }}
               />
               <h3 className="text-2xl sm:text-3xl font-extrabold text-[#E11D48] tracking-tight mt-2">
-                {anak?.nama || (isIbuBalitaOnly ? 'Alya Putri' : 'Dian Pranata')}
+                {anak?.nama || 'Buah Hati'}
               </h3>
               <p className="text-base sm:text-lg font-bold text-slate-800 mt-0.5">
                 {anak?.usia || hitungUsiaString(anak?.tgl_lahir) || (isIbuBalitaOnly ? '1 Tahun 6 Bulan' : '1 Tahun 2 Bulan')}
@@ -481,7 +438,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                   <Heart size={18} />
                 </div>
                 <div>
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">{ancList.length > 0 ? `${ancList.length} dari 8 kali` : '5 dari 8 kali'}</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">{`${ancList.length} dari 6 Standar Kemenkes`}</span>
                   <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Pemeriksaan Kehamilan</span>
                 </div>
                 <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />
@@ -546,7 +503,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
                   <Heart size={18} />
                 </div>
                 <div>
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">{nifasList.filter(n => n.status_pemeriksaan === 'Sudah').length || (nifasList.length > 0 ? nifasList.length : 3)} dari 4 kali</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block leading-tight">{`${nifasList.filter(n => n.status_pemeriksaan === 'Sudah').length} dari 4 kali`}</span>
                   <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Pemeriksaan Nifas</span>
                 </div>
                 <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600" />

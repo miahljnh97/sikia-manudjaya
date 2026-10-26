@@ -65,17 +65,17 @@ export default function PengaturanView({ user, onShowToast }) {
     try {
       const mockJadwal = {
         jenis: 'Pemeriksaan Rutin Kehamilan (ANC Uji Coba)',
-        tanggal: '2026-09-24',
+        tanggal: new Date().toISOString().split('T')[0],
         waktu: '09:00 - 10:00',
         lokasi: 'Puskesmas Manud Jaya',
-        petugas: 'dr. Haryono, Sp.OG',
-        keterangan: 'Uji coba trigger otomatis n8n Webhook -> Fonnte WA Gateway.'
+        petugas: 'Bidan Posyandu',
+        keterangan: 'Uji coba trigger integrasi pengingat WhatsApp SIKIA.'
       };
 
       const res = await sendWhatsAppReminder({
         phone: phoneInput,
         jadwal: mockJadwal,
-        namaIbu: user?.nama || 'Siti Aminah'
+        namaIbu: user?.nama || 'Ibu'
       });
 
       if (res.success) {

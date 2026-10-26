@@ -71,7 +71,7 @@ export const setFonnteToken = (token) => {
  * Normalisasi nomor telepon ke format internasional (misal 08123... -> 628123...)
  */
 export const normalizePhoneForWhatsApp = (phone = '') => {
-  if (!phone) return '6281234567890';
+  if (!phone) return '';
   let clean = String(phone).replace(/\D/g, '');
   if (clean.startsWith('0')) {
     clean = '62' + clean.slice(1);
@@ -142,7 +142,7 @@ export const formatDateDMY = (dateInput) => {
 /**
  * Format template pesan pengingat resmi WhatsApp sesuai PBI-01 AC 2
  */
-export const generateWhatsAppReminderMessage = (jadwal, namaIbu = 'Siti Aminah') => {
+export const generateWhatsAppReminderMessage = (jadwal, namaIbu = 'Ibu') => {
   const statusInfo = getReminderStatus(jadwal?.tanggal);
   const tagH = statusInfo.selisihHari === 1 ? 'PENGINGAT H-1' : (statusInfo.selisihHari === 3 ? 'PENGINGAT H-3' : 'PENGINGAT JADWAL');
   const tanggalBersih = formatDateDMY(jadwal?.tanggal) || 'Sesuai Jadwal';
@@ -169,18 +169,18 @@ _Salam Sehat,_
 /**
  * Kirim pesan WhatsApp menggunakan n8n Webhook, Fonnte API, atau fallback direct wa.me
  */
-export const sendWhatsAppReminder = async ({ phone, jadwal, namaIbu = 'Siti Aminah' }) => {
+export const sendWhatsAppReminder = async ({ phone, jadwal, namaIbu = 'Ibu' }) => {
   const cleanPhone = normalizePhoneForWhatsApp(phone);
   const message = generateWhatsAppReminderMessage(jadwal, namaIbu);
   const n8nUrl = getN8nWebhookUrl();
   const fonnteToken = getFonnteToken();
 
-  const directWaUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+  const directWaUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}` : `https://wa.me/?text=${encodeURIComponent(message)}`;
 
   // 1. Prioritas Utama: Kirim via Webhook n8n (Sesuai Product Brief Tim)
   if (n8nUrl) {
     try {
-      const formattedDate = formatDateDMY(jadwal?.tanggal) || '26-10-2026';
+      const formattedDate = formatDateDMY(jadwal?.tanggal) || formatDateDMY(new Date());
 
       const response = await fetch(n8nUrl, {
         method: 'POST',
@@ -189,8 +189,8 @@ export const sendWhatsAppReminder = async ({ phone, jadwal, namaIbu = 'Siti Amin
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          jadwal_id: jadwal?.id || '6719146f-3c80-4caa-bb2f-e5717d3c64fa',
-          peserta_id: jadwal?.peserta_id || '55af67c9-6695-4435-b4ea-2720efd73c92',
+          jadwal_id: jadwal?.id || null,
+          peserta_id: jadwal?.peserta_id || null,
           nama_ibu: namaIbu,
           phone: cleanPhone,
           target: cleanPhone,
@@ -198,12 +198,12 @@ export const sendWhatsAppReminder = async ({ phone, jadwal, namaIbu = 'Siti Amin
           jenis_kegiatan: jadwal?.jenis || jadwal?.jenis_kegiatan || 'Pemeriksaan Kehamilan ANC',
           tanggal: formattedDate, // Format DD-MM-YYYY (misal: 26-10-2026) tanpa embel-embel timezone
           tanggal_dmy: formattedDate,
-          tanggal_raw: jadwal?.tanggal || '2026-09-24',
+          tanggal_raw: jadwal?.tanggal || new Date().toISOString().split('T')[0],
           waktu_pengingat: formattedDate,
           waktu: jadwal?.waktu || '09:00 - 10:00',
           lokasi: jadwal?.lokasi || 'Puskesmas Manud Jaya',
-          petugas: jadwal?.petugas || 'dr. Haryono, Sp.OG',
-          catatan: jadwal?.keterangan || jadwal?.catatan || 'Membawa Buku KIA.',
+          petugas: jadwal?.petugas || 'Petugas Posyandu / Bidan Desa',
+          catatan: jadwal?.keterangan || jadwal?.catatan || 'Mohon hadir tepat waktu dan membawa Buku KIA.',
           message: message,
           pesan: message,
           pesan_lengkap: message,

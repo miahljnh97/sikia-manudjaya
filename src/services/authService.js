@@ -38,6 +38,7 @@ export const authService = {
         if (!error && data?.user) {
           let userRole = null;
           let userName = null;
+          let pesertaData = null;
 
           // 1. Coba ambil dari tabel kader (dengan relasi roles)
           try {
@@ -58,15 +59,16 @@ export const authService = {
           // 2. Coba ambil dari tabel peserta jika role belum ketemu
           if (!userRole) {
             try {
-              const { data: pesertaData } = await supabase
+              const { data: pData } = await supabase
                 .from('peserta')
                 .select('*')
                 .eq('user_id', data.user.id)
                 .maybeSingle();
 
-              if (pesertaData) {
-                userName = pesertaData.nama;
-                userRole = pesertaData.status_ibu === 'hamil' ? 'Ibu Hamil' : 'Ibu Balita';
+              if (pData) {
+                pesertaData = pData;
+                userName = pData.nama;
+                userRole = pData.status_ibu === 'hamil' ? 'Ibu Hamil' : 'Ibu Balita';
               }
             } catch (err) {
               console.warn('Gagal cek tabel peserta:', err);
@@ -90,10 +92,10 @@ export const authService = {
             userName = userName || DUMMY_ACCOUNTS.bidan.nama;
           } else if (lowerEmail.includes('hamil') || lowerEmail === DUMMY_ACCOUNTS.ibu_hamil?.email) {
             userRole = 'Ibu Hamil';
-            userName = userName || DUMMY_ACCOUNTS.ibu_hamil?.nama || 'Siti Aminah';
+            userName = userName || DUMMY_ACCOUNTS.ibu_hamil?.nama || 'Ibu Hamil';
           } else if (lowerEmail.includes('ibu') || lowerEmail === DUMMY_ACCOUNTS.ibu_balita?.email) {
             userRole = userRole || 'Ibu Balita';
-            userName = 'Siti Aminah';
+            userName = userName || DUMMY_ACCOUNTS.ibu_balita?.nama || 'Ibu Balita';
           } else if (lowerEmail.includes('kader') || lowerEmail === DUMMY_ACCOUNTS.kader.email) {
             userRole = userRole || 'Kader Posyandu';
             userName = userName || DUMMY_ACCOUNTS.kader.nama;
@@ -112,16 +114,7 @@ export const authService = {
             normalizedRole = 'Kader Posyandu';
           }
 
-          let pesertaId = pesertaData?.id;
-          if (!pesertaId) {
-            if (lowerEmail === 'ibu.balita@manudjaya.id' || (lowerEmail.includes('balita') && !lowerEmail.includes('hamil'))) {
-              pesertaId = 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73';
-            } else if (lowerEmail === 'ibu.hamil.anak@manudjaya.id' || lowerEmail === 'siti.aminah@manudjaya.id') {
-              pesertaId = '55af67c9-6695-4435-b4ea-2720efd73c92';
-            } else if (lowerEmail === 'ibu.hamil@manudjaya.id' || lowerEmail.includes('hamil')) {
-              pesertaId = '214fbe12-2216-4e61-9b12-9fccca445e84';
-            }
-          }
+          let pesertaId = pesertaData?.id || data.user.id;
 
           return {
             user: data.user,

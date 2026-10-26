@@ -142,66 +142,14 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
           setActiveAnak(cur);
           setActiveAnakId(cur.id);
         } else {
-          if (isIbuBalitaOnly) {
-            const fallbackAlya = {
-              id: '06b1c286-adb3-4c40-a6cf-51e7c0fa5a12',
-              nama: 'Alya Putri',
-              ibu_id: 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73',
-              tgl_lahir: '2025-04-15',
-              jenis_kelamin: 'P',
-              usia: '1 Tahun 6 Bulan'
-            };
-            setDaftarAnak([fallbackAlya]);
-            setActiveAnak(fallbackAlya);
-            setActiveAnakId(fallbackAlya.id);
-          } else if (isIbuHamilBalita) {
-            const fallbackDian = {
-              id: 'b2222222-2222-2222-2222-222222222222',
-              nama: 'Dian Pranata',
-              ibu_id: '55af67c9-6695-4435-b4ea-2720efd73c92',
-              tgl_lahir: '2024-10-15',
-              jenis_kelamin: 'L',
-              usia: '1 Tahun 2 bulan'
-            };
-            setDaftarAnak([fallbackDian]);
-            setActiveAnak(fallbackDian);
-            setActiveAnakId(fallbackDian.id);
-          } else {
-            setDaftarAnak([]);
-            setActiveAnak(null);
-            setActiveAnakId(null);
-          }
-        }
-      } else {
-        if (isIbuBalitaOnly) {
-          const fallbackAlya = {
-            id: '06b1c286-adb3-4c40-a6cf-51e7c0fa5a12',
-            nama: 'Alya Putri',
-            ibu_id: 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73',
-            tgl_lahir: '2025-04-15',
-            jenis_kelamin: 'P',
-            usia: '1 Tahun 6 Bulan'
-          };
-          setDaftarAnak([fallbackAlya]);
-          setActiveAnak(fallbackAlya);
-          setActiveAnakId(fallbackAlya.id);
-        } else if (isIbuHamilBalita) {
-          const fallbackDian = {
-            id: 'b2222222-2222-2222-2222-222222222222',
-            nama: 'Dian Pranata',
-            ibu_id: '55af67c9-6695-4435-b4ea-2720efd73c92',
-            tgl_lahir: '2024-10-15',
-            jenis_kelamin: 'L',
-            usia: '1 Tahun 2 bulan'
-          };
-          setDaftarAnak([fallbackDian]);
-          setActiveAnak(fallbackDian);
-          setActiveAnakId(fallbackDian.id);
-        } else {
           setDaftarAnak([]);
           setActiveAnak(null);
           setActiveAnakId(null);
         }
+      } else {
+        setDaftarAnak([]);
+        setActiveAnak(null);
+        setActiveAnakId(null);
       }
     });
   }, [user]);

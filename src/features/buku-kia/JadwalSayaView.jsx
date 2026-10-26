@@ -27,14 +27,7 @@ const resolveJadwalStatus = (item) => {
 
 
 export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
-  const defaultIbuHamilJadwal = [
-    { no: 1, id: 'j-1', tanggal: '2026-09-12', displayTanggal: '12 Sep 2026', waktu: '09.00 - 10.00', jenis: 'Pemeriksaan Kehamilan (ANC)', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Siti Nurhayati', keterangan: 'Pemeriksaan ANC Trimester 3 rutin dan USG dasar.' },
-    { no: 2, id: 'j-2', tanggal: '2026-09-24', displayTanggal: '24 Sep 2026', waktu: '09.00 - 10.00', jenis: 'Konseling Gizi Ibu Hamil', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Ahli Gizi Puskesmas', keterangan: 'Evaluasi pola makan, asupan zat besi, dan pencegahan anemia.' },
-    { no: 3, id: 'j-3', tanggal: '2026-10-10', displayTanggal: '10 Okt 2026', waktu: '09.00 - 10.00', jenis: 'Pemeriksaan Kehamilan', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'dr. Haryono, Sp.OG', keterangan: 'Kontrol berkala pemantauan posisi janin dan DJJ.' },
-    { no: 4, id: 'j-4', tanggal: '2026-10-18', displayTanggal: '18 Okt 2026', waktu: '09.00 - 10.00', jenis: 'Pemeriksaan Kehamilan (ANC)', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Siti Nurhayati', keterangan: 'Pemeriksaan kehamilan lanjutan.' },
-    { no: 5, id: 'j-5', tanggal: '2026-10-25', displayTanggal: '25 Okt 2026', waktu: '09.00 - 10.00', jenis: 'Kelas Ibu Hamil', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Koordinator', keterangan: 'Edukasi persiapan persalinan.' },
-    { no: 6, id: 'j-6', tanggal: '2026-11-02', displayTanggal: '02 Nov 2026', waktu: '09.00 - 10.00', jenis: 'Kelas Ibu Hamil', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Koordinator', keterangan: 'Senam hamil dan edukasi IMD.' },
-  ];
+
 
   const userRole = (user?.role || '').toLowerCase().trim();
   const userEmail = (user?.user?.email || user?.email || '').toLowerCase().trim();
@@ -69,7 +62,7 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
     setSelectedDay(null);
   };
 
-  const [jadwalList, setJadwalList] = useState(defaultIbuHamilJadwal);
+  const [jadwalList, setJadwalList] = useState([]);
 
   useEffect(() => {
     const targetIbuId = user?.peserta_id || (user && getPesertaIdFromUser(user)) || user?.id || null;
@@ -246,7 +239,7 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
     try {
       if (blastMetode === 'manual') {
         const cleanPhone = normalizePhoneForWhatsApp(blastTargetPhone);
-        const msg = generateWhatsAppReminderMessage(blastWaJadwal, user?.nama || 'Siti Aminah');
+        const msg = generateWhatsAppReminderMessage(blastWaJadwal, user?.nama || 'Ibu');
         const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
         if (typeof window !== 'undefined') window.open(waUrl, '_blank');
         onShowToast && onShowToast('Membuka WhatsApp Web untuk pengiriman pesan pengingat...', 'info');
@@ -638,7 +631,7 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
               <div>
                 <label className="block text-slate-700 font-bold mb-1">Pratinjau Pesan Broadcast</label>
                 <div className="p-3 bg-[#E7F8E8] border border-emerald-200/80 rounded-2xl text-[11px] text-slate-800 font-mono whitespace-pre-wrap leading-relaxed max-h-36 overflow-y-auto">
-                  {generateWhatsAppReminderMessage(blastWaJadwal, user?.nama || 'Siti Aminah')}
+                  {generateWhatsAppReminderMessage(blastWaJadwal, user?.nama || 'Ibu')}
                 </div>
               </div>
 
