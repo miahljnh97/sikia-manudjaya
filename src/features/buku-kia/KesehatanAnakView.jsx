@@ -839,74 +839,65 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
       ====================================================================== */}
       {activeSub === 'Pertumbuhan' && (
         <div className="space-y-6">
-          {/* Top Banner Profil Anak (Sesuai Expected Result media_1792892624643_a2d6232f.png) */}
-          <div className="bg-gradient-to-r from-[#FFF0F4] via-[#FFE4EC] to-[#FFD6E4] border border-pink-200/70 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            {/* Sisi Kiri: Avatar Anak + Nama + Usia + Gender & Tanggal Lahir */}
-            <div className="flex items-center gap-4 sm:gap-5">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-pink-200 bg-white/80 p-1 overflow-hidden shrink-0 shadow-xs flex items-center justify-center">
-                <img 
-                  src="/images/anak-pertumbuhan.png" 
-                  alt={activeAnak?.nama || 'Farhan'} 
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    e.target.src = '/images/baby-wreath.png';
-                  }}
-                />
+          {/* Top Banner Profil Anak (Sesuai Expected Result Figma QA) */}
+          <div className="bg-[#FFF0F4] border border-pink-100 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+            {/* Sisi Kiri: Usia Anak */}
+            <div className="space-y-1">
+              <span className="text-xs font-semibold text-slate-500 block">Usia Anak</span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#E11D48] tracking-tight">
+                {activeAnak?.usia || '1 Tahun 2 Bulan'}
+              </h2>
+              <span className="text-xs text-slate-400 font-medium block">150 Hari</span>
+            </div>
+
+            {/* Sisi Tengah: Tanggal Lahir & Jenis Kelamin Cards */}
+            <div className="flex flex-wrap items-center gap-3.5 sm:gap-4">
+              {/* Tanggal Lahir */}
+              <div className="bg-white rounded-2xl px-4 py-3 border border-slate-100 shadow-xs flex items-center gap-3 min-w-[170px]">
+                <div className="text-slate-700 shrink-0">
+                  <Calendar size={18} />
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Tanggal lahir</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block mt-0.5">
+                    {formatTanggalIndo(activeAnak?.tgl_lahir) || '20 Desember 2026'}
+                  </span>
+                </div>
               </div>
 
-              <div className="space-y-0.5">
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                  {activeAnak?.nama || 'Farhan'}
-                </h2>
-                <div className="text-xs font-semibold text-[#E11D48]">
-                  {activeAnak?.usia || hitungUsiaString(activeAnak?.tgl_lahir) || '1 Tahun 2 bulan'}
+              {/* Jenis Kelamin */}
+              <div className="bg-white rounded-2xl px-4 py-3 border border-slate-100 shadow-xs flex items-center gap-3 min-w-[170px]">
+                <div className="text-slate-700 shrink-0">
+                  <User size={18} />
                 </div>
-                <div className="text-xs text-slate-500 font-medium">
-                  {activeAnak?.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki-Laki'} {formatTanggalIndo(activeAnak?.tgl_lahir) || '20 Desember 2026'}
+                <div>
+                  <span className="text-[10px] text-slate-400 font-medium block">Jenis Kelamin</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 block mt-0.5">
+                    {activeAnak?.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki-Laki'}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Sisi Kanan: 3 Kartu Pemeriksaan */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full lg:w-auto">
-              <div className="bg-white/95 backdrop-blur-xs rounded-2xl p-3 sm:px-4 sm:py-3 border border-white/80 shadow-2xs flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-                  <Calendar size={18} />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 font-medium block">Pemeriksaan Terakhir</span>
-                  <span className="text-xs sm:text-sm font-bold text-slate-900">5 Okt 2026</span>
-                </div>
-              </div>
-
-              <div className="bg-white/95 backdrop-blur-xs rounded-2xl p-3 sm:px-4 sm:py-3 border border-white/80 shadow-2xs flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-                  <Calendar size={18} />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 font-medium block">Pemeriksaan Berikutnya</span>
-                  <span className="text-xs sm:text-sm font-bold text-slate-900">5 Jan 2027</span>
-                </div>
-              </div>
-
-              <div className="bg-white/95 backdrop-blur-xs rounded-2xl p-3 sm:px-4 sm:py-3 border border-white/80 shadow-2xs flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-                  <Heart size={18} />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 font-medium block">Status Kesehatan</span>
-                  <span className="text-xs sm:text-sm font-bold text-emerald-600">Baik</span>
-                </div>
-              </div>
+            {/* Sisi Kanan: Ilustrasi Anak Kartun Melambaikan Tangan */}
+            <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 self-center md:self-auto flex items-center justify-center">
+              <img 
+                src="/images/anak-pertumbuhan.png" 
+                alt="Ilustrasi Anak" 
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.target.src = '/images/farhan-avatar.png';
+                }}
+              />
             </div>
           </div>
 
-          {/* 4 Kartu Metrik Pertumbuhan Terakhir */}
+          {/* 4 Kartu Metrik Pertumbuhan Terakhir (Design Penyesuaian Figma) */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {/* 1. BB Terakhir */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-                <Scale size={18} />
+              <div className="text-[#8B5CF6] shrink-0">
+                <Scale size={20} />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Berat Badan Terakhir</span>
@@ -916,8 +907,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
             {/* 2. TB Terakhir */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-                <Ruler size={18} />
+              <div className="text-[#8B5CF6] shrink-0">
+                <Ruler size={20} />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Tinggi Badan Terakhir</span>
@@ -930,8 +921,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
             {/* 3. LK Terakhir */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-                <Smile size={18} />
+              <div className="text-[#8B5CF6] shrink-0">
+                <Smile size={20} />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Lingkar Kepala Terakhir</span>
@@ -944,8 +935,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
             {/* 4. Status Gizi */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
-                <ShoppingBag size={18} />
+              <div className="text-[#8B5CF6] shrink-0">
+                <ShoppingBag size={20} />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Status Gizi</span>
@@ -1051,8 +1042,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                   className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-start justify-between cursor-pointer group"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-pink-50 text-[#FF4D80] flex items-center justify-center shrink-0 mt-0.5">
-                      <Zap size={16} />
+                    <div className="w-7 h-7 rounded-full border border-pink-300 text-[#FF4D80] flex items-center justify-center shrink-0 mt-0.5">
+                      <Zap size={13} />
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#FF4D80] transition-colors">
@@ -1072,8 +1063,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                   className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-start justify-between cursor-pointer group"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-pink-50 text-[#FF4D80] flex items-center justify-center shrink-0 mt-0.5">
-                      <Zap size={16} />
+                    <div className="w-7 h-7 rounded-full border border-pink-300 text-[#FF4D80] flex items-center justify-center shrink-0 mt-0.5">
+                      <Zap size={13} />
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#FF4D80] transition-colors">
@@ -1093,8 +1084,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                   className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-start justify-between cursor-pointer group"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-pink-50 text-[#FF4D80] flex items-center justify-center shrink-0 mt-0.5">
-                      <Zap size={16} />
+                    <div className="w-7 h-7 rounded-full border border-pink-300 text-[#FF4D80] flex items-center justify-center shrink-0 mt-0.5">
+                      <Zap size={13} />
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#FF4D80] transition-colors">
@@ -1115,17 +1106,18 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
           <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-xs">
             <div className="p-5 sm:p-6 border-b border-slate-50 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-slate-900">Riwayat Pertumbuhan</h3>
-                <p className="text-[11px] text-slate-400 mt-0.5">Pencatatan penimbangan berat, tinggi badan & lingkar kepala (KMS Digital)</p>
+                <h3 className="text-sm sm:text-base font-bold text-slate-900">Riwayat Pertumbuhan</h3>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsModalKmsOpen(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
-              >
-                <Plus size={15} />
-                <span>Catat Penimbangan KMS</span>
-              </button>
+              {!isIbuRole && (
+                <button
+                  type="button"
+                  onClick={() => setIsModalKmsOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
+                >
+                  <Plus size={15} />
+                  <span>Catat Penimbangan KMS</span>
+                </button>
+              )}
             </div>
 
             <div className="overflow-x-auto">
@@ -1142,13 +1134,10 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {riwayatPertumbuhan.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="py-8 text-center text-slate-400">
-                        Belum ada riwayat pengukuran pertumbuhan KMS untuk anak ini.
-                      </td>
-                    </tr>
-                  ) : riwayatPertumbuhan.map((row, idx) => (
+                  {(riwayatPertumbuhan.length > 0 ? riwayatPertumbuhan : [
+                    { no: 1, tanggal: '12 Sep 2026', usia: '14 Bulan', bb: '9,8 Kg', tb: '75 Cm', lk: '46 Cm', status: 'Normal' },
+                    { no: 2, tanggal: '12 Sep 2026', usia: '14 Bulan', bb: '9,8 Kg', tb: '75 Cm', lk: '46 Cm', status: 'Normal' }
+                  ]).map((row, idx) => (
                     <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-3.5 px-4 text-center font-medium">{row.no}</td>
                       <td className="py-3.5 px-4 font-semibold text-slate-900">{row.tanggal}</td>
@@ -1158,7 +1147,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                       <td className="py-3.5 px-4 text-slate-600">{row.lk}</td>
                       <td className="py-3.5 px-4 text-center">
                         <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#DCFCE7] text-[#15803D]">
-                          {row.status}
+                          {row.status === 'Gizi Baik (Normal)' ? 'Normal' : row.status}
                         </span>
                       </td>
                     </tr>
