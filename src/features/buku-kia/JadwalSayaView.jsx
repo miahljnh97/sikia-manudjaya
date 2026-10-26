@@ -14,6 +14,18 @@ import {
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { sendWhatsAppReminder, getReminderStatus } from '../../services/whatsappService';
 
+// Helper resolusi status selaras antara kolom tanggal dan status
+const resolveJadwalStatus = (item) => {
+  if (!item) return 'Akan Datang';
+  if (item.status === 'Selesai') return 'Selesai';
+  const reminder = getReminderStatus(item.tanggal);
+  if (reminder.selisihHari < 0) {
+    return 'Selesai / Terlewat';
+  }
+  return item.status || 'Akan Datang';
+};
+
+
 export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
   const defaultIbuHamilJadwal = [
     { no: 1, id: 'j-1', tanggal: '2026-09-12', displayTanggal: '12 Sep 2026', waktu: '09.00 - 10.00', jenis: 'Pemeriksaan Kehamilan (ANC)', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Siti Nurhayati', keterangan: 'Pemeriksaan ANC Trimester 3 rutin dan USG dasar.' },
@@ -41,21 +53,42 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
     setCalendarDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   };
 
+  const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || (user?.email || '').toLowerCase().includes('ibu');
+
   useEffect(() => {
     const targetIbuId = user?.peserta_id || (user && getPesertaIdFromUser(user)) || user?.id || null;
     if (targetIbuId) {
       bukuKiaService.getJadwalPesertaList(targetIbuId).then((res) => {
-        const userSpecific = res && res.filter(j => j.peserta_id === targetIbuId);
-        if (userSpecific && userSpecific.length > 0) {
-          const mapped = userSpecific.map((j, idx) => ({
+        if (!res || res.length === 0) return;
+
+        if (isIbuRole) {
+          const userSpecific = res.filter(j => j.peserta_id === targetIbuId);
+          if (userSpecific.length > 0) {
+            const mapped = userSpecific.map((j, idx) => ({
+              no: idx + 1,
+              id: j.id,
+              tanggal: j.tanggal,
+              displayTanggal: j.tanggal,
+              waktu: j.waktu || '09.00 - 10.00',
+              jenis: j.jenis_kegiatan || 'Pemeriksaan Kesehatan',
+              lokasi: j.lokasi || 'Puskesmas Manud Jaya',
+              status: resolveJadwalStatus(j),
+              petugas: j.petugas || 'Bidan Siti, S.Tr.Keb',
+              keterangan: j.catatan || 'Pemeriksaan rutin posyandu.'
+            }));
+            setJadwalList(mapped);
+          }
+        } else {
+          // Untuk Kader Posyandu, Bidan, dll: Tampilkan seluruh jadwal posyandu dengan status yang selaras
+          const mapped = res.map((j, idx) => ({
             no: idx + 1,
             id: j.id,
             tanggal: j.tanggal,
             displayTanggal: j.tanggal,
-            waktu: j.waktu || '09.00 - 10.00',
+            waktu: j.waktu || '09:00 - 10:00',
             jenis: j.jenis_kegiatan || 'Pemeriksaan Kesehatan',
             lokasi: j.lokasi || 'Puskesmas Manud Jaya',
-            status: j.status || 'Akan Datang',
+            status: resolveJadwalStatus(j),
             petugas: j.petugas || 'Bidan Siti, S.Tr.Keb',
             keterangan: j.catatan || 'Pemeriksaan rutin posyandu.'
           }));
@@ -63,7 +96,7 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
         }
       });
     }
-  }, [user]);
+  }, [user, isIbuRole]);
 
   // Metrik terhitung dinamis dari jadwal aktif (PBI 01A AC 1)
   const countPemeriksaan = useMemo(() => {
@@ -393,7 +426,16 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
       {/* 4. Tabel: Daftar Jadwal (Tersaring Berdasarkan Klik Kalender - PBI 01A AC 2) */}
       <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-xs">
         <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900">Daftar Jadwal</h3>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">
+              {isIbuRole ? 'Daftar Jadwal' : 'Daftar Jadwal Kegiatan'}
+            </h3>
+            {!isIbuRole && (
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Menampilkan semua {filteredJadwalList.length} jadwal kegiatan aktif
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -419,6 +461,7 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
               ) : (
                 filteredJadwalList.map((row, idx) => {
                   const reminder = getReminderStatus(row.tanggal);
+                  const resolvedStatus = resolveJadwalStatus(row);
                   return (
                     <tr key={row.no || idx} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-3.5 px-4 text-center font-medium">{idx + 1}</td>
@@ -432,8 +475,14 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
                       <td className="py-3.5 px-4 font-medium text-slate-800">{row.jenis}</td>
                       <td className="py-3.5 px-4 text-slate-600">{row.lokasi}</td>
                       <td className="py-3.5 px-4 text-center">
-                        <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#EDE9FE] text-[#6D28D9]">
-                          {row.status}
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${
+                          resolvedStatus === 'Akan Datang'
+                            ? 'bg-[#EDE9FE] text-[#6D28D9]'
+                            : resolvedStatus === 'Selesai'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-slate-100 text-slate-600 border border-slate-200'
+                        }`}>
+                          {resolvedStatus}
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-center">
