@@ -193,7 +193,7 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
                   type="button"
                   onClick={() => handleQuickFill("ibu_balita")}
                   className="py-1 px-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded text-[10px] font-bold text-center truncate border border-amber-200"
-                  title="Akun Ibu Balita - Pasca Persalinan / Menyusui (Ibu Ratna, Balita Alea)"
+                  title="Akun Ibu Balita (Siti Aminah, Balita Alya Putri)"
                 >
                   Ibu Balita
                 </button>

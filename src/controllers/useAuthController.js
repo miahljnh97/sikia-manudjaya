@@ -49,7 +49,7 @@ export function useAuthController() {
         if (lowerEmail === 'ibu.balita@manudjaya.id' || (lowerEmail.includes('balita') && !lowerEmail.includes('hamil'))) {
           userSession.role = 'Ibu';
           userSession.peserta_id = 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73';
-          userSession.nama = userSession.nama || 'Ibu Ratna';
+          userSession.nama = 'Siti Aminah';
         } else if (lowerEmail === 'ibu.hamil.anak@manudjaya.id' || lowerEmail === 'siti.aminah@manudjaya.id') {
           userSession.role = 'Ibu';
           userSession.peserta_id = '55af67c9-6695-4435-b4ea-2720efd73c92';

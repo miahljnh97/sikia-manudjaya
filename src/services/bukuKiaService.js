@@ -331,11 +331,12 @@ export const bukuKiaService = {
       }
     }
 
-    // Fallback data kehamilan untuk peserta hamil (Najwa Sihab & Siti Aminah) jika belum tersinkron di Supabase
+    // Fallback data kehamilan untuk peserta (Najwa Sihab, Siti Aminah, Ibu Balita)
     if (
       pesertaId === '214fbe12-2216-4e61-9b12-9fccca445e84' ||
       pesertaId === '55af67c9-6695-4435-b4ea-2720efd73c92' ||
-      (typeof pesertaId === 'string' && (pesertaId.includes('214fbe12') || pesertaId.includes('55af67c9')))
+      pesertaId === 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73' ||
+      (typeof pesertaId === 'string' && (pesertaId.includes('214fbe12') || pesertaId.includes('55af67c9') || pesertaId.includes('d5eeb9a6')))
     ) {
       return {
         id: 'kh-' + pesertaId,
