@@ -218,9 +218,9 @@ export default function PencarianPasien({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table className="w-full min-w-[960px] text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50/60 text-[#4B5563] text-xs font-bold border-b border-slate-100">
+              <tr className="bg-slate-50/60 text-[#4B5563] text-xs font-bold border-b border-slate-100 whitespace-nowrap">
                 <th className="py-3.5 px-5 w-12">No</th>
                 <th className="py-3.5 px-5">Nama Peserta</th>
                 <th className="py-3.5 px-5">NIK</th>
@@ -292,7 +292,7 @@ export default function PencarianPasien({
                   }
 
                   return (
-                    <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                    <tr key={item.id} className="hover:bg-slate-50 transition-colors whitespace-nowrap">
                       <td className="py-3.5 px-5 text-slate-400 font-medium">{startIndex + idx + 1}</td>
                       <td className="py-3.5 px-5 font-bold text-slate-900 flex items-center gap-2.5">
                         <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] shrink-0 ${iconBg}`}>
@@ -302,11 +302,11 @@ export default function PencarianPasien({
                       </td>
                       <td className="py-3.5 px-5 font-mono text-slate-600 font-medium">{maskNik(item.nik)}</td>
                       <td className="py-3.5 px-5">
-                        <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border ${badgeClass}`}>
+                        <span className={`inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-md text-[11px] font-semibold border shrink-0 ${badgeClass}`}>
                           {item.jenis_peserta}
                         </span>
                       </td>
-                      <td className="py-3.5 px-5 text-slate-500">{item.tanggal_lahir || item.tgl_lahir || '-'}</td>
+                      <td className="py-3.5 px-5 text-slate-500 whitespace-nowrap">{item.tanggal_lahir || item.tgl_lahir || '-'}</td>
                       <td className="py-3.5 px-5 text-slate-600">{item.usia || '-'}</td>
                       <td className="py-3.5 px-5 text-slate-600">{item.alamat || '-'}</td>
                       <td className="py-3.5 px-5">

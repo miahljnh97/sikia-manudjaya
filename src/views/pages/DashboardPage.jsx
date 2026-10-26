@@ -9,7 +9,6 @@ import RegistrasiPage from '../../features/pbi-03-registrasi/RegistrasiPage';
 import DataPesertaPage from '../../features/data-peserta/DataPesertaPage';
 import RiwayatKunjunganPage from '../../features/riwayat-kunjungan/RiwayatKunjunganPage';
 import KelolaKaderPage from '../../features/super-admin/KelolaKaderPage';
-import LaporanPage from '../../features/laporan/LaporanPage';
 import UnderDevelopmentPage from '../../shared/components/UnderDevelopmentPage';
 import IbuDashboardView from '../../features/dashboard/components/IbuDashboardView';
 import KehamilanView from '../../features/buku-kia/KehamilanView';
@@ -221,11 +220,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
             )
           ) : activeMenu === 'Riwayat Kunjungan' ? (
             <RiwayatKunjunganPage currentUser={currentUser} />
-          ) : activeMenu === 'Laporan' ? (
-            <LaporanPage 
-              currentUser={currentUser} 
-              onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
-            />
+
           ) : activeMenu === 'Kelola Kader' ? (
             <KelolaKaderPage 
               currentUser={currentUser}
