@@ -196,9 +196,9 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
         {/* Card 1: Kesehatan Ibu */}
         <div className="bg-gradient-to-r from-[#FFF0F4] via-[#FFE4EC] to-[#FFD6E4] border border-pink-200/70 rounded-3xl p-6 sm:p-7 relative overflow-hidden shadow-xs flex flex-col justify-between min-h-[220px]">
           <div className="relative z-10 space-y-3 max-w-[62%] sm:max-w-[65%]">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/80 border border-pink-200 text-[#E11D48] text-xs font-bold">
-              <ClipboardPlus size={14} className="text-[#E11D48]" />
-              <span>Kesehatan Ibu</span>
+            <div className="inline-flex items-center gap-2 text-xs font-bold">
+              <ClipboardPlus size={18} className="text-[#FF168B]" />
+              <span className="text-[#0B0C32]">Kesehatan Ibu</span>
             </div>
 
             <div>
