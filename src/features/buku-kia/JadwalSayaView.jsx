@@ -20,7 +20,7 @@ const resolveJadwalStatus = (item) => {
   if (item.status === 'Selesai') return 'Selesai';
   const reminder = getReminderStatus(item.tanggal);
   if (reminder.selisihHari < 0) {
-    return 'Selesai / Terlewat';
+    return 'Selesai';
   }
   return item.status || 'Akan Datang';
 };
@@ -476,11 +476,9 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
                       <td className="py-3.5 px-4 text-slate-600">{row.lokasi}</td>
                       <td className="py-3.5 px-4 text-center">
                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${
-                          resolvedStatus === 'Akan Datang'
-                            ? 'bg-[#EDE9FE] text-[#6D28D9]'
-                            : resolvedStatus === 'Selesai'
+                          resolvedStatus === 'Selesai'
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-slate-100 text-slate-600 border border-slate-200'
+                            : 'bg-[#EDE9FE] text-[#6D28D9]'
                         }`}>
                           {resolvedStatus}
                         </span>
