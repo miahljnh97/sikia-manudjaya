@@ -240,9 +240,9 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
           /* Tampilan Anak Terdaftar (Alya Putri) */
           <div className="bg-gradient-to-r from-[#FFF5F7] via-[#FFEBF1] to-[#FFE0EA] border border-pink-200/70 rounded-3xl p-6 sm:p-7 relative overflow-hidden shadow-xs flex flex-col justify-between items-center text-center min-h-[220px]">
             <div className="w-full flex items-center justify-between gap-2 flex-wrap">
-              <div className="inline-flex items-center gap-1.5 text-pink-600 text-xs font-bold">
-                <Star size={14} className="fill-pink-500 text-pink-500" />
-                <span>Kesehatan Anak</span>
+              <div className="inline-flex items-center gap-2 text-xs font-bold">
+                <Star size={18} className="text-[#FF168B]" />
+                <span className="text-[#0B0C32]">Kesehatan Anak</span>
               </div>
 
               {/* Multiple Children Tab Selector HANYA jika ibu ini memiliki > 1 anak */}
@@ -302,9 +302,9 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
           /* Tampilan Ibu Hamil Saja: Si kecil belum terdaftar */
           <div className="bg-[#FAF5FF]/50 border-2 border-dashed border-pink-200/90 rounded-3xl p-6 sm:p-7 relative overflow-hidden shadow-xs flex flex-col justify-between items-center text-center min-h-[220px]">
             <div className="w-full flex items-center justify-start">
-              <div className="inline-flex items-center gap-1.5 text-pink-600 text-xs font-bold">
-                <Star size={14} className="fill-pink-500 text-pink-500" />
-                <span>Kesehatan Anak</span>
+              <div className="inline-flex items-center gap-2 text-xs font-bold">
+                <Star size={18} className="text-[#FF168B]" />
+                <span className="text-[#0B0C32]">Kesehatan Anak</span>
               </div>
             </div>
 
