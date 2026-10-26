@@ -101,7 +101,7 @@ export const pesertaService = {
   /**
    * Update status kehadiran peserta - Mendukung 4 status: Hadir, Menunggu, Sudah dilayani, Tidak Hadir
    */
-  async updateStatusKehadiran(id, statusKehadiran) {
+  async updateStatusKehadiran(id, statusKehadiran, dicatatOleh = null) {
     const waktuSekarang = (statusKehadiran === 'Hadir' || statusKehadiran === 'Sudah Hadir' || statusKehadiran === 'Sudah dilayani')
       ? new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':')
       : null;
@@ -139,7 +139,19 @@ export const pesertaService = {
               tanggal: tglHariIni,
               jam_kedatangan: jamDb,
               status_kehadiran: statusDb,
-              dicatat_oleh: '5c69e5ca-ba37-41b5-964e-5ef2525ef36d',
+              dicatat_oleh: (() => {
+                if (dicatatOleh) return dicatatOleh;
+                if (typeof window !== 'undefined') {
+                  try {
+                    const saved = localStorage.getItem('sikia_user');
+                    if (saved) {
+                      const u = JSON.parse(saved);
+                      return u?.petugas_id || u?.user?.id || u?.id || null;
+                    }
+                  } catch {}
+                }
+                return null;
+              })(),
               is_suspended: false
             }]);
         }

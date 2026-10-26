@@ -196,7 +196,20 @@ export const kunjunganService = {
         jam_kedatangan: jam ? (jam.length === 5 ? `${jam}:00` : jam) : '08:30:00',
         status_kehadiran: statusDb,
         catatan: catatan || null,
-        dicatat_oleh: dicatat_oleh || petugas_id || '5c69e5ca-ba37-41b5-964e-5ef2525ef36d',
+        dicatat_oleh: (() => {
+          if (dicatat_oleh) return dicatat_oleh;
+          if (petugas_id) return petugas_id;
+          if (typeof window !== 'undefined') {
+            try {
+              const saved = localStorage.getItem('sikia_user');
+              if (saved) {
+                const u = JSON.parse(saved);
+                return u?.petugas_id || u?.user?.id || u?.id || null;
+              }
+            } catch {}
+          }
+          return null;
+        })(),
         is_suspended: false
       };
 

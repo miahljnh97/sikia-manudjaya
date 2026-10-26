@@ -204,6 +204,8 @@ export function useRegistrasiController(currentUser, onSuccessRegistrasi, curren
         jam: kunjunganData.jam,
         posyandu: kunjunganData.posyandu,
         kader_pencatat: kunjunganData.kaderPencatat,
+        petugas_id: currentUser?.petugas_id || currentUser?.id || currentUser?.user?.id || null,
+        dicatat_oleh: currentUser?.petugas_id || currentUser?.id || currentUser?.user?.id || null,
         jenis_pelayanan: selectedPelayanan,
         status_kehadiran: statusKehadiran,
         catatan: catatan

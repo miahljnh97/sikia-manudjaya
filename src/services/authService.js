@@ -125,6 +125,8 @@ export const authService = {
 
           return {
             user: data.user,
+            id: data.user.id,
+            petugas_id: data.user.id,
             role: normalizedRole,
             nama: userName || data.user.email?.split('@')[0] || 'Pengguna',
             peserta_id: pesertaId || data.user.id

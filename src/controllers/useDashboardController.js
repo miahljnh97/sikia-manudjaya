@@ -34,7 +34,8 @@ export function useDashboardController() {
 
   // Ubah status kehadiran
   const handleUpdateStatus = async (id, nextStatus) => {
-    const updated = await pesertaService.updateStatusKehadiran(id, nextStatus);
+    const petugasId = currentUser?.petugas_id || currentUser?.id || currentUser?.user?.id || null;
+    const updated = await pesertaService.updateStatusKehadiran(id, nextStatus, petugasId);
     setPesertaList((prev) =>
       prev.map((item) => (item.id === id ? { ...item, ...updated } : item))
     );

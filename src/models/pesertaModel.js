@@ -877,11 +877,15 @@ export const DUMMY_ACCOUNTS = {
     email: 'kader.posyandu@manudjaya.id',
     role: 'Kader Posyandu',
     nama: 'Annisa Wati',
+    id: '5c69e5ca-ba37-41b5-964e-5ef2525ef36d',
+    petugas_id: '5c69e5ca-ba37-41b5-964e-5ef2525ef36d',
   },
   bidan: {
     email: 'bidan.desa@manudjaya.id',
     role: 'Bidan Desa',
     nama: 'Bidan Siti, S.Tr.Keb',
+    id: 'fb044287-90d3-4d64-b30e-e5fc58f85f91',
+    petugas_id: 'fb044287-90d3-4d64-b30e-e5fc58f85f91',
   },
   ibu_hamil: {
     email: 'ibu.hamil@manudjaya.id',
