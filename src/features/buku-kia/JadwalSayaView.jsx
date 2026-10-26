@@ -12,7 +12,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
-import { sendWhatsAppReminder, getReminderStatus } from '../../services/whatsappService';
+import { sendWhatsAppReminder, getReminderStatus, normalizePhoneForWhatsApp, generateWhatsAppReminderMessage } from '../../services/whatsappService';
 
 // Helper resolusi status selaras antara kolom tanggal dan status
 const resolveJadwalStatus = (item) => {
@@ -36,24 +36,40 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
     { no: 6, id: 'j-6', tanggal: '2026-11-02', displayTanggal: '02 Nov 2026', waktu: '09.00 - 10.00', jenis: 'Kelas Ibu Hamil', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Koordinator', keterangan: 'Senam hamil dan edukasi IMD.' },
   ];
 
-  const [calendarDate, setCalendarDate] = useState(new Date(2026, 8, 1)); // Default: September 2026
-  const [selectedDay, setSelectedDay] = useState(15);
-  const [selectedMonth, setSelectedMonth] = useState(8);
-  const [selectedYear, setSelectedYear] = useState(2026);
+  const userRole = (user?.role || '').toLowerCase().trim();
+  const userEmail = (user?.user?.email || user?.email || '').toLowerCase().trim();
+  const isIbuRole = userRole.includes('ibu') || userEmail.includes('ibu') || userEmail.includes('hamil') || userEmail.includes('balita');
+
+  // Tombol Kirim WA hanya untuk Bidan, Kader, dan Super Admin. Akun Ibu di-hide.
+  const canSendWa = !isIbuRole;
+  const [currentDate, setCurrentDate] = useState(() => new Date(2026, 8, 1)); // September 2026
+  const [selectedDay, setSelectedDay] = useState(null);
   const [selectedJadwal, setSelectedJadwal] = useState(null);
   const [isSendingWa, setIsSendingWa] = useState(false);
+  const [blastWaJadwal, setBlastWaJadwal] = useState(null);
+  const [blastTargetPhone, setBlastTargetPhone] = useState('081234567890');
+  const [blastJenisPengingat, setBlastJenisPengingat] = useState('H-3');
+  const [blastMetode, setBlastMetode] = useState('gateway');
 
-  const [jadwalList, setJadwalList] = useState(defaultIbuHamilJadwal);
+  const monthNames = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
 
   const handlePrevMonth = () => {
-    setCalendarDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    setSelectedDay(null);
   };
 
   const handleNextMonth = () => {
-    setCalendarDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    setSelectedDay(null);
   };
 
-  const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || (user?.email || '').toLowerCase().includes('ibu');
+  const [jadwalList, setJadwalList] = useState(defaultIbuHamilJadwal);
 
   useEffect(() => {
     const targetIbuId = user?.peserta_id || (user && getPesertaIdFromUser(user)) || user?.id || null;
@@ -127,13 +143,13 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
     }).length;
   }, [jadwalList]);
 
-  // Ekstrak hari-hari yang memiliki jadwal di bulan aktif
+  // Ekstrak hari-hari yang memiliki jadwal di bulan & tahun aktif
   const eventDays = useMemo(() => {
     const days = new Set();
     jadwalList.forEach(item => {
       try {
         const d = new Date(item.tanggal);
-        if (!isNaN(d.getDate())) {
+        if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
           days.add(d.getDate());
         }
       } catch {
@@ -141,7 +157,7 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
       }
     });
     return days;
-  }, [jadwalList]);
+  }, [jadwalList, currentYear, currentMonth]);
 
   // Filter daftar jadwal jika ada tanggal kalender yang diklik
   const filteredJadwalList = useMemo(() => {
@@ -149,13 +165,13 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
     const match = jadwalList.filter(item => {
       try {
         const d = new Date(item.tanggal);
-        return d.getDate() === selectedDay;
+        return d.getDate() === selectedDay && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       } catch {
         return false;
       }
     });
     return match.length > 0 ? match : jadwalList;
-  }, [jadwalList, selectedDay]);
+  }, [jadwalList, selectedDay, currentMonth, currentYear]);
 
   const handleKirimWhatsApp = async (item) => {
     setIsSendingWa(true);
@@ -192,18 +208,9 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
     }
   };
 
-  const NAMA_BULAN_IND = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-  ];
-  const currentMonthTitle = `${NAMA_BULAN_IND[calendarDate.getMonth()]} ${calendarDate.getFullYear()}`;
-
   const calendarDays = useMemo(() => {
-    const year = calendarDate.getFullYear();
-    const month = calendarDate.getMonth();
-
     // Khusus September 2026 persis sesuai layout Figma Sprint 2
-    if (year === 2026 && month === 8) {
+    if (currentYear === 2026 && currentMonth === 8) {
       return [
         { day: 31, isPrev: true },
         { day: 1 }, { day: 2 }, { day: 3 }, { day: 4 }, { day: 5 }, { day: 6 },
@@ -215,24 +222,53 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
       ];
     }
 
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const daysInPrevMonth = new Date(year, month, 0).getDate();
-    const days = [];
+    const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay(); // 0 is Sunday
+    const daysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
 
-    for (let i = firstDay - 1; i >= 0; i--) {
+    const days = [];
+    for (let i = firstDayIndex - 1; i >= 0; i--) {
       days.push({ day: daysInPrevMonth - i, isPrev: true });
     }
-    for (let d = 1; d <= daysInMonth; d++) {
-      days.push({ day: d });
+    for (let i = 1; i <= daysInCurrentMonth; i++) {
+      days.push({ day: i });
     }
-    const totalSlots = Math.ceil(days.length / 7) * 7;
-    const remaining = totalSlots - days.length;
+    const remaining = (7 - (days.length % 7)) % 7;
     for (let i = 1; i <= remaining; i++) {
       days.push({ day: i, isNext: true });
     }
     return days;
-  }, [calendarDate]);
+  }, [currentYear, currentMonth]);
+
+  const handleExecuteBlast = async () => {
+    if (!blastWaJadwal) return;
+    setIsSendingWa(true);
+    try {
+      if (blastMetode === 'manual') {
+        const cleanPhone = normalizePhoneForWhatsApp(blastTargetPhone);
+        const msg = generateWhatsAppReminderMessage(blastWaJadwal, user?.nama || 'Siti Aminah');
+        const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+        if (typeof window !== 'undefined') window.open(waUrl, '_blank');
+        onShowToast && onShowToast('Membuka WhatsApp Web untuk pengiriman pesan pengingat...', 'info');
+      } else {
+        const res = await sendWhatsAppReminder({
+          phone: blastTargetPhone,
+          jadwal: blastWaJadwal,
+          namaIbu: user?.nama || 'Siti Aminah'
+        });
+        onShowToast && onShowToast(
+          `Pesan pengingat (${blastJenisPengingat}) berhasil diblast ke nomor ${blastTargetPhone} melalui WhatsApp Gateway Posyandu!`,
+          'success'
+        );
+      }
+      setBlastWaJadwal(null);
+    } catch (err) {
+      console.error(err);
+      onShowToast && onShowToast('Gagal memproses blast WhatsApp: ' + err.message, 'error');
+    } finally {
+      setIsSendingWa(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -314,7 +350,10 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
             >
               <ChevronLeft size={18} />
             </button>
-            <h3 className="text-sm font-bold text-slate-900">{currentMonthTitle}</h3>
+            <div className="text-center">
+              <h3 className="text-sm font-bold text-slate-900">{monthNames[currentMonth]} {currentYear}</h3>
+              <p className="text-[10px] text-slate-400">Klik tanggal untuk menyaring tabel daftar jadwal</p>
+            </div>
             <button 
               type="button" 
               onClick={handleNextMonth}
@@ -339,10 +378,7 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
           {/* Grid Tanggal */}
           <div className="grid grid-cols-7 gap-y-2 gap-x-1 text-center text-xs">
             {calendarDays.map((item, idx) => {
-              const isSelected = !item.isPrev && !item.isNext &&
-                item.day === selectedDay &&
-                calendarDate.getMonth() === selectedMonth &&
-                calendarDate.getFullYear() === selectedYear;
+              const isSelected = !item.isPrev && !item.isNext && item.day === selectedDay;
 
               return (
                 <button
@@ -350,9 +386,7 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
                   type="button"
                   onClick={() => {
                     if (!item.isPrev && !item.isNext) {
-                      setSelectedDay(item.day);
-                      setSelectedMonth(calendarDate.getMonth());
-                      setSelectedYear(calendarDate.getFullYear());
+                      setSelectedDay(item.day === selectedDay ? null : item.day);
                     }
                   }}
                   className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center transition-all cursor-pointer font-medium relative ${
@@ -430,11 +464,12 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
             <h3 className="text-sm font-bold text-slate-900">
               {isIbuRole ? 'Daftar Jadwal' : 'Daftar Jadwal Kegiatan'}
             </h3>
-            {!isIbuRole && (
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Menampilkan semua {filteredJadwalList.length} jadwal kegiatan aktif
-              </p>
-            )}
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {selectedDay 
+                ? `Menampilkan ${filteredJadwalList.length} kegiatan pada tanggal ${selectedDay} ${monthNames[currentMonth]} ${currentYear}`
+                : `Menampilkan semua ${filteredJadwalList.length} jadwal kegiatan aktif`
+              }
+            </p>
           </div>
         </div>
 
@@ -485,16 +520,20 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
                       </td>
                       <td className="py-3.5 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleKirimWhatsApp(row)}
-                            disabled={isSendingWa}
-                            className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-50"
-                            title="Kirim Pengingat WhatsApp Resmi (n8n / Fonnte / wa.me)"
-                          >
-                            <MessageCircle size={13} className="text-emerald-600" />
-                            <span>Kirim WA</span>
-                          </button>
+                          {canSendWa && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setBlastWaJadwal(row);
+                                setBlastTargetPhone('081234567890');
+                              }}
+                              className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition-all shadow-2xs active:scale-95 cursor-pointer"
+                              title="Kirim Blast Pengingat WhatsApp Resmi"
+                            >
+                              <MessageCircle size={13} className="text-emerald-600" />
+                              <span>Kirim WA</span>
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => setSelectedJadwal(row)}
@@ -513,6 +552,155 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
           </table>
         </div>
       </div>
+
+      {/* Modal Blast Pengingat WhatsApp Resmi Posyandu (Item 24) */}
+      {blastWaJadwal && canSendWa && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+            {/* Header Modal */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <MessageCircle size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                    Sistem Blast WhatsApp Posyandu
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Kirim pesan broadcast pengingat jadwal otomatis ke peserta
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setBlastWaJadwal(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Informasi Kegiatan */}
+            <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 text-xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-semibold">Kegiatan:</span>
+                <span className="font-bold text-slate-900">{blastWaJadwal.jenis}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-semibold">Waktu & Tanggal:</span>
+                <span className="font-bold text-slate-800">{blastWaJadwal.displayTanggal || blastWaJadwal.tanggal} ({blastWaJadwal.waktu} WIB)</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-semibold">Lokasi:</span>
+                <span className="text-slate-700">{blastWaJadwal.lokasi}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-semibold">Petugas:</span>
+                <span className="text-slate-700">{blastWaJadwal.petugas}</span>
+              </div>
+            </div>
+
+            {/* Form Input Penerima & Template */}
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Nomor WhatsApp Penerima / Sasaran</label>
+                <input
+                  type="text"
+                  value={blastTargetPhone}
+                  onChange={(e) => setBlastTargetPhone(e.target.value)}
+                  placeholder="081234567890"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Jenis Blast Pengingat</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {['H-3', 'H-1', 'Hari-H'].map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setBlastJenisPengingat(opt)}
+                      className={`py-2 px-3 rounded-xl font-bold text-xs border transition-all cursor-pointer ${
+                        blastJenisPengingat === opt
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      Pengingat {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Preview Chat WhatsApp */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Pratinjau Pesan Broadcast</label>
+                <div className="p-3 bg-[#E7F8E8] border border-emerald-200/80 rounded-2xl text-[11px] text-slate-800 font-mono whitespace-pre-wrap leading-relaxed max-h-36 overflow-y-auto">
+                  {generateWhatsAppReminderMessage(blastWaJadwal, user?.nama || 'Siti Aminah')}
+                </div>
+              </div>
+
+              {/* Metode Pengiriman */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Metode Pengiriman</label>
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="blast_method"
+                      value="gateway"
+                      checked={blastMetode === 'gateway'}
+                      onChange={() => setBlastMetode('gateway')}
+                      className="accent-emerald-600"
+                    />
+                    <div>
+                      <span className="font-bold text-slate-800 block text-xs">Kirim Otomatis via WhatsApp Gateway / n8n iPaaS</span>
+                      <span className="text-[10px] text-slate-400 block">Mengirim pesan blast di latar belakang langsung ke WhatsApp peserta</span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="blast_method"
+                      value="manual"
+                      checked={blastMetode === 'manual'}
+                      onChange={() => setBlastMetode('manual')}
+                      className="accent-emerald-600"
+                    />
+                    <div>
+                      <span className="font-bold text-slate-800 block text-xs">Kirim via WhatsApp Web / Aplikasi (Manual)</span>
+                      <span className="text-[10px] text-slate-400 block">Membuka jendela chat WhatsApp dengan teks template yang sudah terisi</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-2 flex justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setBlastWaJadwal(null)}
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteBlast}
+                disabled={isSendingWa}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer active:scale-95 disabled:opacity-50"
+              >
+                <MessageCircle size={15} />
+                <span>{isSendingWa ? 'Mengirim Blast...' : 'Kirim Blast Sekarang'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Detail Jadwal */}
       {selectedJadwal && (

@@ -26,9 +26,17 @@ import { maskNik } from '../../utils/nikUtils';
 import { formatTanggalIndo } from '../../utils/dateUtils';
 
 export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate, onShowToast }) {
-  const role = (user?.role || user?.user?.role || '').toLowerCase();
-  const email = (user?.email || user?.user?.email || '').toLowerCase();
-  const isIbuRole = role.includes('ibu') || email.includes('ibu') || role === 'pasien';
+  const userRole = (user?.role || '').toLowerCase().trim();
+  const userEmail = (user?.user?.email || user?.email || '').toLowerCase().trim();
+
+  // Role checking
+  const isBidan = userRole.includes('bidan') || userEmail.includes('bidan');
+  const isKader = userRole.includes('kader') || userEmail.includes('kader');
+  const isAdmin = userRole.includes('admin') || userEmail.includes('admin');
+  const isIbuRole = userRole.includes('ibu') || userEmail.includes('ibu') || userEmail.includes('hamil') || userEmail.includes('balita');
+
+  // Button 'Catat Pemeriksaan' & 'Unggah Dokumen' cuma muncul di kader dan bidan. Di super admin dan ibu di-hide:
+  const canInputPemeriksaan = (isBidan || isKader) && !isAdmin && !isIbuRole;
 
   // Helper ekstrak ID dari URL path atau query string (?peserta_id=... atau /pemeriksaan/:id)
   const extractPesertaId = () => {
@@ -581,7 +589,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
           <div>
             <h3 className="text-sm font-bold text-slate-900">Riwayat Pemeriksaan</h3>
           </div>
-          {!isIbuRole && (
+          {canInputPemeriksaan && (
             <button
               type="button"
               onClick={() => setIsModalTambahOpen(true)}
@@ -706,6 +714,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
       </div>
 
       {/* 5. Modal Detail Pemeriksaan */}
+
       {selectedPemeriksaan && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in-95 duration-150">
@@ -778,8 +787,8 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
         </div>
       )}
 
-      {/* 6. Modal Input Pemeriksaan ANC Baru (PBI 02C: 4 Sections & Dokumen Upload) */}
-      {isModalTambahOpen && (
+      {/* 6. Modal Input Pemeriksaan ANC Baru (Hanya Bidan & Kader) */}
+      {isModalTambahOpen && canInputPemeriksaan && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}

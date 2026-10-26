@@ -49,6 +49,7 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
   const [selectedPanduan, setSelectedPanduan] = useState(null);
   const [showAllPanduan, setShowAllPanduan] = useState(false);
   const [selectedKategoriPanduan, setSelectedKategoriPanduan] = useState('Semua');
+  const [ancList, setAncList] = useState([]);
   // Jumlah janin dinamis murni dari database Supabase / URL query ?janin=N
   const jumlahJanin = (() => {
     if (typeof window !== 'undefined' && window.location.search) {
@@ -62,8 +63,16 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
   })();
   const [activeJaninId, setActiveJaninId] = useState('janin-1');
 
-  // Generator data klinis dinamis untuk Janin 1 ... Janin N (termasuk edge case kembar 19)
-  const generateJaninList = (count) => {
+  // Pemeriksaan ANC terbaru dari Supabase
+  const latestAnc = ancList && ancList.length > 0 ? ancList[ancList.length - 1] : null;
+
+  // Generator data klinis dinamis untuk Janin 1 ... Janin N (terintegrasi Supabase)
+  const generateJaninList = (count, ancRecord) => {
+    // Jika ada detail janin tersimpan di kolom JSONB kehamilan_ibu Supabase
+    if (kehamilan?.detail_janin && Array.isArray(kehamilan.detail_janin) && kehamilan.detail_janin.length > 0) {
+      return kehamilan.detail_janin;
+    }
+
     const positions = [
       'Presentasi Kepala (Preskep)',
       'Presentasi Bokong (Sungsang)',
@@ -85,26 +94,40 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
 
     return Array.from({ length: count }, (_, i) => {
       const idx = i + 1;
-      // Rumus fisiologis agar DJJ selalu aman di rentang 130 - 154 x/menit berapapun jumlah janinnya
-      const djjVal = 130 + ((idx * 7) % 25);
+      const isFirst = idx === 1;
+
+      // DJJ: Gunakan hasil rekam medis ANC riil dari Supabase bila tersedia
+      const djjVal = (isFirst && ancRecord?.djj) 
+        ? parseInt(ancRecord.djj) 
+        : (130 + ((idx * 7) % 25));
+
+      // TBJ: Dihitung secara klinis dari TFU (Tinggi Fundus Uteri) ANC terbaru (Johnson-Toshack: (TFU - 12) * 155 gram)
+      let tbjVal = Math.max(500, 1250 - ((idx * 35) % 400));
+      if (isFirst && ancRecord?.tinggi_fundus) {
+        const tfu = parseFloat(ancRecord.tinggi_fundus);
+        if (!isNaN(tfu) && tfu > 12) {
+          tbjVal = Math.round((tfu - 12) * 155);
+        }
+      }
+
       return {
         id: `janin-${idx}`,
         label: `Janin ${idx}`,
         alias: `Calon Si Kecil ${idx}`,
         djj: djjVal,
         djjStatus: 'Normal (120 - 160 x/mnt)',
-        tbj: Math.max(500, 1250 - ((idx * 35) % 400)),
+        tbj: tbjVal,
         tbjKet: count > 1 ? `Sesuai kurva kehamilan kembar (${count} janin)` : 'Sesuai kurva kehamilan tunggal',
         gerakan: `${Math.max(8, 12 - (idx % 4))} kali / 12 jam`,
         gerakanKet: 'Aktif & Responsif',
         posisi: positions[(idx - 1) % positions.length],
         letakDjj: `Punctum maximum di ${quadrants[(idx - 1) % quadrants.length]} perut ibu`,
-        catatanBidan: `Kondisi klinis Janin ${idx} sehat, detak jantung reguler dan kuat.`
+        catatanBidan: ancRecord?.catatan_tindak_lanjut || `Kondisi klinis Janin ${idx} sehat, detak jantung reguler dan kuat.`
       };
     });
   };
 
-  const dataJaninList = generateJaninList(jumlahJanin);
+  const dataJaninList = generateJaninList(jumlahJanin, latestAnc);
   const selectedJanin = dataJaninList.find(j => j.id === activeJaninId) || dataJaninList[0];
 
   // Sinkronkan saat URL berubah
@@ -134,7 +157,19 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
       if (p) setPeserta(p);
     });
     bukuKiaService.getKehamilanIbu(activePesertaId).then(k => {
-      if (k) setKehamilan(k);
+      if (k) {
+        setKehamilan(k);
+        if (k.id) {
+          bukuKiaService.getPemeriksaanAncList(k.id).then(list => {
+            setAncList(list || []);
+          });
+        } else {
+          setAncList([]);
+        }
+      } else {
+        setKehamilan(null);
+        setAncList([]);
+      }
     });
   }, [activePesertaId]);
 
@@ -560,7 +595,7 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-medium block">Pemeriksaan Kehamilan</span>
-              <span className="text-sm font-bold text-slate-900 mt-0.5 block">5 dari 8 kali</span>
+              <span className="text-sm font-bold text-slate-900 mt-0.5 block">{ancList.length} dari 6 Standar Kemenkes</span>
             </div>
           </div>
           <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
