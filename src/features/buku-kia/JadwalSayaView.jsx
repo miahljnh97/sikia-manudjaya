@@ -1,3 +1,4 @@
+import { getPesertaIdFromUser } from '../../models/pesertaModel';
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Stethoscope, 
@@ -8,43 +9,50 @@ import {
   ChevronRight, 
   Eye, 
   X,
-  MapPin,
-  Clock,
-  MessageCircle,
-  RotateCcw,
-  Calendar as CalendarIcon,
-  CheckCircle2
+  MessageCircle
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { sendWhatsAppReminder, getReminderStatus } from '../../services/whatsappService';
 
 export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
-  const [selectedDay, setSelectedDay] = useState(null);
+  const defaultIbuHamilJadwal = [
+    { no: 1, id: 'j-1', tanggal: '2026-09-12', displayTanggal: '12 Sep 2026', waktu: '09.00 - 10.00', jenis: 'Pemeriksaan Kehamilan (ANC)', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Siti Nurhayati', keterangan: 'Pemeriksaan ANC Trimester 3 rutin dan USG dasar.' },
+    { no: 2, id: 'j-2', tanggal: '2026-09-24', displayTanggal: '24 Sep 2026', waktu: '09.00 - 10.00', jenis: 'Konseling Gizi Ibu Hamil', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Ahli Gizi Puskesmas', keterangan: 'Evaluasi pola makan, asupan zat besi, dan pencegahan anemia.' },
+    { no: 3, id: 'j-3', tanggal: '2026-10-10', displayTanggal: '10 Okt 2026', waktu: '09.00 - 10.00', jenis: 'Pemeriksaan Kehamilan', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'dr. Haryono, Sp.OG', keterangan: 'Kontrol berkala pemantauan posisi janin dan DJJ.' },
+    { no: 4, id: 'j-4', tanggal: '2026-10-18', displayTanggal: '18 Okt 2026', waktu: '09.00 - 10.00', jenis: 'Pemeriksaan Kehamilan (ANC)', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Siti Nurhayati', keterangan: 'Pemeriksaan kehamilan lanjutan.' },
+    { no: 5, id: 'j-5', tanggal: '2026-10-25', displayTanggal: '25 Okt 2026', waktu: '09.00 - 10.00', jenis: 'Kelas Ibu Hamil', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Koordinator', keterangan: 'Edukasi persiapan persalinan.' },
+    { no: 6, id: 'j-6', tanggal: '2026-11-02', displayTanggal: '02 Nov 2026', waktu: '09.00 - 10.00', jenis: 'Kelas Ibu Hamil', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Koordinator', keterangan: 'Senam hamil dan edukasi IMD.' },
+  ];
+
+  const [selectedDay, setSelectedDay] = useState(15);
   const [selectedJadwal, setSelectedJadwal] = useState(null);
   const [isSendingWa, setIsSendingWa] = useState(false);
 
-  const [jadwalList, setJadwalList] = useState([]);
+  const [jadwalList, setJadwalList] = useState(defaultIbuHamilJadwal);
 
   useEffect(() => {
-    const targetIbuId = user?.peserta_id || user?.user?.id || user?.id || null;
-    bukuKiaService.getJadwalPesertaList(targetIbuId).then((res) => {
-      if (res && res.length > 0) {
-        const mapped = res.map((j, idx) => ({
-          no: idx + 1,
-          id: j.id,
-          tanggal: j.tanggal,
-          displayTanggal: j.tanggal,
-          waktu: j.waktu || '09:00 - 10:00',
-          jenis: j.jenis_kegiatan || 'Pemeriksaan Kesehatan',
-          lokasi: j.lokasi || 'Puskesmas Manud Jaya',
-          status: j.status || 'Akan Datang',
-          petugas: j.petugas || 'Bidan Siti, S.Tr.Keb',
-          keterangan: j.catatan || 'Pemeriksaan rutin posyandu.'
-        }));
-        setJadwalList(mapped);
-      }
-    });
-  }, []);
+    const targetIbuId = user?.peserta_id || (user && getPesertaIdFromUser(user)) || user?.id || null;
+    if (targetIbuId) {
+      bukuKiaService.getJadwalPesertaList(targetIbuId).then((res) => {
+        const userSpecific = res && res.filter(j => j.peserta_id === targetIbuId);
+        if (userSpecific && userSpecific.length > 0) {
+          const mapped = userSpecific.map((j, idx) => ({
+            no: idx + 1,
+            id: j.id,
+            tanggal: j.tanggal,
+            displayTanggal: j.tanggal,
+            waktu: j.waktu || '09.00 - 10.00',
+            jenis: j.jenis_kegiatan || 'Pemeriksaan Kesehatan',
+            lokasi: j.lokasi || 'Puskesmas Manud Jaya',
+            status: j.status || 'Akan Datang',
+            petugas: j.petugas || 'Bidan Siti, S.Tr.Keb',
+            keterangan: j.catatan || 'Pemeriksaan rutin posyandu.'
+          }));
+          setJadwalList(mapped);
+        }
+      });
+    }
+  }, [user]);
 
   // Metrik terhitung dinamis dari jadwal aktif (PBI 01A AC 1)
   const countPemeriksaan = useMemo(() => {
@@ -93,8 +101,8 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
 
   // Filter daftar jadwal jika ada tanggal kalender yang diklik
   const filteredJadwalList = useMemo(() => {
-    if (!selectedDay) return jadwalList;
-    return jadwalList.filter(item => {
+    if (!selectedDay || selectedDay === 15) return jadwalList;
+    const match = jadwalList.filter(item => {
       try {
         const d = new Date(item.tanggal);
         return d.getDate() === selectedDay;
@@ -102,6 +110,7 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
         return false;
       }
     });
+    return match.length > 0 ? match : jadwalList;
   }, [jadwalList, selectedDay]);
 
   const handleKirimWhatsApp = async (item) => {
@@ -161,16 +170,16 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
         </p>
       </div>
 
-      {/* 2. 4 Kartu Metrik Jadwal (Dihitung Dinamis Sesuai Desain Figma Jadwal.png) */}
+      {/* 2. 4 Kartu Metrik Jadwal */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1: Pemeriksaan */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-[#F5F3FF] text-[#7C3AED] flex items-center justify-center shrink-0">
-            <Stethoscope size={18} />
+          <div className="text-[#7C3AED] shrink-0">
+            <Stethoscope size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Jadwal Pemeriksaan</span>
-            <span className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
+            <span className="text-base sm:text-lg font-bold text-slate-900 leading-tight block mt-0.5">
               {countPemeriksaan}
             </span>
           </div>
@@ -178,12 +187,12 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
 
         {/* Metric 2: Imunisasi */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-[#F5F3FF] text-[#7C3AED] flex items-center justify-center shrink-0">
-            <Syringe size={18} />
+          <div className="text-[#7C3AED] shrink-0">
+            <Syringe size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Jadwal Imunisasi</span>
-            <span className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
+            <span className="text-base sm:text-lg font-bold text-slate-900 leading-tight block mt-0.5">
               {countImunisasi}
             </span>
           </div>
@@ -191,12 +200,12 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
 
         {/* Metric 3: Konseling */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-[#F5F3FF] text-[#7C3AED] flex items-center justify-center shrink-0">
-            <User size={18} />
+          <div className="text-[#7C3AED] shrink-0">
+            <User size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Jadwal Konseling</span>
-            <span className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
+            <span className="text-base sm:text-lg font-bold text-slate-900 leading-tight block mt-0.5">
               {countKonseling}
             </span>
           </div>
@@ -204,12 +213,12 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
 
         {/* Metric 4: Kelas Ibu Hamil */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-[#F5F3FF] text-[#7C3AED] flex items-center justify-center shrink-0">
-            <BookOpen size={18} />
+          <div className="text-[#7C3AED] shrink-0">
+            <BookOpen size={22} />
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Kelas Ibu Hamil</span>
-            <span className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
+            <span className="text-base sm:text-lg font-bold text-slate-900 leading-tight block mt-0.5">
               {countKelasIbu}
             </span>
           </div>
@@ -227,10 +236,7 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
             >
               <ChevronLeft size={18} />
             </button>
-            <div className="text-center">
-              <h3 className="text-sm font-bold text-slate-900">September 2026</h3>
-              <p className="text-[10px] text-slate-400">Klik tanggal untuk menyaring tabel daftar jadwal</p>
-            </div>
+            <h3 className="text-sm font-bold text-slate-900">September 2026</h3>
             <button 
               type="button" 
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
@@ -270,44 +276,23 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
                     item.isPrev || item.isNext
                       ? 'text-slate-300'
                       : isSelected
-                      ? 'bg-[#1E3A8A] text-white font-bold shadow-sm ring-2 ring-blue-300'
-                      : hasEvent
-                      ? 'text-slate-900 font-bold bg-pink-50/70 hover:bg-pink-100'
+                      ? 'bg-[#1E3A8A] text-white font-bold shadow-xs'
                       : 'text-slate-700 hover:bg-slate-100'
                   }`}
-                  title={hasEvent ? `Ada agenda kegiatan pada tanggal ${item.day}` : undefined}
                 >
                   <span>{item.day}</span>
-                  {hasEvent && !isSelected && (
-                    <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#E11D48]" />
-                  )}
                 </button>
               );
             })}
           </div>
 
-          {selectedDay && (
-            <div className="pt-2 flex items-center justify-between text-xs bg-blue-50/70 border border-blue-100 px-3.5 py-2 rounded-xl text-blue-700">
-              <span className="font-semibold">
-                Menyaring jadwal tanggal <strong>{selectedDay} September 2026</strong>
-              </span>
-              <button
-                type="button"
-                onClick={() => setSelectedDay(null)}
-                className="inline-flex items-center gap-1 font-bold text-blue-800 hover:underline cursor-pointer"
-              >
-                <RotateCcw size={12} />
-                <span>Reset Filter</span>
-              </button>
-            </div>
-          )}
+
         </div>
 
         {/* Jadwal Terdekat */}
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-slate-900">Jadwal Terdekat</h3>
-            <span className="text-[11px] text-slate-400 font-medium">Bulan Ini</span>
           </div>
 
           <div className="space-y-3">
@@ -332,27 +317,19 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
                 <div 
                   key={idx}
                   onClick={() => setSelectedJadwal(item)}
-                  className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
+                  className="p-3.5 rounded-2xl border border-slate-100 hover:border-purple-200 hover:bg-purple-50/20 transition-all flex items-center justify-between cursor-pointer group"
                 >
                   <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-2xl bg-pink-50 border border-pink-100 flex flex-col items-center justify-center text-[#E11D48] shrink-0 font-bold leading-tight">
-                      <span className="text-base font-extrabold">{dayStr}</span>
-                      <span className="text-[10px] uppercase font-semibold">{monthStr}</span>
+                    <div className="w-11 h-11 rounded-xl bg-[#F1E8FB] flex flex-col items-center justify-center text-[#7E22CE] shrink-0 font-bold leading-tight">
+                      <span className="text-sm font-extrabold">{dayStr}</span>
+                      <span className="text-[10px] font-medium">{monthStr}</span>
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#E11D48] transition-colors">
-                          {item.jenis}
-                        </h4>
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold border ${reminder.badgeColor}`}>
-                          {reminder.label}
-                        </span>
-                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#7E22CE] transition-colors">
+                        {item.jenis}
+                      </h4>
                       <p className="text-[11px] text-slate-500 mt-0.5">{item.waktu} WIB</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
-                        <MapPin size={10} />
-                        <span>{item.lokasi}</span>
-                      </p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">{item.lokasi}</p>
                     </div>
                   </div>
                   <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
@@ -366,25 +343,7 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
       {/* 4. Tabel: Daftar Jadwal (Tersaring Berdasarkan Klik Kalender - PBI 01A AC 2) */}
       <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-xs">
         <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900">Daftar Jadwal Kegiatan</h3>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              {selectedDay 
-                ? `Menampilkan ${filteredJadwalList.length} kegiatan pada tanggal ${selectedDay} September 2026`
-                : `Menampilkan semua ${jadwalList.length} jadwal kegiatan aktif`
-              }
-            </p>
-          </div>
-          {selectedDay && (
-            <button
-              type="button"
-              onClick={() => setSelectedDay(null)}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <RotateCcw size={13} />
-              <span>Tampilkan Semua</span>
-            </button>
-          )}
+          <h3 className="text-sm font-bold text-slate-900">Daftar Jadwal</h3>
         </div>
 
         <div className="overflow-x-auto">

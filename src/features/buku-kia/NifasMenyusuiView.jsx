@@ -185,21 +185,21 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
 
         {/* Informasi Tentang ASI */}
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-          <h3 className="text-sm font-bold text-slate-900">Informasi Penting Tentang ASI</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <h3 className="text-sm font-bold text-slate-900">Informasi Tentang ASI</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3.5">
             {edukasiASI.map((item, idx) => (
               <div 
                 key={idx}
                 onClick={() => setSelectedDoc(item)}
-                className="p-3 rounded-xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
+                className="flex items-center justify-between py-1 cursor-pointer group hover:opacity-80 transition-opacity"
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <FileText size={15} className="text-slate-400 group-hover:text-[#E11D48] shrink-0" />
-                  <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900 truncate">
+                <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                  <FileText size={18} className="text-slate-800 shrink-0" />
+                  <span className="text-xs font-medium text-slate-800 leading-snug">
                     {item.title}
                   </span>
                 </div>
-                <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-600 shrink-0" />
+                <ChevronRight size={15} className="text-slate-700 shrink-0" />
               </div>
             ))}
           </div>
@@ -209,8 +209,7 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
       {/* 4. Tabel: Riwayat Pemeriksaan Nifas KF 1 - KF 4 */}
       <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-xs">
         <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900">Jadwal & Riwayat Pemeriksaan Nifas (KF 1 - KF 4)</h3>
-          <span className="text-[11px] text-slate-400">Standar Pelayanan Kebidanan</span>
+          <h3 className="text-sm font-bold text-slate-900">Riwayat Pemeriksaan</h3>
         </div>
 
         <div className="overflow-x-auto">
