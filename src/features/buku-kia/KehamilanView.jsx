@@ -639,8 +639,10 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
 
           {/* Chart Legend */}
           <div className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-600">
-            <span className="w-3 h-0.5 bg-[#E11D48] inline-block rounded-full"></span>
-            <span className="w-2 h-2 rounded-full border-2 border-[#E11D48] bg-white inline-block"></span>
+            <svg width="24" height="12" viewBox="0 0 24 12" className="inline-block shrink-0">
+              <line x1="0" y1="6" x2="24" y2="6" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="12" cy="6" r="3.5" fill="#FFFFFF" stroke="#E11D48" strokeWidth="2" />
+            </svg>
             <span className="font-medium text-slate-700">Berat Badan</span>
           </div>
         </div>
@@ -651,66 +653,60 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
           <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
             <h3 className="text-sm sm:text-base font-bold text-slate-900">Konsumsi TTD/MMS</h3>
 
-            <div className="flex items-center gap-6">
-              {/* SVG Donut Chart */}
-              <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  {/* Background Ring (Belum diminum - 5 hari / 18%) */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="38"
-                    fill="transparent"
-                    stroke="#E2E8F0"
-                    strokeWidth="14"
-                  />
-                  {/* Foreground Ring (Sudah diminum - 23 hari / 82%) */}
-                  {/* Circumference = 2 * PI * 38 = 238.76. 82.1% = 196 */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="38"
-                    fill="transparent"
-                    stroke="#E11D48"
-                    strokeWidth="14"
-                    strokeDasharray="238.76"
-                    strokeDashoffset="42.7"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                {/* Center Percentage Display */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-base font-extrabold text-slate-900 leading-none">82%</span>
-                  <span className="text-[9px] text-slate-400 mt-0.5">Tercapai</span>
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+              {/* SVG Donut Chart (Hollow, tanpa text center) */}
+              <div className="sm:col-span-3 flex justify-center">
+                <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="38"
+                      fill="transparent"
+                      stroke="#E2E8F0"
+                      strokeWidth="14"
+                    />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="38"
+                      fill="transparent"
+                      stroke="#E11D48"
+                      strokeWidth="14"
+                      strokeDasharray="238.76"
+                      strokeDashoffset="42.7"
+                      strokeLinecap="round"
+                    />
+                  </svg>
                 </div>
               </div>
 
               {/* Legend List */}
-              <div className="space-y-2.5 text-xs flex-1">
-                <div className="flex items-center justify-between">
+              <div className="sm:col-span-4 space-y-2.5 text-xs">
+                <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#E11D48] shrink-0" />
                     <span className="text-slate-600">Sudah diminum</span>
                   </div>
-                  <span className="font-bold text-slate-900">23 hari</span>
+                  <span className="font-bold text-slate-900 shrink-0">23 hari</span>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0" />
                     <span className="text-slate-600">Belum diminum</span>
                   </div>
-                  <span className="font-bold text-slate-900">5 hari</span>
+                  <span className="font-bold text-slate-900 shrink-0">5 hari</span>
                 </div>
               </div>
-            </div>
 
-            {/* Blue / Purple Info Callout Box */}
-            <div className="bg-[#EEF2FF] border border-[#E0E7FF] rounded-2xl p-4 flex items-start gap-3 text-xs text-[#3730A3]">
-              <Info size={18} className="shrink-0 text-[#4F46E5] mt-0.5" />
-              <p className="leading-relaxed">
-                Tablet Tambah Darah (TTD) dilanjutkan diminum setiap hari selama kehamilan, minimal 90 tablet (3 bulan) sesuai buku KIA
-              </p>
+              {/* Blue / Purple Info Callout Box */}
+              <div className="sm:col-span-5 bg-[#EEF2FF] border border-[#E0E7FF] rounded-2xl p-3 flex flex-col gap-1.5 text-[11px] text-[#3730A3]">
+                <Info size={16} className="shrink-0 text-[#4F46E5]" />
+                <p className="leading-snug">
+                  Tablet Tambah Darah (TTD) dilanjutkan diminum setiap hari selama kehamilan, minimal 90 tablet (3 bulan) sesuai buku KIA
+                </p>
+              </div>
             </div>
           </div>
 

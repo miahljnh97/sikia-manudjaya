@@ -273,10 +273,14 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
   };
 
   const namaPasien = peserta?.nama || 'Siti Aminah';
-  const nikPasien = peserta?.nik ? maskNik(peserta.nik) : '3201234567890001';
-  const usiaKehamilanStr = kehamilan?.usia_kehamilan_minggu 
-    ? `${kehamilan.usia_kehamilan_minggu} Minggu` 
-    : '28 Minggu';
+  const nikPasien = peserta?.nik || '293920102029029';
+  const noRekamMedis = peserta?.no_rekam_medis || peserta?.nik || '293920102029029';
+  const usiaPasien = peserta?.usia ? `${peserta.usia} Tahun` : '27 Tahun';
+  const usiaKehamilanStr = (() => {
+    const minggu = kehamilan?.usia_kehamilan_minggu || 28;
+    const hari = kehamilan?.usia_kehamilan_hari ? `${kehamilan.usia_kehamilan_hari} hari` : '3 hari';
+    return `${minggu} Minggu ${hari}`;
+  })();
   const hplStr = kehamilan?.hpl || '20 Desember 2026';
   const hphtStr = kehamilan?.hpht || '12 Februari 2026';
 
@@ -318,7 +322,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
       {/* 2. Top Patient Card (Profil Terisolasi per ID) */}
       <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="flex items-center gap-4.5">
+          <div className="flex items-center gap-4.5 flex-1">
             <div className="w-16 h-16 rounded-full overflow-hidden bg-pink-100 border-2 border-pink-200 shrink-0">
               <img 
                 src="/images/siti-aminah-avatar.png" 
@@ -329,31 +333,41 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
                 }}
               />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900">{namaPasien}</h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-pink-50 text-pink-700 border border-pink-200">
-                  Ibu Hamil
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 mt-1.5 text-xs text-slate-600">
-                <div>
-                  <span className="text-slate-400">Nama:</span> <span className="font-semibold text-slate-800">{namaPasien}</span>
+            <div className="flex-1">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900">{namaPasien}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 lg:gap-x-12 gap-y-1.5 mt-2 text-xs">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-28 text-slate-400">Nama</span>
+                    <span className="font-semibold text-slate-800">{namaPasien}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-28 text-slate-400">NIK</span>
+                    <span className="font-semibold text-slate-800 font-mono">{nikPasien}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-28 text-slate-400">No Rekam Medis</span>
+                    <span className="font-semibold text-slate-800 font-mono">{noRekamMedis}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-28 text-slate-400">Usia</span>
+                    <span className="font-semibold text-slate-800">{usiaPasien}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-slate-400">Usia Kehamilan:</span> <span className="font-semibold text-slate-800">{usiaKehamilanStr}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">NIK:</span> <span className="font-semibold text-slate-800 font-mono">{nikPasien}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">HPHT:</span> <span className="font-semibold text-slate-800">{formatTanggalIndo(hphtStr)}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">ID Pasien:</span> <span className="font-semibold text-slate-800 font-mono text-[10px]">{activePesertaId.slice(0, 13)}...</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">Taksiran Persalinan:</span> <span className="font-semibold text-slate-800">{formatTanggalIndo(hplStr)}</span>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-36 text-slate-400">Usia Kehamilan</span>
+                    <span className="font-semibold text-slate-800">{usiaKehamilanStr}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-36 text-slate-400">HPHT</span>
+                    <span className="font-semibold text-slate-800">{formatTanggalIndo(hphtStr)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-36 text-slate-400">Taksiran Persalinan</span>
+                    <span className="font-semibold text-slate-800">{formatTanggalIndo(hplStr)}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -368,9 +382,9 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
                 onShowToast && onShowToast(`Membuka profil lengkap ${namaPasien}`, 'info');
               }
             }}
-            className="px-4 py-2 bg-[#F5F3FF] hover:bg-[#EDE9FE] text-[#6D28D9] rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-colors self-start lg:self-center cursor-pointer active:scale-95"
+            className="px-4 py-2 bg-[#F5F3FF] hover:bg-[#EDE9FE] text-[#6D28D9] rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-colors self-start lg:self-center cursor-pointer active:scale-95 shrink-0"
           >
-            <span>Lihat Profil Peserta</span>
+            <span>Lihat Profil</span>
             <ChevronRight size={14} />
           </button>
         </div>
