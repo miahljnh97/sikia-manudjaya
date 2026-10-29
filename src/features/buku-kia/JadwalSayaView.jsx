@@ -13,6 +13,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
+import { formatTanggalIndo } from '../../utils/dateUtils';
 import { sendWhatsAppReminder, getReminderStatus, normalizePhoneForWhatsApp, generateWhatsAppReminderMessage } from '../../services/whatsappService';
 
 // Helper resolusi status selaras antara kolom tanggal dan status
@@ -27,7 +28,29 @@ const resolveJadwalStatus = (item) => {
 };
 
 
-export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
+export default function JadwalSayaView({ user, currentPath = '', onNavigate, onShowToast }) {
+
+  // Helper ekstrak tanggal dari URL parameter (?tanggal=YYYY-MM-DD)
+  const extractDateFromUrl = () => {
+    let t = null;
+    if (typeof window !== 'undefined' && window.location.search) {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get('tanggal')) t = sp.get('tanggal');
+    }
+    if (!t && currentPath && currentPath.includes('?')) {
+      const sp = new URLSearchParams(currentPath.split('?')[1]);
+      if (sp.get('tanggal')) t = sp.get('tanggal');
+    }
+    if (t) {
+      try {
+        const d = new Date(t);
+        if (!isNaN(d.getTime())) return d;
+      } catch {}
+    }
+    return null;
+  };
+
+  const initialUrlDate = extractDateFromUrl();
 
 
   const userRole = (user?.role || '').toLowerCase().trim();
@@ -36,8 +59,8 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
 
   // Tombol Kirim WA hanya untuk Bidan, Kader, dan Super Admin. Akun Ibu di-hide.
   const canSendWa = !isIbuRole;
-  const [currentDate, setCurrentDate] = useState(() => new Date(2026, 8, 1)); // September 2026
-  const [selectedDay, setSelectedDay] = useState(null);
+  const [currentDate, setCurrentDate] = useState(() => initialUrlDate ? new Date(initialUrlDate.getFullYear(), initialUrlDate.getMonth(), 1) : new Date(2026, 9, 1)); // Default Oktober 2026
+  const [selectedDay, setSelectedDay] = useState(() => initialUrlDate ? initialUrlDate.getDate() : null);
   const [selectedJadwal, setSelectedJadwal] = useState(null);
   const [isSendingWa, setIsSendingWa] = useState(false);
   const [blastWaJadwal, setBlastWaJadwal] = useState(null);
@@ -76,25 +99,31 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
   const [jadwalList, setJadwalList] = useState(defaultIbuHamilJadwal);
 
   useEffect(() => {
+    const d = extractDateFromUrl();
+    if (d) {
+      setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1));
+      setSelectedDay(d.getDate());
+    }
+  }, [currentPath]);
+
+  useEffect(() => {
     const targetIbuId = user?.peserta_id || (user && getPesertaIdFromUser(user)) || user?.id || null;
     if (targetIbuId) {
       bukuKiaService.getJadwalPesertaList(targetIbuId).then((res) => {
-        if (!res || res.length === 0) return;
-
-        let candidateList = res;
-        if (isIbuRole) {
-          const userSpecific = res.filter(j => j.peserta_id === targetIbuId);
-          if (userSpecific.length > 0) {
-            candidateList = userSpecific;
-          }
+        if (!res || res.length === 0) {
+          setJadwalList([]);
+          return;
         }
+
+        const userSpecific = res.filter(j => !j.peserta_id || String(j.peserta_id) === String(targetIbuId));
+        const candidateList = userSpecific.length > 0 ? userSpecific : res;
 
         if (candidateList && candidateList.length > 0) {
           const mapped = candidateList.map((j, idx) => ({
             no: idx + 1,
             id: j.id,
             tanggal: j.tanggal,
-            displayTanggal: j.tanggal,
+            displayTanggal: formatTanggalIndo(j.tanggal) || j.tanggal,
             waktu: j.waktu || '09.00 - 10.00',
             jenis: j.jenis_kegiatan || 'Pemeriksaan Kesehatan',
             lokasi: j.lokasi || 'Puskesmas Manud Jaya',
@@ -103,9 +132,23 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
             keterangan: j.catatan || 'Pemeriksaan rutin posyandu.'
           }));
           setJadwalList(mapped);
+
+          // Jika ada jadwal tapi belum ada tanggal spesifik di URL, sesuaikan bulan ke jadwal pertama
+          const urlD = extractDateFromUrl();
+          if (!urlD && mapped.length > 0) {
+            try {
+              const firstD = new Date(mapped[0].tanggal);
+              if (!isNaN(firstD.getTime())) {
+                setCurrentDate(new Date(firstD.getFullYear(), firstD.getMonth(), 1));
+              }
+            } catch {}
+          }
+        } else {
+          setJadwalList([]);
         }
       }).catch(err => {
         console.warn('Gagal fetch jadwal dari Supabase:', err);
+        setJadwalList([]);
       });
     }
   }, [user, isIbuRole]);

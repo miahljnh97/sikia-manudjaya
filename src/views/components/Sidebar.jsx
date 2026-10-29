@@ -29,6 +29,7 @@ export default function Sidebar({
   const isBidan = (roleNormalized.includes('bidan') || emailNormalized.includes('bidan')) && !roleNormalized.includes('ibu') && !emailNormalized.includes('ibu');
   const isKader = (roleNormalized.includes('kader') || emailNormalized.includes('kader')) && !roleNormalized.includes('ibu') && !emailNormalized.includes('ibu');
   const isStaff = isSuperAdmin || isBidan || isKader;
+  const isIbuBalitaOnly = roleNormalized === 'ibu balita' || emailNormalized === 'ibu.balita@manudjaya.id' || (emailNormalized.includes('balita') && !emailNormalized.includes('hamil'));
 
   // State Accordion Submenu Kesehatan Ibu & Anak
   const [isIbuExpanded, setIsIbuExpanded] = useState(true);
@@ -41,7 +42,9 @@ export default function Sidebar({
     }
   };
 
-  const subKesehatanIbu = [
+  const subKesehatanIbu = isIbuBalitaOnly ? [
+    { id: 'Pemeriksaan Ibu', label: 'Riwayat Pemeriksaan' },
+  ] : [
     { id: 'Kehamilan', label: 'Kehamilan' },
     { id: 'Pemeriksaan Ibu', label: 'Pemeriksaan' },
     { id: 'Persalinan', label: 'Persalinan' },

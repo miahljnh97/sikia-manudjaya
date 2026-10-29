@@ -55,6 +55,9 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
   const isIbuHamilOnly = userRole === 'ibu hamil' || email === 'ibu.hamil@manudjaya.id' || (email.includes('hamil') && !email.includes('anak') && !email.includes('balita'));
   const isIbuHamilBalita = userRole === 'ibu hamil & balita' || email === 'ibu.hamil.anak@manudjaya.id' || email.includes('hamil.anak') || (!isIbuBalitaOnly && !isIbuHamilOnly);
 
+  // Validasi status kehamilan murni dinamis (aktif jika sedang hamil & memiliki record usia kehamilan)
+  const isSedangHamil = !isIbuBalitaOnly && Boolean(kehamilan && (kehamilan.status_kehamilan === 'Aktif' || !kehamilan.status_kehamilan) && kehamilan.usia_kehamilan_minggu);
+
   // Tampilkan nama akun asli pengguna secara dinamis dari profil (bukan hardcoded)
   const displayName = user?.nama || user?.user_metadata?.nama || (email ? email.split('@')[0] : 'Ibu');
 
@@ -255,9 +258,15 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#E11D48] tracking-tight">
                 {displayName}
               </h2>
-              <p className="text-xs text-slate-600 font-medium mt-1">
-                Usia Kehamilan: <strong className="text-slate-900 font-bold">{kehamilan?.usia_kehamilan_minggu || 28} Minggu</strong> · Trimester {kehamilan?.trimester || 3}
-              </p>
+              {isSedangHamil ? (
+                <p className="text-xs text-slate-600 font-medium mt-1">
+                  Usia Kehamilan: <strong className="text-slate-900 font-bold">{kehamilan?.usia_kehamilan_minggu} Minggu</strong> · Trimester {kehamilan?.trimester || 3}
+                </p>
+              ) : (
+                <p className="text-xs text-slate-600 font-medium mt-1">
+                  Status: <strong className="text-slate-900 font-bold">Saat ini tidak dalam masa kehamilan</strong>
+                </p>
+              )}
             </div>
           </div>
 
@@ -265,10 +274,10 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
           <div className="relative z-10 mt-auto pt-10 sm:pt-14 max-w-[62%] sm:max-w-[65%]">
             <button
               type="button"
-              onClick={() => handleNav('/kesehatan-ibu/kehamilan')}
+              onClick={() => handleNav(isSedangHamil ? '/kesehatan-ibu/kehamilan' : '/kesehatan-ibu/pemeriksaan')}
               className="px-6 py-2.5 bg-[#FF4D80] hover:bg-[#F43F5E] text-white rounded-full text-xs font-bold inline-flex items-center gap-1.5 shadow-md shadow-pink-300/40 transition-all cursor-pointer active:scale-95"
             >
-              <span>Lihat Detail Ibu</span>
+              <span>{isSedangHamil ? 'Lihat Detail Ibu' : 'Lihat Riwayat Ibu'}</span>
               <ArrowRight size={14} />
             </button>
           </div>
@@ -405,7 +414,7 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
               return (
                 <div 
                   key={idx}
-                  onClick={() => handleNav('/jadwal-saya')}
+                  onClick={() => handleNav(`/jadwal-saya?tanggal=${item.tanggal || ''}`)}
                   className="p-3.5 rounded-2xl border border-slate-100 hover:border-pink-200 hover:bg-pink-50/20 transition-all flex items-center justify-between cursor-pointer group"
                 >
                   <div className="flex items-center gap-3.5">
@@ -491,15 +500,16 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
             <h3 className="text-sm sm:text-base font-bold text-slate-900">Ringkasan Kesehatan Ibu</h3>
             <button
               type="button"
-              onClick={() => handleNav('/kesehatan-ibu/kehamilan')}
+              onClick={() => handleNav(isSedangHamil ? '/kesehatan-ibu/kehamilan' : '/kesehatan-ibu/pemeriksaan')}
               className="text-xs font-semibold text-[#E11D48] hover:text-[#BE185D] cursor-pointer"
             >
               Lihat Detail
             </button>
           </div>
 
-          {/* Metrik Kehamilan Sesuai Desain Figma (Gambar 1 Expected) */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          {isSedangHamil ? (
+            /* Metrik Kehamilan Sesuai Desain Figma (Gambar 1 Expected) */
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {/* 1. Pemeriksaan Kehamilan */}
             <div 
               onClick={() => handleNav('/kesehatan-ibu/pemeriksaan')}
@@ -587,6 +597,17 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
               </div>
             </div>
           </div>
+          ) : (
+            <div className="bg-white/80 border border-pink-100/60 rounded-2xl p-6 text-center my-auto space-y-2">
+              <div className="w-10 h-10 rounded-2xl bg-pink-50 text-[#FF168B] flex items-center justify-center mx-auto mb-1">
+                <ClipboardPlus size={20} />
+              </div>
+              <p className="text-xs sm:text-sm font-bold text-slate-800">Saat ini tidak dalam masa kehamilan</p>
+              <p className="text-[11px] text-slate-500 max-w-sm mx-auto leading-relaxed">
+                Data pemantauan kehamilan aktif tidak ditemukan. Anda dapat memantau tumbuh kembang dan riwayat imunisasi ananda pada ringkasan kesehatan anak.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Kolom 2: Ringkasan Kesehatan Anak */}

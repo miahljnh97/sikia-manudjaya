@@ -1816,38 +1816,22 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
           SUB-PAGE 3: IMUNISASI (Image 3 - Sesuai Figma QA)
       ====================================================================== */}
       {activeSub === 'Imunisasi' && (() => {
-        const defaultJadwalRingkas = [
-          { nama_vaksin: 'Hepatitis B', jadwal_usia: 'Usia 0–7 Hari', tanggal_diberikan: '20 Feb 2026', status: 'Selesai' },
-          { nama_vaksin: 'BCG', jadwal_usia: 'Usia 1 Bulan', tanggal_diberikan: '20 Feb 2026', status: 'Selesai' },
-          { nama_vaksin: 'Polio 1', jadwal_usia: 'Usia 0–7 Hari', tanggal_diberikan: '20 Feb 2026', status: 'Selesai' },
-          { nama_vaksin: 'Polio 2', jadwal_usia: 'Usia 0–7 Hari', tanggal_diberikan: '20 Feb 2026', status: 'Selesai' }
-        ];
-
-        const displayJadwalRingkas = daftarImunisasi.length > 0
-          ? daftarImunisasi.slice(0, 4).map(i => ({
-              nama_vaksin: i.nama_vaksin ? i.nama_vaksin.replace(/\s*\(.*?\)/g, '') : 'Hepatitis B',
-              jadwal_usia: i.jadwal_usia ? (i.jadwal_usia.toLowerCase().startsWith('usia') ? i.jadwal_usia : 'Usia ' + i.jadwal_usia) : 'Usia 0–7 Hari',
-              tanggal_diberikan: formatTanggalIndo(i.tanggal_diberikan) || '20 Feb 2026',
-              status: i.status || 'Selesai'
-            }))
-          : defaultJadwalRingkas;
-
-        const defaultRiwayatImunisasi = [
-          { no: 1, tanggal: '12 Sep 2026', usia: '14 Bulan', jenis: 'DPT-HB-Hb 3', lokasi: 'Puskesmas Maju Jaya', petugas: 'Bidan Sari' },
-          { no: 1, tanggal: '12 Sep 2026', usia: '14 Bulan', jenis: 'DPT-HB-Hb 3', lokasi: 'Puskesmas Maju Jaya', petugas: 'Bidan Sari' }
-        ];
+        const displayJadwalRingkas = daftarImunisasi.slice(0, 4).map(i => ({
+          nama_vaksin: i.nama_vaksin ? i.nama_vaksin.replace(/\s*\(.*?\)/g, '') : 'Vaksin',
+          jadwal_usia: i.jadwal_usia ? (i.jadwal_usia.toLowerCase().startsWith('usia') ? i.jadwal_usia : 'Usia ' + i.jadwal_usia) : 'Sesuai Jadwal',
+          tanggal_diberikan: i.status === 'Selesai' && i.tanggal_diberikan ? (formatTanggalIndo(i.tanggal_diberikan) || i.tanggal_diberikan) : (i.status || 'Akan Datang'),
+          status: i.status || 'Selesai'
+        }));
 
         const riwayatSelesai = daftarImunisasi.filter(i => i.status === 'Selesai' || i.tanggal_diberikan);
-        const displayRiwayatImunisasi = riwayatSelesai.length > 0
-          ? riwayatSelesai.map((vax, idx) => ({
-              no: idx + 1,
-              tanggal: formatTanggalIndo(vax.tanggal_diberikan) || vax.tanggal_diberikan || '12 Sep 2026',
-              usia: vax.jadwal_usia || '14 Bulan',
-              jenis: vax.nama_vaksin || 'DPT-HB-Hb 3',
-              lokasi: vax.lokasi || 'Puskesmas Maju Jaya',
-              petugas: vax.petugas || 'Bidan Sari'
-            }))
-          : defaultRiwayatImunisasi;
+        const displayRiwayatImunisasi = riwayatSelesai.map((vax, idx) => ({
+          no: idx + 1,
+          tanggal: formatTanggalIndo(vax.tanggal_diberikan) || vax.tanggal_diberikan || '-',
+          usia: vax.jadwal_usia || '-',
+          jenis: vax.nama_vaksin || '-',
+          lokasi: vax.lokasi || 'Posyandu Anggrek',
+          petugas: vax.petugas || 'Bidan Siti, S.Tr.Keb'
+        }));
 
         return (
           <div className="space-y-6">
@@ -1884,7 +1868,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                   <div>
                     <span className="text-[10px] text-slate-500 font-medium block">Imunisasi Selesai</span>
                     <span className="text-base sm:text-lg font-extrabold text-slate-900 block leading-tight">
-                      {daftarImunisasi.length > 0 ? `${daftarImunisasi.filter(i => i.status === 'Selesai').length} / ${daftarImunisasi.length}` : '7/9'}
+                      {daftarImunisasi.length > 0 ? `${daftarImunisasi.filter(i => i.status === 'Selesai').length} / ${daftarImunisasi.length}` : '0 / 0'}
                     </span>
                   </div>
                 </div>
@@ -1947,28 +1931,36 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
               {/* Kolom Kanan: Detail Campak Rubella & Tips Setelah Imunisasi */}
               <div className="lg:col-span-7 space-y-4">
-                {/* 2 Kartu Atas: Jadwal Campak & Manfaat */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex items-start gap-3.5">
-                    <Calendar size={22} className="text-[#8B5CF6] shrink-0 mt-0.5" />
-                    <div>
-                      <span className="text-xs font-bold text-slate-800 block">Campak Rubella</span>
-                      <span className="text-sm font-bold text-[#FF168B] leading-tight block mt-0.5">
-                        20 Desember 2026
-                      </span>
-                    </div>
-                  </div>
+                {/* 2 Kartu Atas: Jadwal Vaksin Berikutnya & Manfaat */}
+                {(() => {
+                  const nextVaksin = daftarImunisasi.find(i => i.status === 'Akan Datang' || !i.tanggal_diberikan) || (daftarImunisasi.length > 0 ? daftarImunisasi[daftarImunisasi.length - 1] : null);
+                  const nextTitle = nextVaksin?.nama_vaksin || 'Campak Rubella (MR)';
+                  const nextDate = nextVaksin?.tanggal_diberikan ? (formatTanggalIndo(nextVaksin.tanggal_diberikan) || nextVaksin.tanggal_diberikan) : (nextVaksin?.jadwal_usia ? `Usia ${nextVaksin.jadwal_usia}` : 'Sesuai Jadwal');
 
-                  <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex items-start gap-3.5">
-                    <Heart size={22} className="text-[#8B5CF6] shrink-0 mt-0.5" />
-                    <div>
-                      <span className="text-xs font-bold text-slate-800 block">Manfaat</span>
-                      <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
-                        Melindungi anak dari penyakit campak dan rubella yang dapat menyebabkan komplikasi serius
-                      </p>
+                  return (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex items-start gap-3.5">
+                        <Calendar size={22} className="text-[#8B5CF6] shrink-0 mt-0.5" />
+                        <div>
+                          <span className="text-xs font-bold text-slate-800 block">{nextTitle}</span>
+                          <span className="text-sm font-bold text-[#FF168B] leading-tight block mt-0.5">
+                            {nextDate}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex items-start gap-3.5">
+                        <Heart size={22} className="text-[#8B5CF6] shrink-0 mt-0.5" />
+                        <div>
+                          <span className="text-xs font-bold text-slate-800 block">Manfaat</span>
+                          <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
+                            Melindungi anak dari penyakit menular berbahaya dan komplikasi serius melalui imunisasi lengkap.
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* Tips Setelah Imunisasi */}
                 <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
@@ -2042,7 +2034,13 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700">
-                      {displayRiwayatImunisasi.map((row, idx) => (
+                      {displayRiwayatImunisasi.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="py-8 text-center text-slate-400">
+                            Belum ada riwayat imunisasi yang tercatat untuk anak ini.
+                          </td>
+                        </tr>
+                      ) : displayRiwayatImunisasi.map((row, idx) => (
                         <tr key={idx} className="hover:bg-pink-50/20 transition-colors">
                           <td className="py-3.5 px-4 text-center font-medium text-slate-700">{row.no || idx + 1}</td>
                           <td className="py-3.5 px-4 font-semibold text-slate-900">{row.tanggal}</td>
