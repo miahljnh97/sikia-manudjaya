@@ -335,6 +335,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
   const [isSubmittingKms, setIsSubmittingKms] = useState(false);
 
   // States untuk Modal Jadwal Imunisasi Lengkap & Tips KIPI Buku KIA
+  const [showAllPencapaian, setShowAllPencapaian] = useState(false);
+  const [filterKpspKategori, setFilterKpspKategori] = useState('Semua');
   const [showAllJadwalImunisasi, setShowAllJadwalImunisasi] = useState(false);
   const [showAllTipsImunisasi, setShowAllTipsImunisasi] = useState(false);
   const [filterStatusJadwal, setFilterStatusJadwal] = useState('Semua');
@@ -423,6 +425,174 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
       urgensi: 'DARURAT / IGD 24 JAM'
     }
   ];
+
+  const getChecklistKpspLengkap = () => {
+    const masterKpsp = [
+      {
+        id: 'kpsp-mk-1',
+        title: 'Duduk Tanpa Bantuan',
+        kategori: 'Motorik Kasar',
+        usia: 'Usia 6 Bulan',
+        tanggal: '20 Jan 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi dapat duduk tegak sendiri di lantai tanpa disangga bantal atau dipegangi selama minimal 60 detik.'
+      },
+      {
+        id: 'kpsp-mh-1',
+        title: 'Meraih & Memegang Benda dengan Seluruh Jari',
+        kategori: 'Motorik Halus',
+        usia: 'Usia 6 Bulan',
+        tanggal: '18 Jan 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi aktif mengulurkan tangan meraih mainan atau benda yang didekatkan dan menggenggamnya erat.'
+      },
+      {
+        id: 'kpsp-bb-1',
+        title: 'Mengoceh Mengulang Suku Kata (Ba-ba, Da-da, Ma-ma)',
+        kategori: 'Bicara & Bahasa',
+        usia: 'Usia 6 Bulan',
+        tanggal: '25 Jan 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi mampu mengeluarkan suara bersuara konsonan dan vokal berulang saat diajak berkomunikasi.'
+      },
+      {
+        id: 'kpsp-sm-1',
+        title: 'Tersenyum Spontan & Bermain Cilukba',
+        kategori: 'Sosialisasi & Kemandirian',
+        usia: 'Usia 6 Bulan',
+        tanggal: '10 Feb 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi gembira dan tersenyum spontan melihat wajah orang tua atau saat diajak bermain cilukba.'
+      },
+      {
+        id: 'kpsp-mk-2',
+        title: 'Merangkak Menjelajah Ruangan',
+        kategori: 'Motorik Kasar',
+        usia: 'Usia 8 Bulan',
+        tanggal: '15 Mar 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi merangkak maju dengan bertumpu pada kedua tangan dan lutut untuk bergerak mengambil mainan.'
+      },
+      {
+        id: 'kpsp-mh-2',
+        title: 'Menjepit Benda Kecil dengan Ibu Jari dan Telunjuk (Pincer Grasp)',
+        kategori: 'Motorik Halus',
+        usia: 'Usia 9 Bulan',
+        tanggal: '12 Apr 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi mampu memungut kismis atau remah biskuit menggunakan ujung ibu jari dan telunjuk secara presisi.'
+      },
+      {
+        id: 'kpsp-bb-2',
+        title: 'Menoleh dan Menanggapi Saat Namanya Dipanggil',
+        kategori: 'Bicara & Bahasa',
+        usia: 'Usia 9 Bulan',
+        tanggal: '20 Apr 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi langsung menolehkan kepala ke arah suara saat namanya dipanggil lembut dari sisi samping/belakang.'
+      },
+      {
+        id: 'kpsp-sm-2',
+        title: 'Melambaikan Tangan (Dadah / Bye-bye)',
+        kategori: 'Sosialisasi & Kemandirian',
+        usia: 'Usia 9 Bulan',
+        tanggal: '02 Mei 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi mampu menirukan gerakan melambaikan tangan saat seseorang berpamitan.'
+      },
+      {
+        id: 'kpsp-mk-3',
+        title: 'Berdiri Berpegangan pada Perabotan (Cruising)',
+        kategori: 'Motorik Kasar',
+        usia: 'Usia 10 Bulan',
+        tanggal: '10 Mei 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi dapat menarik tubuhnya ke posisi berdiri dengan berpegangan pada kursi, meja, atau tempat tidur.'
+      },
+      {
+        id: 'kpsp-mk-4',
+        title: 'Berjalan Beberapa Langkah Tanpa Bantuan',
+        kategori: 'Motorik Kasar',
+        usia: 'Usia 12 Bulan',
+        tanggal: '22 Jul 2026',
+        status: 'Tercapai',
+        deskripsi: 'Anak mampu melangkah 2 hingga 5 langkah sendiri di lantai seimbang tanpa terjatuh.'
+      },
+      {
+        id: 'kpsp-mh-3',
+        title: 'Menumpuk 2 Balok Mainan',
+        kategori: 'Motorik Halus',
+        usia: 'Usia 12 Bulan',
+        tanggal: '05 Agu 2026',
+        status: 'Tercapai',
+        deskripsi: 'Anak dapat menaruh satu balok mainan di atas balok lain tanpa menjatuhkannya.'
+      },
+      {
+        id: 'kpsp-bb-3',
+        title: 'Mengucapkan 1-2 Kata Bermakna (Selain Mama/Papa)',
+        kategori: 'Bicara & Bahasa',
+        usia: 'Usia 12 Bulan',
+        tanggal: '14 Jul 2026',
+        status: 'Tercapai',
+        deskripsi: 'Anak dapat mengucapkan kata bermakna seperti "mimi", "mau", atau "bol" untuk merujuk objek tertentu.'
+      },
+      {
+        id: 'kpsp-sm-3',
+        title: 'Menunjukkan Keinginan dengan Menunjuk Jari & Minum dari Cangkir',
+        kategori: 'Sosialisasi & Kemandirian',
+        usia: 'Usia 12 Bulan',
+        tanggal: '18 Jul 2026',
+        status: 'Tercapai',
+        deskripsi: 'Anak mengarahkan jari telunjuknya ke arah mainan/makanan yang diinginkan dan dapat memegang cangkir minum sendiri.'
+      },
+      {
+        id: 'kpsp-mk-5',
+        title: 'Membungkuk Mengambil Mainan Lalu Berdiri Tegak Kembali',
+        kategori: 'Motorik Kasar',
+        usia: 'Usia 15 Bulan',
+        tanggal: 'Terjadwal Skrining Berikutnya',
+        status: 'Dalam Pemantauan',
+        deskripsi: 'Anak membungkuk memungut benda di lantai tanpa berpegangan dan kembali berdiri tegak dengan seimbang.'
+      },
+      {
+        id: 'kpsp-mh-4',
+        title: 'Memasukkan Benda Kecil ke Dalam Lubang / Botol',
+        kategori: 'Motorik Halus',
+        usia: 'Usia 15 Bulan',
+        tanggal: 'Terjadwal Skrining Berikutnya',
+        status: 'Dalam Pemantauan',
+        deskripsi: 'Anak mampu memasukkan koin mainan atau bola kecil ke dalam wadah atau celengan dengan sengaja.'
+      },
+      {
+        id: 'kpsp-bb-4',
+        title: 'Memahami Perintah Sederhana Tanpa Isyarat Tubuh',
+        kategori: 'Bicara & Bahasa',
+        usia: 'Usia 15 Bulan',
+        tanggal: 'Terjadwal Skrining Berikutnya',
+        status: 'Dalam Pemantauan',
+        deskripsi: 'Anak mengerti dan menjalankan instruksi pendek seperti "Bawa bolanya ke sini" atau "Ambil sepatumu".'
+      }
+    ];
+
+    if (pencapaianMilestones && pencapaianMilestones.length > 0) {
+      return masterKpsp.map(item => {
+        const matched = pencapaianMilestones.find(p => 
+          (p.title && item.title.toLowerCase().includes(p.title.toLowerCase())) ||
+          (p.title && p.title.toLowerCase().includes(item.title.toLowerCase()))
+        );
+        if (matched) {
+          return {
+            ...item,
+            status: 'Tercapai',
+            tanggal: formatTanggalIndo(matched.tanggal) || item.tanggal
+          };
+        }
+        return item;
+      });
+    }
+
+    return masterKpsp;
+  };
 
   const getJadwalLengkapImunisasi = () => {
     const defaultMasterVaksin = [
@@ -1458,7 +1628,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                 <h3 className="text-sm font-bold text-slate-900">Pencapaian Perkembangan</h3>
                 <button 
                   type="button"
-                  onClick={() => onShowToast && onShowToast('Membuka checklist lengkap KPSP Buku KIA...', 'info')}
+                  onClick={() => setShowAllPencapaian(true)}
                   className="text-xs font-semibold text-[#FF4D80] hover:text-[#E11D48] cursor-pointer"
                 >
                   Lihat Semua
@@ -1960,6 +2130,160 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                 type="button"
                 onClick={() => setSelectedStimulasi(null)}
                 className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    
+      {/* Modal Checklist Lengkap Pencapaian Perkembangan KPSP Buku KIA */}
+      {showAllPencapaian && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-4 border-b border-slate-100 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <ClipboardCheck size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                    Pencapaian Perkembangan ({activeAnak?.nama || 'Farhan'})
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Checklist Lengkap Kuesioner Pra Skrining Perkembangan (KPSP) Buku KIA Kemenkes RI
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowAllPencapaian(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer shrink-0"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Child Info Badge & Filter Tabs */}
+            <div className="space-y-3 shrink-0">
+              <div className="p-3 bg-pink-50/50 rounded-2xl border border-pink-100/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-4">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Nama Anak:</span>
+                    <span className="font-bold text-slate-800">{activeAnak?.nama || 'Farhan'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Usia Saat Ini:</span>
+                    <span className="font-bold text-[#E11D48]">{activeAnak?.usia || '1 Tahun 2 bulan'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Tahap Perkembangan:</span>
+                    <span className="font-medium text-slate-700">12 - 18 Bulan</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-pink-100 shadow-2xs">
+                  <CheckCircle2 size={14} className="text-emerald-600" />
+                  <span className="text-[11px] font-bold text-emerald-700">
+                    {getChecklistKpspLengkap().filter(m => m.status === 'Tercapai').length} dari {getChecklistKpspLengkap().length} Indikator Tercapai
+                  </span>
+                </div>
+              </div>
+
+              {/* Kategori Filter Tabs */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {['Semua', 'Motorik Kasar', 'Motorik Halus', 'Bicara & Bahasa', 'Sosialisasi & Kemandirian'].map((kat) => (
+                  <button
+                    key={kat}
+                    type="button"
+                    onClick={() => setFilterKpspKategori(kat)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      filterKpspKategori === kat
+                        ? 'bg-[#E11D48] text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {kat === 'Semua' 
+                      ? `Semua (${getChecklistKpspLengkap().length})`
+                      : `${kat} (${getChecklistKpspLengkap().filter(m => m.kategori === kat).length})`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* List KPSP Milestones */}
+            <div className="space-y-3 overflow-y-auto pr-1 flex-1">
+              {getChecklistKpspLengkap()
+                .filter(m => filterKpspKategori === 'Semua' || m.kategori === filterKpspKategori)
+                .map((milestone) => (
+                  <div 
+                    key={milestone.id}
+                    className="p-4 rounded-2xl border border-slate-100 bg-white hover:border-pink-200 transition-all shadow-2xs space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                          milestone.status === 'Tercapai' 
+                            ? 'bg-emerald-50 text-emerald-600' 
+                            : 'bg-amber-50 text-amber-600'
+                        }`}>
+                          {milestone.status === 'Tercapai' ? <CheckCircle2 size={18} /> : <Clock size={18} />}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-sm font-bold text-slate-900">{milestone.title}</h4>
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-pink-50 text-[#E11D48] border border-pink-100">
+                              {milestone.kategori}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                            {milestone.deskripsi}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 whitespace-nowrap ${
+                        milestone.status === 'Tercapai' 
+                          ? 'bg-[#DCFCE7] text-[#15803D]' 
+                          : 'bg-amber-50 text-amber-700 border border-amber-200'
+                      }`}>
+                        {milestone.status}
+                      </span>
+                    </div>
+
+                    {/* Metadata Detail */}
+                    <div className="p-2.5 bg-slate-50/70 rounded-xl flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-400">Rekomendasi Usia:</span>
+                        <span className="font-bold text-slate-800">{milestone.usia}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-400">Pencapaian:</span>
+                        <span className="font-semibold text-slate-800">{milestone.tanggal}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
+              <a
+                href="https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-[#E11D48] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <BookOpen size={14} />
+                <span>Panduan KPSP Buku KIA 2024</span>
+                <ExternalLink size={12} />
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowAllPencapaian(false)}
+                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold cursor-pointer active:scale-95 transition-transform"
               >
                 Tutup
               </button>
