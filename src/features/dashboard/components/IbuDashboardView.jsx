@@ -55,9 +55,6 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
   const isIbuHamilOnly = userRole === 'ibu hamil' || email === 'ibu.hamil@manudjaya.id' || (email.includes('hamil') && !email.includes('anak') && !email.includes('balita'));
   const isIbuHamilBalita = userRole === 'ibu hamil & balita' || email === 'ibu.hamil.anak@manudjaya.id' || email.includes('hamil.anak') || (!isIbuBalitaOnly && !isIbuHamilOnly);
 
-  // Validasi status kehamilan murni dinamis (aktif jika sedang hamil & memiliki record usia kehamilan)
-  const isSedangHamil = !isIbuBalitaOnly && Boolean(kehamilan && (kehamilan.status_kehamilan === 'Aktif' || !kehamilan.status_kehamilan) && kehamilan.usia_kehamilan_minggu);
-
   // Tampilkan nama akun asli pengguna secara dinamis dari profil (bukan hardcoded)
   const displayName = user?.nama || user?.user_metadata?.nama || (email ? email.split('@')[0] : 'Ibu');
 
@@ -78,6 +75,9 @@ export default function IbuDashboardView({ user, onNavigate, onShowToast }) {
 
   // Pemeriksaan ANC terbaru dari Supabase
   const latestAnc = ancList && ancList.length > 0 ? ancList[ancList.length - 1] : null;
+
+  // Validasi status kehamilan murni dinamis (aktif jika sedang hamil & memiliki record usia kehamilan)
+  const isSedangHamil = !isIbuBalitaOnly && Boolean(kehamilan && (kehamilan.status_kehamilan === 'Aktif' || !kehamilan.status_kehamilan) && kehamilan.usia_kehamilan_minggu);
 
   useEffect(() => {
     if (!ibuId) return;
