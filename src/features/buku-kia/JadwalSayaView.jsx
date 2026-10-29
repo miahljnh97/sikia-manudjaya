@@ -9,7 +9,8 @@ import {
   ChevronRight, 
   Eye, 
   X,
-  MessageCircle
+  MessageCircle,
+  RotateCcw
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { sendWhatsAppReminder, getReminderStatus, normalizePhoneForWhatsApp, generateWhatsAppReminderMessage } from '../../services/whatsappService';
@@ -62,7 +63,17 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
     setSelectedDay(null);
   };
 
-  const [jadwalList, setJadwalList] = useState([]);
+  const defaultIbuHamilJadwal = [
+    { no: 1, id: 'j-1', tanggal: '2026-09-05', displayTanggal: '05 Sep 2026', waktu: '09.00 - 10.00', jenis: 'Pemeriksaan Kehamilan (ANC)', lokasi: 'Puskesmas Manud Jaya', status: 'Selesai', petugas: 'Bidan Siti Nurhayati', keterangan: 'Pemeriksaan ANC Trimester 3 rutin dan USG dasar.' },
+    { no: 2, id: 'j-2', tanggal: '2026-09-24', displayTanggal: '24 Sep 2026', waktu: '09.00 - 10.00', jenis: 'Konseling Gizi Ibu Hamil', lokasi: 'Puskesmas Manud Jaya', status: 'Selesai', petugas: 'Ahli Gizi Puskesmas', keterangan: 'Evaluasi pola makan, asupan zat besi, dan pencegahan anemia.' },
+    { no: 3, id: 'j-3', tanggal: '2026-09-28', displayTanggal: '28 Sep 2026', waktu: '09.00 - 10.00', jenis: 'Pemeriksaan Kehamilan', lokasi: 'Puskesmas Manud Jaya', status: 'Selesai', petugas: 'dr. Haryono, Sp.OG', keterangan: 'Kontrol berkala pemantauan posisi janin dan DJJ.' },
+    { no: 4, id: 'j-4', tanggal: '2026-10-10', displayTanggal: '10 Okt 2026', waktu: '09.00 - 10.00', jenis: 'Pemeriksaan Kehamilan (ANC)', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Siti Nurhayati', keterangan: 'Pemeriksaan kehamilan lanjutan.' },
+    { no: 5, id: 'j-5', tanggal: '2026-10-18', displayTanggal: '18 Okt 2026', waktu: '09.00 - 10.00', jenis: 'Kelas Ibu Hamil', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Koordinator', keterangan: 'Edukasi persiapan persalinan.' },
+    { no: 6, id: 'j-6', tanggal: '2026-10-25', displayTanggal: '25 Okt 2026', waktu: '09.00 - 10.00', jenis: 'Posyandu Balita & Imunisasi', lokasi: 'Posyandu Manud Jaya', status: 'Akan Datang', petugas: 'Kader & Bidan Desa', keterangan: 'Penimbangan dan imunisasi balita.' },
+    { no: 7, id: 'j-7', tanggal: '2026-11-02', displayTanggal: '02 Nov 2026', waktu: '09.00 - 10.00', jenis: 'Kelas Ibu Hamil', lokasi: 'Puskesmas Manud Jaya', status: 'Akan Datang', petugas: 'Bidan Koordinator', keterangan: 'Senam hamil dan edukasi IMD.' },
+  ];
+
+  const [jadwalList, setJadwalList] = useState(defaultIbuHamilJadwal);
 
   useEffect(() => {
     const targetIbuId = user?.peserta_id || (user && getPesertaIdFromUser(user)) || user?.id || null;
@@ -70,31 +81,21 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
       bukuKiaService.getJadwalPesertaList(targetIbuId).then((res) => {
         if (!res || res.length === 0) return;
 
+        let candidateList = res;
         if (isIbuRole) {
           const userSpecific = res.filter(j => j.peserta_id === targetIbuId);
           if (userSpecific.length > 0) {
-            const mapped = userSpecific.map((j, idx) => ({
-              no: idx + 1,
-              id: j.id,
-              tanggal: j.tanggal,
-              displayTanggal: j.tanggal,
-              waktu: j.waktu || '09.00 - 10.00',
-              jenis: j.jenis_kegiatan || 'Pemeriksaan Kesehatan',
-              lokasi: j.lokasi || 'Puskesmas Manud Jaya',
-              status: resolveJadwalStatus(j),
-              petugas: j.petugas || 'Bidan Siti, S.Tr.Keb',
-              keterangan: j.catatan || 'Pemeriksaan rutin posyandu.'
-            }));
-            setJadwalList(mapped);
+            candidateList = userSpecific;
           }
-        } else {
-          // Untuk Kader Posyandu, Bidan, dll: Tampilkan seluruh jadwal posyandu dengan status yang selaras
-          const mapped = res.map((j, idx) => ({
+        }
+
+        if (candidateList && candidateList.length > 0) {
+          const mapped = candidateList.map((j, idx) => ({
             no: idx + 1,
             id: j.id,
             tanggal: j.tanggal,
             displayTanggal: j.tanggal,
-            waktu: j.waktu || '09:00 - 10:00',
+            waktu: j.waktu || '09.00 - 10.00',
             jenis: j.jenis_kegiatan || 'Pemeriksaan Kesehatan',
             lokasi: j.lokasi || 'Puskesmas Manud Jaya',
             status: resolveJadwalStatus(j),
@@ -103,6 +104,8 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
           }));
           setJadwalList(mapped);
         }
+      }).catch(err => {
+        console.warn('Gagal fetch jadwal dari Supabase:', err);
       });
     }
   }, [user, isIbuRole]);
@@ -154,16 +157,51 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
 
   // Filter daftar jadwal jika ada tanggal kalender yang diklik
   const filteredJadwalList = useMemo(() => {
-    if (!selectedDay || selectedDay === 15) return jadwalList;
-    const match = jadwalList.filter(item => {
+    if (selectedDay) {
+      return jadwalList.filter(item => {
+        try {
+          const d = new Date(item.tanggal);
+          return d.getDate() === selectedDay && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        } catch {
+          return false;
+        }
+      });
+    }
+    const monthFiltered = jadwalList.filter(item => {
       try {
         const d = new Date(item.tanggal);
-        return d.getDate() === selectedDay && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       } catch {
         return false;
       }
     });
-    return match.length > 0 ? match : jadwalList;
+    return monthFiltered.length > 0 ? monthFiltered : jadwalList;
+  }, [jadwalList, selectedDay, currentMonth, currentYear]);
+
+  // Jadwal terdekat yang selaras dengan kalender (bulan/tanggal aktif)
+  const displayJadwalTerdekat = useMemo(() => {
+    let list = jadwalList.filter(item => {
+      try {
+        const d = new Date(item.tanggal);
+        if (selectedDay) {
+          return d.getDate() === selectedDay && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        }
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      } catch {
+        return false;
+      }
+    });
+
+    list.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+
+    if (list.length === 0 && !selectedDay) {
+      const upcoming = jadwalList
+        .filter(item => resolveJadwalStatus(item) === 'Akan Datang')
+        .sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+      return upcoming.slice(0, 3);
+    }
+
+    return list.slice(0, 4);
   }, [jadwalList, selectedDay, currentMonth, currentYear]);
 
   const handleKirimWhatsApp = async (item) => {
@@ -371,6 +409,7 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
           {/* Grid Tanggal */}
           <div className="grid grid-cols-7 gap-y-2 gap-x-1 text-center text-xs">
             {calendarDays.map((item, idx) => {
+              const hasEvent = !item.isPrev && !item.isNext && eventDays.has(item.day);
               const isSelected = !item.isPrev && !item.isNext && item.day === selectedDay;
 
               return (
@@ -387,30 +426,53 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
                       ? 'text-slate-300'
                       : isSelected
                       ? 'bg-[#1E3A8A] text-white font-bold shadow-xs'
+                      : hasEvent
+                      ? 'text-slate-900 font-bold bg-pink-50 hover:bg-pink-100'
                       : 'text-slate-700 hover:bg-slate-100'
                   }`}
                 >
                   <span>{item.day}</span>
+                  {hasEvent && !isSelected && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 absolute bottom-0.5"></span>
+                  )}
                 </button>
               );
             })}
           </div>
 
-
+          {/* Banner Filter Tanggal Aktif (Gambar 2 Sesuai Figma) */}
+          {selectedDay && (
+            <div className="pt-2 flex items-center justify-between text-xs bg-blue-50/70 border border-blue-100 px-3.5 py-2.5 rounded-xl text-blue-700 animate-in fade-in">
+              <span className="font-medium">
+                Menyaring jadwal tanggal <strong>{selectedDay} {monthNames[currentMonth]} {currentYear}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedDay(null)}
+                className="inline-flex items-center gap-1 font-bold text-blue-800 hover:underline cursor-pointer"
+              >
+                <RotateCcw size={12} />
+                <span>Reset Filter</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Jadwal Terdekat */}
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-slate-900">Jadwal Terdekat</h3>
+            <span className="text-[11px] text-slate-400 font-medium">
+              {selectedDay ? `${selectedDay} ${monthNames[currentMonth]}` : `${monthNames[currentMonth]} ${currentYear}`}
+            </span>
           </div>
 
           <div className="space-y-3">
-            {jadwalList.length === 0 ? (
+            {displayJadwalTerdekat.length === 0 ? (
               <div className="py-6 text-center text-xs text-slate-400">
-                Belum ada agenda jadwal kegiatan mendatang.
+                Belum ada agenda jadwal kegiatan pada {selectedDay ? `tanggal ${selectedDay} ` : 'bulan '}{monthNames[currentMonth]} {currentYear}.
               </div>
-            ) : jadwalList.slice(0, 3).map((item, idx) => {
+            ) : displayJadwalTerdekat.map((item, idx) => {
               const reminder = getReminderStatus(item.tanggal);
               let dayStr = '12';
               let monthStr = 'Sep';
@@ -425,7 +487,7 @@ export default function JadwalSayaView({ user, onNavigate, onShowToast }) {
 
               return (
                 <div 
-                  key={idx}
+                  key={item.id || idx}
                   onClick={() => setSelectedJadwal(item)}
                   className="p-3.5 rounded-2xl border border-slate-100 hover:border-purple-200 hover:bg-purple-50/20 transition-all flex items-center justify-between cursor-pointer group"
                 >

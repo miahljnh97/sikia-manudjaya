@@ -423,7 +423,12 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
   const namaPasien = peserta?.nama || 'Siti Aminah';
   const nikPasien = peserta?.nik || '293920102029029';
   const noRekamMedis = peserta?.no_rekam_medis || peserta?.nik || '293920102029029';
-  const usiaPasien = peserta?.usia ? `${peserta.usia} Tahun` : '27 Tahun';
+  const getCleanUsia = (usia) => {
+    if (!usia || usia === '-') return '27 Tahun';
+    const clean = String(usia).replace(/\s*tahun/gi, '').trim();
+    return clean ? `${clean} Tahun` : '27 Tahun';
+  };
+  const usiaPasien = getCleanUsia(peserta?.usia);
   const usiaKehamilanStr = (() => {
     const minggu = kehamilan?.usia_kehamilan_minggu || 28;
     const hari = kehamilan?.usia_kehamilan_hari ? `${kehamilan.usia_kehamilan_hari} hari` : '3 hari';
@@ -470,51 +475,51 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
       {/* 2. Top Patient Card (Profil Terisolasi per ID) */}
       <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="flex items-center gap-4.5 flex-1">
-            <div className="w-16 h-16 rounded-full overflow-hidden bg-pink-100 border-2 border-pink-200 shrink-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8 flex-1">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center">
               <img 
-                src="/images/siti-aminah-avatar.png" 
+                src="/images/profil-ibu.png" 
                 alt={namaPasien} 
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.target.style.display = 'none';
+                  e.target.src = '/images/siti-aminah-avatar.png';
                 }}
               />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h2 className="text-base sm:text-lg font-bold text-slate-900">{namaPasien}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 lg:gap-x-12 gap-y-1.5 mt-2 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 lg:gap-x-16 gap-y-2 mt-2.5 text-xs">
                 <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-28 text-slate-400">Nama</span>
-                    <span className="font-semibold text-slate-800">{namaPasien}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="w-28 sm:w-32 text-slate-400 shrink-0">Nama</span>
+                    <span className="font-medium text-slate-800">{namaPasien}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-28 text-slate-400">NIK</span>
-                    <span className="font-semibold text-slate-800 font-mono">{nikPasien}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="w-28 sm:w-32 text-slate-400 shrink-0">NIK</span>
+                    <span className="font-medium text-slate-800 font-mono">{nikPasien}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-28 text-slate-400">No Rekam Medis</span>
-                    <span className="font-semibold text-slate-800 font-mono">{noRekamMedis}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="w-28 sm:w-32 text-slate-400 shrink-0">No Rekam Medis</span>
+                    <span className="font-medium text-slate-800 font-mono">{noRekamMedis}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-28 text-slate-400">Usia</span>
-                    <span className="font-semibold text-slate-800">{usiaPasien}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="w-28 sm:w-32 text-slate-400 shrink-0">Usia</span>
+                    <span className="font-medium text-slate-800">{usiaPasien}</span>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-36 text-slate-400">Usia Kehamilan</span>
-                    <span className="font-semibold text-slate-800">{usiaKehamilanStr}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="w-36 sm:w-40 text-slate-400 shrink-0">Usia Kehamilan</span>
+                    <span className="font-medium text-slate-800">{usiaKehamilanStr}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-36 text-slate-400">HPHT</span>
-                    <span className="font-semibold text-slate-800">{formatTanggalIndo(hphtStr)}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="w-36 sm:w-40 text-slate-400 shrink-0">HPHT</span>
+                    <span className="font-medium text-slate-800">{formatTanggalIndo(hphtStr)}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-36 text-slate-400">Taksiran Persalinan</span>
-                    <span className="font-semibold text-slate-800">{formatTanggalIndo(hplStr)}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="w-36 sm:w-40 text-slate-400 shrink-0">Taksiran Persalinan</span>
+                    <span className="font-medium text-slate-800">{formatTanggalIndo(hplStr)}</span>
                   </div>
                 </div>
               </div>

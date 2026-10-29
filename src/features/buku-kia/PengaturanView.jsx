@@ -119,13 +119,13 @@ export default function PengaturanView({ user, onShowToast }) {
         <div className="space-y-6">
           <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-7 shadow-xs space-y-6">
             <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
-              <div className="w-14 h-14 rounded-full overflow-hidden bg-pink-50 border-2 border-pink-100 flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center shrink-0">
                 <img 
-                  src="/images/siti-aminah-avatar.png" 
+                  src="/images/profil-ibu.png" 
                   alt="Avatar" 
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.style.display = 'none';
+                    e.target.src = '/images/siti-aminah-avatar.png';
                   }}
                 />
               </div>

@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
+  Weight,
+  ShoppingBasket,
   Scale, 
   Ruler, 
   Smile, 
@@ -30,8 +32,68 @@ import {
   Clock,
   AlertTriangle,
   Check,
-  ClipboardCheck
+  ClipboardCheck,
+  BarChart2,
+  Puzzle
 } from 'lucide-react';
+
+function HeightMeasureIcon({ size = 20, className = '' }) {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2.5" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      <path d="M6 4h12" />
+      <path d="M6 20h12" />
+      <path d="M12 4v16" />
+      <path d="M9 12h6" />
+    </svg>
+  );
+}
+
+function WalkingIcon({ size = 20, className = '' }) {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="currentColor" 
+      className={className}
+    >
+      <path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7z"/>
+    </svg>
+  );
+}
+
+function BalokLegoIcon({ size = 20, className = '' }) {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      <path d="M2.5 13.5L12 8l9.5 5.5-9.5 5.5z" />
+      <path d="M2.5 13.5v4L12 23v-4" />
+      <path d="M21.5 13.5v4L12 23" />
+      <ellipse cx="8" cy="11" rx="2" ry="1.2" />
+      <ellipse cx="12" cy="13" rx="2" ry="1.2" />
+      <ellipse cx="16" cy="15" rx="2" ry="1.2" />
+    </svg>
+  );
+}
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
 import { maskNik } from '../../utils/nikUtils';
@@ -97,6 +159,38 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
   const [daftarAnak, setDaftarAnak] = useState([]);
   const [activeAnakId, setActiveAnakId] = useState(extractAnakId);
   const [activeAnak, setActiveAnak] = useState(null);
+
+  // Dynamic responsive chart width & points for Grafik Pertumbuhan
+  const chartContainerRef1 = useRef(null);
+  const chartContainerRef2 = useRef(null);
+  const [chartWidth, setChartWidth] = useState(650);
+
+  useEffect(() => {
+    const updateWidth = () => {
+      const el = chartContainerRef1.current || chartContainerRef2.current;
+      if (el && el.clientWidth > 200) {
+        setChartWidth(el.clientWidth);
+      }
+    };
+    updateWidth();
+    const ro = new ResizeObserver(() => updateWidth());
+    if (chartContainerRef1.current) ro.observe(chartContainerRef1.current);
+    if (chartContainerRef2.current) ro.observe(chartContainerRef2.current);
+    return () => ro.disconnect();
+  }, [activeSub]);
+
+  const chartPoints = [
+    { week: 12, bb: 50 },
+    { week: 16, bb: 60 },
+    { week: 20, bb: 62 },
+    { week: 24, bb: 65 },
+    { week: 28, bb: 68 },
+  ];
+  const chartPaddingLeft = 38;
+  const chartPaddingRight = 16;
+  const availableChartWidth = Math.max(chartWidth - chartPaddingLeft - chartPaddingRight, 100);
+  const getChartX = (idx) => chartPaddingLeft + idx * (availableChartWidth / (chartPoints.length - 1));
+  const getChartY = (bb) => 220 - (bb * 2);
 
   useEffect(() => {
     if (subFeature) {
@@ -219,7 +313,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
     {
       title: 'Latihan Berjalan',
       desc: 'Ajak anak berjalan dengan bantuan di lingkungan aman.',
-      icon: Footprints,
+      icon: WalkingIcon,
       detail: 'Pegang kedua tangan anak dari depan secara perlahan, biarkan ia melangkah di atas lantai datar tanpa alas kaki untuk melatih keseimbangan dan kekuatan otot kaki.'
     },
     {
@@ -231,7 +325,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
     {
       title: 'Bermain Balok',
       desc: 'Melatih motorik halus dan koordinasi tangan mata',
-      icon: Boxes,
+      icon: BalokLegoIcon,
       detail: 'Sediakan balok susun berukuran aman (tidak tertelan). Ajarkan cara menumpuk 2-3 balok ke atas dan biarkan anak merubuhkannya dengan gembira.'
     }
   ];
@@ -515,6 +609,10 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
   }, [activeAnakId]);
 
   const [riwayatPertumbuhan, setRiwayatPertumbuhan] = useState([]);
+
+  const latestKms = riwayatPertumbuhan && riwayatPertumbuhan.length > 0 
+    ? riwayatPertumbuhan[riwayatPertumbuhan.length - 1] 
+    : { bb: '9,8 Kg', tb: '75 Cm', lk: '46 Cm', status: 'Normal' };
 
   useEffect(() => {
     if (!activeAnakId) return;
@@ -845,7 +943,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                     <span className="font-extrabold text-slate-900 mt-0.5 block">Gizi Baik (Normal)</span>
                   </div>
                   <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-emerald-700 border border-emerald-200">
-                    BB 9,8 kg · TB 75 cm
+                    BB {(latestKms.bb || '9,8 Kg').replace(' Kg', ' kg')} · TB {(latestKms.tb || '75 Cm').replace(' Cm', ' cm')}
                   </span>
                 </div>
 
@@ -937,23 +1035,27 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
             {/* 1. BB Terakhir */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
               <div className="text-[#8B5CF6] shrink-0">
-                <Scale size={20} />
+                <Weight size={20} />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Berat Badan Terakhir</span>
-                <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight">9,8 Kg</span>
+                <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                  {latestKms.bb || '9,8 Kg'}
+                </span>
               </div>
             </div>
 
             {/* 2. TB Terakhir */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
               <div className="text-[#8B5CF6] shrink-0">
-                <Ruler size={20} />
+                <HeightMeasureIcon size={20} />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Tinggi Badan Terakhir</span>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight">50 cm</span>
+                  <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                    {(latestKms.tb || '50 cm').toLowerCase()}
+                  </span>
                   <span className="text-[10px] text-slate-400">Naik 2cm</span>
                 </div>
               </div>
@@ -962,7 +1064,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
             {/* 3. LK Terakhir */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
               <div className="text-[#8B5CF6] shrink-0">
-                <Smile size={20} />
+                <Baby size={20} />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Lingkar Kepala Terakhir</span>
@@ -976,7 +1078,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
             {/* 4. Status Gizi */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
               <div className="text-[#8B5CF6] shrink-0">
-                <ShoppingBag size={20} />
+                <ShoppingBasket size={20} />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Status Gizi</span>
@@ -989,7 +1091,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Grafik Pertumbuhan */}
             <div className="lg:col-span-7 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-              <h3 className="text-sm font-bold text-slate-900">Grafik Pertumbuhan</h3>
+              <h3 className="text-base font-bold text-slate-900">Grafik Pertumbuhan</h3>
 
               {/* Tabs Metrik Grafik */}
               <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -1009,56 +1111,107 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                 ))}
               </div>
 
-              {/* Line Chart SVG */}
-              <div className="relative pt-4">
-                <svg viewBox="0 0 500 200" className="w-full h-44 overflow-visible">
-                  <line x1="40" y1="20" x2="480" y2="20" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="60" x2="480" y2="60" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="100" x2="480" y2="100" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="140" x2="480" y2="140" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="180" x2="480" y2="180" stroke="#E2E8F0" />
-
-                  <text x="30" y="25" fontSize="10" fill="#94A3B8" textAnchor="end">100</text>
-                  <text x="30" y="65" fontSize="10" fill="#94A3B8" textAnchor="end">80</text>
-                  <text x="30" y="105" fontSize="10" fill="#94A3B8" textAnchor="end">60</text>
-                  <text x="30" y="145" fontSize="10" fill="#94A3B8" textAnchor="end">40</text>
-                  <text x="30" y="183" fontSize="10" fill="#94A3B8" textAnchor="end">0</text>
-
-                  <text x="60" y="195" fontSize="10" fill="#64748B" textAnchor="middle">12</text>
-                  <text x="160" y="195" fontSize="10" fill="#64748B" textAnchor="middle">16</text>
-                  <text x="260" y="195" fontSize="10" fill="#64748B" textAnchor="middle">20</text>
-                  <text x="360" y="195" fontSize="10" fill="#64748B" textAnchor="middle">24</text>
-                  <text x="460" y="195" fontSize="10" fill="#64748B" textAnchor="middle">28</text>
-
-                  {/* Gradient Area under line */}
+              {/* Line Chart SVG (Lebar Responsif Sesuai Desain Figma) */}
+              <div ref={chartContainerRef1} className="w-full pt-2 pb-2">
+                <svg viewBox={`0 0 ${chartWidth} 248`} className="w-full h-auto select-none block">
                   <defs>
                     <linearGradient id="pertumbuhanGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FF4D80" stopOpacity="0.25" />
-                      <stop offset="100%" stopColor="#FF4D80" stopOpacity="0.0" />
+                      <stop offset="0%" stopColor="#FB7185" stopOpacity="0.32" />
+                      <stop offset="100%" stopColor="#FFF1F2" stopOpacity="0.04" />
                     </linearGradient>
                   </defs>
 
-                  <path 
-                    d="M 60 120 L 160 100 L 260 96 L 360 88 L 460 82 L 460 180 L 60 180 Z" 
-                    fill="url(#pertumbuhanGrad)" 
+                  {/* Horizontal Grid lines (Y: 100, 80, 60, 40, 20, 0) */}
+                  {[100, 80, 60, 40, 20, 0].map((val) => {
+                    const y = getChartY(val);
+                    return (
+                      <g key={val}>
+                        <line
+                          x1={chartPaddingLeft}
+                          y1={y}
+                          x2={chartWidth - chartPaddingRight}
+                          y2={y}
+                          stroke="#E2E8F0"
+                          strokeDasharray="3 3"
+                        />
+                        <text
+                          x={chartPaddingLeft - 10}
+                          y={y + 3.5}
+                          textAnchor="end"
+                          fontSize="10"
+                          fill="#94A3B8"
+                        >
+                          {val}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Vertical Grid lines at each week point */}
+                  {chartPoints.map((p, i) => {
+                    const x = getChartX(i);
+                    return (
+                      <g key={p.week}>
+                        <line
+                          x1={x}
+                          y1="20"
+                          x2={x}
+                          y2="220"
+                          stroke="#E2E8F0"
+                          strokeDasharray="3 3"
+                        />
+                        <text
+                          x={x}
+                          y="238"
+                          textAnchor="middle"
+                          fontSize="11"
+                          fill="#64748B"
+                          fontWeight="500"
+                        >
+                          {p.week}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Shaded Area Under Curve */}
+                  <polygon
+                    points={`${chartPaddingLeft},220 ${chartPoints.map((p, i) => `${getChartX(i)},${getChartY(p.bb)}`).join(' ')} ${chartWidth - chartPaddingRight},220`}
+                    fill="url(#pertumbuhanGrad)"
                   />
 
-                  <path 
-                    d="M 60 120 L 160 100 L 260 96 L 360 88 L 460 82" 
-                    fill="none" 
-                    stroke="#FF4D80" 
-                    strokeWidth="2.5" 
+                  {/* Curve Line */}
+                  <polyline
+                    points={chartPoints.map((p, i) => `${getChartX(i)},${getChartY(p.bb)}`).join(' ')}
+                    fill="none"
+                    stroke="#F43F5E"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
 
-                  {[[60, 120], [160, 100], [260, 96], [360, 88], [460, 82]].map(([cx, cy], i) => (
-                    <circle key={i} cx={cx} cy={cy} r="4" fill="#FFFFFF" stroke="#FF4D80" strokeWidth="2" />
+                  {/* Data Points */}
+                  {chartPoints.map((p, i) => (
+                    <circle
+                      key={p.week}
+                      cx={getChartX(i)}
+                      cy={getChartY(p.bb)}
+                      r="4.5"
+                      fill="#FFFFFF"
+                      stroke="#F43F5E"
+                      strokeWidth="2.5"
+                    />
                   ))}
                 </svg>
+              </div>
 
-                <div className="flex items-center justify-center gap-2 mt-2 text-[11px] text-slate-500 font-medium">
-                  <span className="w-3 h-0.5 bg-[#FF4D80]" />
-                  <span>{activeChartTab}</span>
-                </div>
+              {/* Chart Legend */}
+              <div className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-600">
+                <svg width="24" height="12" viewBox="0 0 24 12" className="inline-block shrink-0">
+                  <line x1="0" y1="6" x2="24" y2="6" stroke="#F43F5E" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="12" cy="6" r="3.5" fill="#FFFFFF" stroke="#F43F5E" strokeWidth="2" />
+                </svg>
+                <span className="font-medium text-slate-700">{activeChartTab}</span>
               </div>
             </div>
 
@@ -1174,24 +1327,29 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {(riwayatPertumbuhan.length > 0 ? riwayatPertumbuhan : [
-                    { no: 1, tanggal: '12 Sep 2026', usia: '14 Bulan', bb: '9,8 Kg', tb: '75 Cm', lk: '46 Cm', status: 'Normal' },
-                    { no: 2, tanggal: '12 Sep 2026', usia: '14 Bulan', bb: '9,8 Kg', tb: '75 Cm', lk: '46 Cm', status: 'Normal' }
-                  ]).map((row, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3.5 px-4 text-center font-medium">{row.no}</td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-900">{row.tanggal}</td>
-                      <td className="py-3.5 px-4 text-slate-600">{row.usia}</td>
-                      <td className="py-3.5 px-4 font-bold text-slate-900">{row.bb}</td>
-                      <td className="py-3.5 px-4 text-slate-600">{row.tb}</td>
-                      <td className="py-3.5 px-4 text-slate-600">{row.lk}</td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#DCFCE7] text-[#15803D]">
-                          {row.status === 'Gizi Baik (Normal)' ? 'Normal' : row.status}
-                        </span>
+                  {riwayatPertumbuhan.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-slate-400">
+                        Belum ada data penimbangan KMS untuk anak ini.{!isIbuRole ? ' Klik tombol "+ Catat Penimbangan KMS" untuk menambahkan.' : ''}
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    riwayatPertumbuhan.map((row) => (
+                      <tr key={row.id || row.no} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-3.5 px-4 text-center font-medium">{row.no}</td>
+                        <td className="py-3.5 px-4 font-semibold text-slate-900">{row.tanggal}</td>
+                        <td className="py-3.5 px-4 text-slate-600">{row.usia}</td>
+                        <td className="py-3.5 px-4 font-bold text-slate-900">{row.bb}</td>
+                        <td className="py-3.5 px-4 text-slate-600">{row.tb}</td>
+                        <td className="py-3.5 px-4 text-slate-600">{row.lk}</td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#DCFCE7] text-[#15803D]">
+                            {row.status === 'Gizi Baik (Normal)' ? 'Normal' : row.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1206,8 +1364,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
         <div className="space-y-6">
           {/* Top Card: Profil Anak (Sesuai Expected Result Figma QA) */}
           <div className="bg-[#FFF0F4] border border-pink-100 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-            <div className="flex items-center gap-4.5">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-pink-200 overflow-hidden shrink-0 bg-white p-0.5 shadow-2xs">
+            <div className="flex items-center gap-6 sm:gap-8">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-pink-200 overflow-hidden shrink-0 bg-white p-0.5 shadow-2xs">
                 <img 
                   src="/images/farhan-avatar.png" 
                   alt={activeAnak?.nama || 'Farhan'} 
@@ -1242,7 +1400,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
               {/* Card 2: Status Perkembangan */}
               <div className="bg-white rounded-2xl px-4 py-3 border border-slate-100 shadow-xs flex items-center gap-3 min-w-[160px]">
-                <Activity size={18} className="text-[#FF4D80] shrink-0" />
+                <BarChart2 size={18} className="text-[#FF4D80] shrink-0" />
                 <div>
                   <span className="text-[10px] text-slate-400 font-medium block">Status Perkembangan</span>
                   <span className="text-xs sm:text-sm font-bold text-emerald-600 mt-0.5 block">Sesuai Usia</span>
@@ -1279,7 +1437,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
               className="md:col-span-3 bg-white border border-slate-100 hover:border-pink-200 rounded-3xl p-5 sm:p-6 shadow-xs flex items-center justify-between cursor-pointer group transition-all"
             >
               <div className="flex items-center gap-3.5">
-                <Footprints size={22} className="text-[#8B5CF6] shrink-0" />
+                <Puzzle size={22} className="text-[#8B5CF6] shrink-0" />
                 <div>
                   <span className="text-[10px] text-slate-400 font-medium block">Stimulasi Hari Ini</span>
                   <div className="mt-0.5">
@@ -1327,7 +1485,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
             {/* Grafik Pertumbuhan */}
             <div className="lg:col-span-7 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-              <h3 className="text-sm font-bold text-slate-900">Grafik Pertumbuhan</h3>
+              <h3 className="text-base font-bold text-slate-900">Grafik Pertumbuhan</h3>
 
               {/* Tabs Metrik Grafik */}
               <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -1347,56 +1505,107 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                 ))}
               </div>
 
-              {/* Line Chart SVG */}
-              <div className="relative pt-4">
-                <svg viewBox="0 0 500 200" className="w-full h-44 overflow-visible">
-                  <line x1="40" y1="20" x2="480" y2="20" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="60" x2="480" y2="60" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="100" x2="480" y2="100" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="140" x2="480" y2="140" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="180" x2="480" y2="180" stroke="#E2E8F0" />
-
-                  <text x="30" y="25" fontSize="10" fill="#94A3B8" textAnchor="end">100</text>
-                  <text x="30" y="65" fontSize="10" fill="#94A3B8" textAnchor="end">80</text>
-                  <text x="30" y="105" fontSize="10" fill="#94A3B8" textAnchor="end">60</text>
-                  <text x="30" y="145" fontSize="10" fill="#94A3B8" textAnchor="end">40</text>
-                  <text x="30" y="183" fontSize="10" fill="#94A3B8" textAnchor="end">0</text>
-
-                  <text x="60" y="195" fontSize="10" fill="#64748B" textAnchor="middle">12</text>
-                  <text x="160" y="195" fontSize="10" fill="#64748B" textAnchor="middle">16</text>
-                  <text x="260" y="195" fontSize="10" fill="#64748B" textAnchor="middle">20</text>
-                  <text x="360" y="195" fontSize="10" fill="#64748B" textAnchor="middle">24</text>
-                  <text x="460" y="195" fontSize="10" fill="#64748B" textAnchor="middle">28</text>
-
-                  {/* Gradient Area under line */}
+              {/* Line Chart SVG (Lebar Responsif Sesuai Desain Figma) */}
+              <div ref={chartContainerRef2} className="w-full pt-2 pb-2">
+                <svg viewBox={`0 0 ${chartWidth} 248`} className="w-full h-auto select-none block">
                   <defs>
                     <linearGradient id="perkembanganGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FF4D80" stopOpacity="0.25" />
-                      <stop offset="100%" stopColor="#FF4D80" stopOpacity="0.0" />
+                      <stop offset="0%" stopColor="#FB7185" stopOpacity="0.32" />
+                      <stop offset="100%" stopColor="#FFF1F2" stopOpacity="0.04" />
                     </linearGradient>
                   </defs>
 
-                  <path 
-                    d="M 60 120 L 160 100 L 260 96 L 360 88 L 460 82 L 460 180 L 60 180 Z" 
-                    fill="url(#perkembanganGrad)" 
+                  {/* Horizontal Grid lines (Y: 100, 80, 60, 40, 20, 0) */}
+                  {[100, 80, 60, 40, 20, 0].map((val) => {
+                    const y = getChartY(val);
+                    return (
+                      <g key={val}>
+                        <line
+                          x1={chartPaddingLeft}
+                          y1={y}
+                          x2={chartWidth - chartPaddingRight}
+                          y2={y}
+                          stroke="#E2E8F0"
+                          strokeDasharray="3 3"
+                        />
+                        <text
+                          x={chartPaddingLeft - 10}
+                          y={y + 3.5}
+                          textAnchor="end"
+                          fontSize="10"
+                          fill="#94A3B8"
+                        >
+                          {val}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Vertical Grid lines at each week point */}
+                  {chartPoints.map((p, i) => {
+                    const x = getChartX(i);
+                    return (
+                      <g key={p.week}>
+                        <line
+                          x1={x}
+                          y1="20"
+                          x2={x}
+                          y2="220"
+                          stroke="#E2E8F0"
+                          strokeDasharray="3 3"
+                        />
+                        <text
+                          x={x}
+                          y="238"
+                          textAnchor="middle"
+                          fontSize="11"
+                          fill="#64748B"
+                          fontWeight="500"
+                        >
+                          {p.week}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Shaded Area Under Curve */}
+                  <polygon
+                    points={`${chartPaddingLeft},220 ${chartPoints.map((p, i) => `${getChartX(i)},${getChartY(p.bb)}`).join(' ')} ${chartWidth - chartPaddingRight},220`}
+                    fill="url(#perkembanganGrad)"
                   />
 
-                  <path 
-                    d="M 60 120 L 160 100 L 260 96 L 360 88 L 460 82" 
-                    fill="none" 
-                    stroke="#FF4D80" 
-                    strokeWidth="2.5" 
+                  {/* Curve Line */}
+                  <polyline
+                    points={chartPoints.map((p, i) => `${getChartX(i)},${getChartY(p.bb)}`).join(' ')}
+                    fill="none"
+                    stroke="#F43F5E"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
 
-                  {[[60, 120], [160, 100], [260, 96], [360, 88], [460, 82]].map(([cx, cy], i) => (
-                    <circle key={i} cx={cx} cy={cy} r="4" fill="#FFFFFF" stroke="#FF4D80" strokeWidth="2" />
+                  {/* Data Points */}
+                  {chartPoints.map((p, i) => (
+                    <circle
+                      key={p.week}
+                      cx={getChartX(i)}
+                      cy={getChartY(p.bb)}
+                      r="4.5"
+                      fill="#FFFFFF"
+                      stroke="#F43F5E"
+                      strokeWidth="2.5"
+                    />
                   ))}
                 </svg>
+              </div>
 
-                <div className="flex items-center justify-center gap-2 mt-2 text-[11px] text-slate-500 font-medium">
-                  <span className="w-3 h-0.5 bg-[#FF4D80]" />
-                  <span>{activeChartTab}</span>
-                </div>
+              {/* Chart Legend */}
+              <div className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-600">
+                <svg width="24" height="12" viewBox="0 0 24 12" className="inline-block shrink-0">
+                  <line x1="0" y1="6" x2="24" y2="6" stroke="#F43F5E" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="12" cy="6" r="3.5" fill="#FFFFFF" stroke="#F43F5E" strokeWidth="2" />
+                </svg>
+                <span className="font-medium text-slate-700">{activeChartTab}</span>
               </div>
             </div>
           </div>

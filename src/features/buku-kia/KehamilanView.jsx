@@ -1,5 +1,5 @@
 import { getPesertaIdFromUser } from '../../models/pesertaModel';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Calendar, 
   HeartPulse, 
@@ -62,6 +62,37 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
     return 2; // Default langsung tampil Janin 1 dan Janin 2
   })();
   const [activeJaninId, setActiveJaninId] = useState('janin-1');
+
+  // Dynamic responsive chart width & points for Perkembangan Kehamilan
+  const chartContainerRef = useRef(null);
+  const [chartWidth, setChartWidth] = useState(650);
+
+  useEffect(() => {
+    if (!chartContainerRef.current) return;
+    const updateWidth = () => {
+      if (chartContainerRef.current) {
+        const w = chartContainerRef.current.clientWidth;
+        if (w > 200) setChartWidth(w);
+      }
+    };
+    updateWidth();
+    const ro = new ResizeObserver(() => updateWidth());
+    ro.observe(chartContainerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  const chartPoints = [
+    { week: 12, bb: 50 },
+    { week: 16, bb: 60 },
+    { week: 20, bb: 62 },
+    { week: 24, bb: 65 },
+    { week: 28, bb: 68 },
+  ];
+  const chartPaddingLeft = 38;
+  const chartPaddingRight = 16;
+  const availableChartWidth = Math.max(chartWidth - chartPaddingLeft - chartPaddingRight, 100);
+  const getChartX = (idx) => chartPaddingLeft + idx * (availableChartWidth / (chartPoints.length - 1));
+  const getChartY = (bb) => 220 - (bb * 2);
 
   // Pemeriksaan ANC terbaru dari Supabase
   const latestAnc = ancList && ancList.length > 0 ? ancList[ancList.length - 1] : null;
@@ -655,90 +686,108 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         {/* Kolom Kiri: Perkembangan Kehamilan (Area Chart BB Ibu Hamil) */}
         <div className="lg:col-span-7 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
           <div>
-            <h3 className="text-sm sm:text-base font-bold text-slate-900">Perkembangan Kehamilan</h3>
+            <h3 className="text-base font-bold text-slate-900">Perkembangan Kehamilan</h3>
           </div>
 
           {/* SVG Line / Area Chart */}
-          <div className="w-full overflow-x-auto">
-            <div className="min-w-[420px] pt-4 pb-2">
-              <svg viewBox="0 0 500 240" className="w-full h-56 select-none">
-                <defs>
-                  <linearGradient id="bbGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FB7185" stopOpacity="0.35" />
-                    <stop offset="100%" stopColor="#FFF1F2" stopOpacity="0.05" />
-                  </linearGradient>
-                </defs>
+          <div ref={chartContainerRef} className="w-full pt-2 pb-2">
+            <svg viewBox={`0 0 ${chartWidth} 248`} className="w-full h-auto select-none block">
+              <defs>
+                <linearGradient id="bbGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#FB7185" stopOpacity="0.32" />
+                  <stop offset="100%" stopColor="#FFF1F2" stopOpacity="0.04" />
+                </linearGradient>
+              </defs>
 
-                {/* Horizontal Grid lines (Y: 100, 80, 60, 40, 20, 0) */}
-                {/* 100 kg -> y=20 */}
-                <line x1="45" y1="20" x2="480" y2="20" stroke="#E2E8F0" strokeDasharray="3 3" />
-                <text x="35" y="24" textAnchor="end" fontSize="10" fill="#94A3B8">100</text>
+              {/* Horizontal Grid lines (Y: 100, 80, 60, 40, 20, 0) */}
+              {[100, 80, 60, 40, 20, 0].map((val) => {
+                const y = getChartY(val);
+                return (
+                  <g key={val}>
+                    <line
+                      x1={chartPaddingLeft}
+                      y1={y}
+                      x2={chartWidth - chartPaddingRight}
+                      y2={y}
+                      stroke="#E2E8F0"
+                      strokeDasharray="3 3"
+                    />
+                    <text
+                      x={chartPaddingLeft - 10}
+                      y={y + 3.5}
+                      textAnchor="end"
+                      fontSize="10"
+                      fill="#94A3B8"
+                    >
+                      {val}
+                    </text>
+                  </g>
+                );
+              })}
 
-                {/* 80 kg -> y=60 */}
-                <line x1="45" y1="60" x2="480" y2="60" stroke="#E2E8F0" strokeDasharray="3 3" />
-                <text x="35" y="64" textAnchor="end" fontSize="10" fill="#94A3B8">80</text>
+              {/* Vertical Grid lines at each week point */}
+              {chartPoints.map((p, i) => {
+                const x = getChartX(i);
+                return (
+                  <g key={p.week}>
+                    <line
+                      x1={x}
+                      y1="20"
+                      x2={x}
+                      y2="220"
+                      stroke="#E2E8F0"
+                      strokeDasharray="3 3"
+                    />
+                    <text
+                      x={x}
+                      y="238"
+                      textAnchor="middle"
+                      fontSize="11"
+                      fill="#64748B"
+                      fontWeight="500"
+                    >
+                      {p.week}
+                    </text>
+                  </g>
+                );
+              })}
 
-                {/* 60 kg -> y=100 */}
-                <line x1="45" y1="100" x2="480" y2="100" stroke="#E2E8F0" strokeDasharray="3 3" />
-                <text x="35" y="104" textAnchor="end" fontSize="10" fill="#94A3B8">60</text>
+              {/* Shaded Area Under Curve */}
+              <polygon
+                points={`${chartPaddingLeft},220 ${chartPoints.map((p, i) => `${getChartX(i)},${getChartY(p.bb)}`).join(' ')} ${chartWidth - chartPaddingRight},220`}
+                fill="url(#bbGradient)"
+              />
 
-                {/* 40 kg -> y=140 */}
-                <line x1="45" y1="140" x2="480" y2="140" stroke="#E2E8F0" strokeDasharray="3 3" />
-                <text x="35" y="144" textAnchor="end" fontSize="10" fill="#94A3B8">40</text>
+              {/* Curve Line */}
+              <polyline
+                points={chartPoints.map((p, i) => `${getChartX(i)},${getChartY(p.bb)}`).join(' ')}
+                fill="none"
+                stroke="#F43F5E"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
 
-                {/* 20 kg -> y=180 */}
-                <line x1="45" y1="180" x2="480" y2="180" stroke="#E2E8F0" strokeDasharray="3 3" />
-                <text x="35" y="184" textAnchor="end" fontSize="10" fill="#94A3B8">20</text>
-
-                {/* 0 kg -> y=220 (Baseline) */}
-                <line x1="45" y1="220" x2="480" y2="220" stroke="#CBD5E1" strokeWidth="1.5" />
-                <text x="35" y="224" textAnchor="end" fontSize="10" fill="#94A3B8">0</text>
-
-                {/* X-Axis Labels (Weeks 12, 16, 20, 24, 28) */}
-                {/* Points:
-                    w12: x=45, bb=54kg -> y = 220 - (54 * 2) = 112
-                    w16: x=154, bb=59kg -> y = 220 - (59 * 2) = 102
-                    w20: x=262, bb=61kg -> y = 220 - (61 * 2) = 98
-                    w24: x=371, bb=63kg -> y = 220 - (63 * 2) = 94
-                    w28: x=480, bb=64.5kg -> y = 220 - (64.5 * 2) = 91
-                */}
-                <text x="45" y="235" textAnchor="middle" fontSize="10" fill="#64748B">12</text>
-                <text x="154" y="235" textAnchor="middle" fontSize="10" fill="#64748B">16</text>
-                <text x="262" y="235" textAnchor="middle" fontSize="10" fill="#64748B">20</text>
-                <text x="371" y="235" textAnchor="middle" fontSize="10" fill="#64748B">24</text>
-                <text x="480" y="235" textAnchor="middle" fontSize="10" fill="#64748B">28</text>
-
-                {/* Shaded Area Under Curve */}
-                <polygon
-                  points="45,220 45,112 154,102 262,98 371,94 480,91 480,220"
-                  fill="url(#bbGradient)"
-                />
-
-                {/* Curve Line */}
-                <polyline
-                  points="45,112 154,102 262,98 371,94 480,91"
-                  fill="none"
-                  stroke="#E11D48"
+              {/* Data Points */}
+              {chartPoints.map((p, i) => (
+                <circle
+                  key={p.week}
+                  cx={getChartX(i)}
+                  cy={getChartY(p.bb)}
+                  r="4.5"
+                  fill="#FFFFFF"
+                  stroke="#F43F5E"
                   strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
                 />
-
-                {/* Data Points */}
-                <circle cx="45" cy="112" r="4.5" fill="#FFFFFF" stroke="#E11D48" strokeWidth="2.5" />
-                <circle cx="154" cy="102" r="4.5" fill="#FFFFFF" stroke="#E11D48" strokeWidth="2.5" />
-                <circle cx="262" cy="98" r="4.5" fill="#FFFFFF" stroke="#E11D48" strokeWidth="2.5" />
-                <circle cx="371" cy="94" r="4.5" fill="#FFFFFF" stroke="#E11D48" strokeWidth="2.5" />
-                <circle cx="480" cy="91" r="4.5" fill="#FFFFFF" stroke="#E11D48" strokeWidth="2.5" />
-              </svg>
-            </div>
+              ))}
+            </svg>
           </div>
 
           {/* Chart Legend */}
           <div className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-600">
             <svg width="24" height="12" viewBox="0 0 24 12" className="inline-block shrink-0">
-              <line x1="0" y1="6" x2="24" y2="6" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" />
-              <circle cx="12" cy="6" r="3.5" fill="#FFFFFF" stroke="#E11D48" strokeWidth="2" />
+              <line x1="0" y1="6" x2="24" y2="6" stroke="#F43F5E" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="12" cy="6" r="3.5" fill="#FFFFFF" stroke="#F43F5E" strokeWidth="2" />
             </svg>
             <span className="font-medium text-slate-700">Berat Badan</span>
           </div>
