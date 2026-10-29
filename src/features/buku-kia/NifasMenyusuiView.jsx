@@ -16,6 +16,9 @@ import { maskNik } from '../../utils/nikUtils';
 
 export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, onShowToast }) {
   const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || (user?.email || '').toLowerCase().includes('ibu');
+  const userRole = (user?.role || '').toLowerCase().trim();
+  const userEmail = (user?.user?.email || user?.email || '').toLowerCase().trim();
+  const isIbuBalitaOnly = userRole === 'ibu balita' || userEmail === 'ibu.balita@manudjaya.id' || (userEmail.includes('balita') && !userEmail.includes('hamil'));
 
   const extractPesertaId = () => {
     if (typeof window !== 'undefined' && window.location.search) {
@@ -124,6 +127,21 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
         )}
       </div>
 
+      {/* Banner info khusus Ibu Balita */}
+      {isIbuBalitaOnly && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-xs text-emerald-800">
+          <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 text-emerald-600 font-bold">
+            ✓
+          </div>
+          <div>
+            <p className="font-bold">Masa Nifas Selesai</p>
+            <p className="text-[11px] text-emerald-700 mt-0.5">
+              Masa nifas 42 hari pasca melahirkan telah selesai. Pemantauan dilanjutkan pada pemberian makanan bergizi seimbang dan tumbuh kembang balita Anda.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* 2. 4 Kartu Metrik Nifas & Menyusui */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1 */}
@@ -133,7 +151,9 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
           </div>
           <div>
             <span className="text-[10px] text-slate-400 font-medium block">Status Nifas</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">Belum</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">
+              {isIbuBalitaOnly ? 'Selesai' : 'Belum'}
+            </span>
           </div>
         </div>
 
@@ -143,8 +163,12 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
             <Calendar size={22} />
           </div>
           <div>
-            <span className="text-[10px] text-slate-400 font-medium block">Perkiraan Mulai Nifas</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">Setelah Persalinan</span>
+            <span className="text-[10px] text-slate-400 font-medium block">
+              {isIbuBalitaOnly ? 'Masa Nifas' : 'Perkiraan Mulai Nifas'}
+            </span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">
+              {isIbuBalitaOnly ? 'Telah Selesai (42 Hari)' : 'Setelah Persalinan'}
+            </span>
           </div>
         </div>
 
@@ -154,8 +178,12 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
             <Milk size={22} />
           </div>
           <div>
-            <span className="text-[10px] text-slate-400 font-medium block">Rencana Menyusui</span>
-            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">IMD & Asi Eksklusif</span>
+            <span className="text-[10px] text-slate-400 font-medium block">
+              {isIbuBalitaOnly ? 'Fase Nutrisi' : 'Rencana Menyusui'}
+            </span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight block mt-0.5">
+              {isIbuBalitaOnly ? 'ASI & MP-ASI Lanjutan' : 'IMD & ASI Eksklusif'}
+            </span>
           </div>
         </div>
 
