@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
+  Weight,
+  ShoppingBasket,
   Scale, 
   Ruler, 
   Smile, 
@@ -30,8 +32,68 @@ import {
   Clock,
   AlertTriangle,
   Check,
-  ClipboardCheck
+  ClipboardCheck,
+  BarChart2,
+  Puzzle
 } from 'lucide-react';
+
+function HeightMeasureIcon({ size = 20, className = '' }) {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2.5" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      <path d="M6 4h12" />
+      <path d="M6 20h12" />
+      <path d="M12 4v16" />
+      <path d="M9 12h6" />
+    </svg>
+  );
+}
+
+function WalkingIcon({ size = 20, className = '' }) {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="currentColor" 
+      className={className}
+    >
+      <path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7z"/>
+    </svg>
+  );
+}
+
+function BalokLegoIcon({ size = 20, className = '' }) {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      <path d="M2.5 13.5L12 8l9.5 5.5-9.5 5.5z" />
+      <path d="M2.5 13.5v4L12 23v-4" />
+      <path d="M21.5 13.5v4L12 23" />
+      <ellipse cx="8" cy="11" rx="2" ry="1.2" />
+      <ellipse cx="12" cy="13" rx="2" ry="1.2" />
+      <ellipse cx="16" cy="15" rx="2" ry="1.2" />
+    </svg>
+  );
+}
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
 import { maskNik } from '../../utils/nikUtils';
@@ -97,6 +159,38 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
   const [daftarAnak, setDaftarAnak] = useState([]);
   const [activeAnakId, setActiveAnakId] = useState(extractAnakId);
   const [activeAnak, setActiveAnak] = useState(null);
+
+  // Dynamic responsive chart width & points for Grafik Pertumbuhan
+  const chartContainerRef1 = useRef(null);
+  const chartContainerRef2 = useRef(null);
+  const [chartWidth, setChartWidth] = useState(650);
+
+  useEffect(() => {
+    const updateWidth = () => {
+      const el = chartContainerRef1.current || chartContainerRef2.current;
+      if (el && el.clientWidth > 200) {
+        setChartWidth(el.clientWidth);
+      }
+    };
+    updateWidth();
+    const ro = new ResizeObserver(() => updateWidth());
+    if (chartContainerRef1.current) ro.observe(chartContainerRef1.current);
+    if (chartContainerRef2.current) ro.observe(chartContainerRef2.current);
+    return () => ro.disconnect();
+  }, [activeSub]);
+
+  const chartPoints = [
+    { week: 12, bb: 50 },
+    { week: 16, bb: 60 },
+    { week: 20, bb: 62 },
+    { week: 24, bb: 65 },
+    { week: 28, bb: 68 },
+  ];
+  const chartPaddingLeft = 38;
+  const chartPaddingRight = 16;
+  const availableChartWidth = Math.max(chartWidth - chartPaddingLeft - chartPaddingRight, 100);
+  const getChartX = (idx) => chartPaddingLeft + idx * (availableChartWidth / (chartPoints.length - 1));
+  const getChartY = (bb) => 220 - (bb * 2);
 
   useEffect(() => {
     if (subFeature) {
@@ -219,7 +313,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
     {
       title: 'Latihan Berjalan',
       desc: 'Ajak anak berjalan dengan bantuan di lingkungan aman.',
-      icon: Footprints,
+      icon: WalkingIcon,
       detail: 'Pegang kedua tangan anak dari depan secara perlahan, biarkan ia melangkah di atas lantai datar tanpa alas kaki untuk melatih keseimbangan dan kekuatan otot kaki.'
     },
     {
@@ -231,7 +325,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
     {
       title: 'Bermain Balok',
       desc: 'Melatih motorik halus dan koordinasi tangan mata',
-      icon: Boxes,
+      icon: BalokLegoIcon,
       detail: 'Sediakan balok susun berukuran aman (tidak tertelan). Ajarkan cara menumpuk 2-3 balok ke atas dan biarkan anak merubuhkannya dengan gembira.'
     }
   ];
@@ -241,6 +335,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
   const [isSubmittingKms, setIsSubmittingKms] = useState(false);
 
   // States untuk Modal Jadwal Imunisasi Lengkap & Tips KIPI Buku KIA
+  const [showAllPencapaian, setShowAllPencapaian] = useState(false);
+  const [filterKpspKategori, setFilterKpspKategori] = useState('Semua');
   const [showAllJadwalImunisasi, setShowAllJadwalImunisasi] = useState(false);
   const [showAllTipsImunisasi, setShowAllTipsImunisasi] = useState(false);
   const [filterStatusJadwal, setFilterStatusJadwal] = useState('Semua');
@@ -329,6 +425,174 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
       urgensi: 'DARURAT / IGD 24 JAM'
     }
   ];
+
+  const getChecklistKpspLengkap = () => {
+    const masterKpsp = [
+      {
+        id: 'kpsp-mk-1',
+        title: 'Duduk Tanpa Bantuan',
+        kategori: 'Motorik Kasar',
+        usia: 'Usia 6 Bulan',
+        tanggal: '20 Jan 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi dapat duduk tegak sendiri di lantai tanpa disangga bantal atau dipegangi selama minimal 60 detik.'
+      },
+      {
+        id: 'kpsp-mh-1',
+        title: 'Meraih & Memegang Benda dengan Seluruh Jari',
+        kategori: 'Motorik Halus',
+        usia: 'Usia 6 Bulan',
+        tanggal: '18 Jan 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi aktif mengulurkan tangan meraih mainan atau benda yang didekatkan dan menggenggamnya erat.'
+      },
+      {
+        id: 'kpsp-bb-1',
+        title: 'Mengoceh Mengulang Suku Kata (Ba-ba, Da-da, Ma-ma)',
+        kategori: 'Bicara & Bahasa',
+        usia: 'Usia 6 Bulan',
+        tanggal: '25 Jan 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi mampu mengeluarkan suara bersuara konsonan dan vokal berulang saat diajak berkomunikasi.'
+      },
+      {
+        id: 'kpsp-sm-1',
+        title: 'Tersenyum Spontan & Bermain Cilukba',
+        kategori: 'Sosialisasi & Kemandirian',
+        usia: 'Usia 6 Bulan',
+        tanggal: '10 Feb 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi gembira dan tersenyum spontan melihat wajah orang tua atau saat diajak bermain cilukba.'
+      },
+      {
+        id: 'kpsp-mk-2',
+        title: 'Merangkak Menjelajah Ruangan',
+        kategori: 'Motorik Kasar',
+        usia: 'Usia 8 Bulan',
+        tanggal: '15 Mar 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi merangkak maju dengan bertumpu pada kedua tangan dan lutut untuk bergerak mengambil mainan.'
+      },
+      {
+        id: 'kpsp-mh-2',
+        title: 'Menjepit Benda Kecil dengan Ibu Jari dan Telunjuk (Pincer Grasp)',
+        kategori: 'Motorik Halus',
+        usia: 'Usia 9 Bulan',
+        tanggal: '12 Apr 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi mampu memungut kismis atau remah biskuit menggunakan ujung ibu jari dan telunjuk secara presisi.'
+      },
+      {
+        id: 'kpsp-bb-2',
+        title: 'Menoleh dan Menanggapi Saat Namanya Dipanggil',
+        kategori: 'Bicara & Bahasa',
+        usia: 'Usia 9 Bulan',
+        tanggal: '20 Apr 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi langsung menolehkan kepala ke arah suara saat namanya dipanggil lembut dari sisi samping/belakang.'
+      },
+      {
+        id: 'kpsp-sm-2',
+        title: 'Melambaikan Tangan (Dadah / Bye-bye)',
+        kategori: 'Sosialisasi & Kemandirian',
+        usia: 'Usia 9 Bulan',
+        tanggal: '02 Mei 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi mampu menirukan gerakan melambaikan tangan saat seseorang berpamitan.'
+      },
+      {
+        id: 'kpsp-mk-3',
+        title: 'Berdiri Berpegangan pada Perabotan (Cruising)',
+        kategori: 'Motorik Kasar',
+        usia: 'Usia 10 Bulan',
+        tanggal: '10 Mei 2026',
+        status: 'Tercapai',
+        deskripsi: 'Bayi dapat menarik tubuhnya ke posisi berdiri dengan berpegangan pada kursi, meja, atau tempat tidur.'
+      },
+      {
+        id: 'kpsp-mk-4',
+        title: 'Berjalan Beberapa Langkah Tanpa Bantuan',
+        kategori: 'Motorik Kasar',
+        usia: 'Usia 12 Bulan',
+        tanggal: '22 Jul 2026',
+        status: 'Tercapai',
+        deskripsi: 'Anak mampu melangkah 2 hingga 5 langkah sendiri di lantai seimbang tanpa terjatuh.'
+      },
+      {
+        id: 'kpsp-mh-3',
+        title: 'Menumpuk 2 Balok Mainan',
+        kategori: 'Motorik Halus',
+        usia: 'Usia 12 Bulan',
+        tanggal: '05 Agu 2026',
+        status: 'Tercapai',
+        deskripsi: 'Anak dapat menaruh satu balok mainan di atas balok lain tanpa menjatuhkannya.'
+      },
+      {
+        id: 'kpsp-bb-3',
+        title: 'Mengucapkan 1-2 Kata Bermakna (Selain Mama/Papa)',
+        kategori: 'Bicara & Bahasa',
+        usia: 'Usia 12 Bulan',
+        tanggal: '14 Jul 2026',
+        status: 'Tercapai',
+        deskripsi: 'Anak dapat mengucapkan kata bermakna seperti "mimi", "mau", atau "bol" untuk merujuk objek tertentu.'
+      },
+      {
+        id: 'kpsp-sm-3',
+        title: 'Menunjukkan Keinginan dengan Menunjuk Jari & Minum dari Cangkir',
+        kategori: 'Sosialisasi & Kemandirian',
+        usia: 'Usia 12 Bulan',
+        tanggal: '18 Jul 2026',
+        status: 'Tercapai',
+        deskripsi: 'Anak mengarahkan jari telunjuknya ke arah mainan/makanan yang diinginkan dan dapat memegang cangkir minum sendiri.'
+      },
+      {
+        id: 'kpsp-mk-5',
+        title: 'Membungkuk Mengambil Mainan Lalu Berdiri Tegak Kembali',
+        kategori: 'Motorik Kasar',
+        usia: 'Usia 15 Bulan',
+        tanggal: 'Terjadwal Skrining Berikutnya',
+        status: 'Dalam Pemantauan',
+        deskripsi: 'Anak membungkuk memungut benda di lantai tanpa berpegangan dan kembali berdiri tegak dengan seimbang.'
+      },
+      {
+        id: 'kpsp-mh-4',
+        title: 'Memasukkan Benda Kecil ke Dalam Lubang / Botol',
+        kategori: 'Motorik Halus',
+        usia: 'Usia 15 Bulan',
+        tanggal: 'Terjadwal Skrining Berikutnya',
+        status: 'Dalam Pemantauan',
+        deskripsi: 'Anak mampu memasukkan koin mainan atau bola kecil ke dalam wadah atau celengan dengan sengaja.'
+      },
+      {
+        id: 'kpsp-bb-4',
+        title: 'Memahami Perintah Sederhana Tanpa Isyarat Tubuh',
+        kategori: 'Bicara & Bahasa',
+        usia: 'Usia 15 Bulan',
+        tanggal: 'Terjadwal Skrining Berikutnya',
+        status: 'Dalam Pemantauan',
+        deskripsi: 'Anak mengerti dan menjalankan instruksi pendek seperti "Bawa bolanya ke sini" atau "Ambil sepatumu".'
+      }
+    ];
+
+    if (pencapaianMilestones && pencapaianMilestones.length > 0) {
+      return masterKpsp.map(item => {
+        const matched = pencapaianMilestones.find(p => 
+          (p.title && item.title.toLowerCase().includes(p.title.toLowerCase())) ||
+          (p.title && p.title.toLowerCase().includes(item.title.toLowerCase()))
+        );
+        if (matched) {
+          return {
+            ...item,
+            status: 'Tercapai',
+            tanggal: formatTanggalIndo(matched.tanggal) || item.tanggal
+          };
+        }
+        return item;
+      });
+    }
+
+    return masterKpsp;
+  };
 
   const getJadwalLengkapImunisasi = () => {
     const defaultMasterVaksin = [
@@ -515,6 +779,10 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
   }, [activeAnakId]);
 
   const [riwayatPertumbuhan, setRiwayatPertumbuhan] = useState([]);
+
+  const latestKms = riwayatPertumbuhan && riwayatPertumbuhan.length > 0 
+    ? riwayatPertumbuhan[riwayatPertumbuhan.length - 1] 
+    : { bb: '9,8 Kg', tb: '75 Cm', lk: '46 Cm', status: 'Normal' };
 
   useEffect(() => {
     if (!activeAnakId) return;
@@ -845,7 +1113,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                     <span className="font-extrabold text-slate-900 mt-0.5 block">Gizi Baik (Normal)</span>
                   </div>
                   <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-emerald-700 border border-emerald-200">
-                    BB 9,8 kg · TB 75 cm
+                    BB {(latestKms.bb || '9,8 Kg').replace(' Kg', ' kg')} · TB {(latestKms.tb || '75 Cm').replace(' Cm', ' cm')}
                   </span>
                 </div>
 
@@ -937,23 +1205,27 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
             {/* 1. BB Terakhir */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
               <div className="text-[#8B5CF6] shrink-0">
-                <Scale size={20} />
+                <Weight size={20} />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Berat Badan Terakhir</span>
-                <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight">9,8 Kg</span>
+                <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                  {latestKms.bb || '9,8 Kg'}
+                </span>
               </div>
             </div>
 
             {/* 2. TB Terakhir */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
               <div className="text-[#8B5CF6] shrink-0">
-                <Ruler size={20} />
+                <HeightMeasureIcon size={20} />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Tinggi Badan Terakhir</span>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight">50 cm</span>
+                  <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                    {(latestKms.tb || '50 cm').toLowerCase()}
+                  </span>
                   <span className="text-[10px] text-slate-400">Naik 2cm</span>
                 </div>
               </div>
@@ -962,7 +1234,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
             {/* 3. LK Terakhir */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
               <div className="text-[#8B5CF6] shrink-0">
-                <Smile size={20} />
+                <Baby size={20} />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Lingkar Kepala Terakhir</span>
@@ -976,7 +1248,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
             {/* 4. Status Gizi */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
               <div className="text-[#8B5CF6] shrink-0">
-                <ShoppingBag size={20} />
+                <ShoppingBasket size={20} />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Status Gizi</span>
@@ -989,7 +1261,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Grafik Pertumbuhan */}
             <div className="lg:col-span-7 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-              <h3 className="text-sm font-bold text-slate-900">Grafik Pertumbuhan</h3>
+              <h3 className="text-base font-bold text-slate-900">Grafik Pertumbuhan</h3>
 
               {/* Tabs Metrik Grafik */}
               <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -1009,56 +1281,107 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                 ))}
               </div>
 
-              {/* Line Chart SVG */}
-              <div className="relative pt-4">
-                <svg viewBox="0 0 500 200" className="w-full h-44 overflow-visible">
-                  <line x1="40" y1="20" x2="480" y2="20" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="60" x2="480" y2="60" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="100" x2="480" y2="100" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="140" x2="480" y2="140" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="180" x2="480" y2="180" stroke="#E2E8F0" />
-
-                  <text x="30" y="25" fontSize="10" fill="#94A3B8" textAnchor="end">100</text>
-                  <text x="30" y="65" fontSize="10" fill="#94A3B8" textAnchor="end">80</text>
-                  <text x="30" y="105" fontSize="10" fill="#94A3B8" textAnchor="end">60</text>
-                  <text x="30" y="145" fontSize="10" fill="#94A3B8" textAnchor="end">40</text>
-                  <text x="30" y="183" fontSize="10" fill="#94A3B8" textAnchor="end">0</text>
-
-                  <text x="60" y="195" fontSize="10" fill="#64748B" textAnchor="middle">12</text>
-                  <text x="160" y="195" fontSize="10" fill="#64748B" textAnchor="middle">16</text>
-                  <text x="260" y="195" fontSize="10" fill="#64748B" textAnchor="middle">20</text>
-                  <text x="360" y="195" fontSize="10" fill="#64748B" textAnchor="middle">24</text>
-                  <text x="460" y="195" fontSize="10" fill="#64748B" textAnchor="middle">28</text>
-
-                  {/* Gradient Area under line */}
+              {/* Line Chart SVG (Lebar Responsif Sesuai Desain Figma) */}
+              <div ref={chartContainerRef1} className="w-full pt-2 pb-2">
+                <svg viewBox={`0 0 ${chartWidth} 248`} className="w-full h-auto select-none block">
                   <defs>
                     <linearGradient id="pertumbuhanGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FF4D80" stopOpacity="0.25" />
-                      <stop offset="100%" stopColor="#FF4D80" stopOpacity="0.0" />
+                      <stop offset="0%" stopColor="#FB7185" stopOpacity="0.32" />
+                      <stop offset="100%" stopColor="#FFF1F2" stopOpacity="0.04" />
                     </linearGradient>
                   </defs>
 
-                  <path 
-                    d="M 60 120 L 160 100 L 260 96 L 360 88 L 460 82 L 460 180 L 60 180 Z" 
-                    fill="url(#pertumbuhanGrad)" 
+                  {/* Horizontal Grid lines (Y: 100, 80, 60, 40, 20, 0) */}
+                  {[100, 80, 60, 40, 20, 0].map((val) => {
+                    const y = getChartY(val);
+                    return (
+                      <g key={val}>
+                        <line
+                          x1={chartPaddingLeft}
+                          y1={y}
+                          x2={chartWidth - chartPaddingRight}
+                          y2={y}
+                          stroke="#E2E8F0"
+                          strokeDasharray="3 3"
+                        />
+                        <text
+                          x={chartPaddingLeft - 10}
+                          y={y + 3.5}
+                          textAnchor="end"
+                          fontSize="10"
+                          fill="#94A3B8"
+                        >
+                          {val}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Vertical Grid lines at each week point */}
+                  {chartPoints.map((p, i) => {
+                    const x = getChartX(i);
+                    return (
+                      <g key={p.week}>
+                        <line
+                          x1={x}
+                          y1="20"
+                          x2={x}
+                          y2="220"
+                          stroke="#E2E8F0"
+                          strokeDasharray="3 3"
+                        />
+                        <text
+                          x={x}
+                          y="238"
+                          textAnchor="middle"
+                          fontSize="11"
+                          fill="#64748B"
+                          fontWeight="500"
+                        >
+                          {p.week}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Shaded Area Under Curve */}
+                  <polygon
+                    points={`${chartPaddingLeft},220 ${chartPoints.map((p, i) => `${getChartX(i)},${getChartY(p.bb)}`).join(' ')} ${chartWidth - chartPaddingRight},220`}
+                    fill="url(#pertumbuhanGrad)"
                   />
 
-                  <path 
-                    d="M 60 120 L 160 100 L 260 96 L 360 88 L 460 82" 
-                    fill="none" 
-                    stroke="#FF4D80" 
-                    strokeWidth="2.5" 
+                  {/* Curve Line */}
+                  <polyline
+                    points={chartPoints.map((p, i) => `${getChartX(i)},${getChartY(p.bb)}`).join(' ')}
+                    fill="none"
+                    stroke="#F43F5E"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
 
-                  {[[60, 120], [160, 100], [260, 96], [360, 88], [460, 82]].map(([cx, cy], i) => (
-                    <circle key={i} cx={cx} cy={cy} r="4" fill="#FFFFFF" stroke="#FF4D80" strokeWidth="2" />
+                  {/* Data Points */}
+                  {chartPoints.map((p, i) => (
+                    <circle
+                      key={p.week}
+                      cx={getChartX(i)}
+                      cy={getChartY(p.bb)}
+                      r="4.5"
+                      fill="#FFFFFF"
+                      stroke="#F43F5E"
+                      strokeWidth="2.5"
+                    />
                   ))}
                 </svg>
+              </div>
 
-                <div className="flex items-center justify-center gap-2 mt-2 text-[11px] text-slate-500 font-medium">
-                  <span className="w-3 h-0.5 bg-[#FF4D80]" />
-                  <span>{activeChartTab}</span>
-                </div>
+              {/* Chart Legend */}
+              <div className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-600">
+                <svg width="24" height="12" viewBox="0 0 24 12" className="inline-block shrink-0">
+                  <line x1="0" y1="6" x2="24" y2="6" stroke="#F43F5E" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="12" cy="6" r="3.5" fill="#FFFFFF" stroke="#F43F5E" strokeWidth="2" />
+                </svg>
+                <span className="font-medium text-slate-700">{activeChartTab}</span>
               </div>
             </div>
 
@@ -1174,24 +1497,29 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {(riwayatPertumbuhan.length > 0 ? riwayatPertumbuhan : [
-                    { no: 1, tanggal: '12 Sep 2026', usia: '14 Bulan', bb: '9,8 Kg', tb: '75 Cm', lk: '46 Cm', status: 'Normal' },
-                    { no: 2, tanggal: '12 Sep 2026', usia: '14 Bulan', bb: '9,8 Kg', tb: '75 Cm', lk: '46 Cm', status: 'Normal' }
-                  ]).map((row, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3.5 px-4 text-center font-medium">{row.no}</td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-900">{row.tanggal}</td>
-                      <td className="py-3.5 px-4 text-slate-600">{row.usia}</td>
-                      <td className="py-3.5 px-4 font-bold text-slate-900">{row.bb}</td>
-                      <td className="py-3.5 px-4 text-slate-600">{row.tb}</td>
-                      <td className="py-3.5 px-4 text-slate-600">{row.lk}</td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#DCFCE7] text-[#15803D]">
-                          {row.status === 'Gizi Baik (Normal)' ? 'Normal' : row.status}
-                        </span>
+                  {riwayatPertumbuhan.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-slate-400">
+                        Belum ada data penimbangan KMS untuk anak ini.{!isIbuRole ? ' Klik tombol "+ Catat Penimbangan KMS" untuk menambahkan.' : ''}
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    riwayatPertumbuhan.map((row) => (
+                      <tr key={row.id || row.no} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-3.5 px-4 text-center font-medium">{row.no}</td>
+                        <td className="py-3.5 px-4 font-semibold text-slate-900">{row.tanggal}</td>
+                        <td className="py-3.5 px-4 text-slate-600">{row.usia}</td>
+                        <td className="py-3.5 px-4 font-bold text-slate-900">{row.bb}</td>
+                        <td className="py-3.5 px-4 text-slate-600">{row.tb}</td>
+                        <td className="py-3.5 px-4 text-slate-600">{row.lk}</td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#DCFCE7] text-[#15803D]">
+                            {row.status === 'Gizi Baik (Normal)' ? 'Normal' : row.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1206,8 +1534,8 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
         <div className="space-y-6">
           {/* Top Card: Profil Anak (Sesuai Expected Result Figma QA) */}
           <div className="bg-[#FFF0F4] border border-pink-100 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-            <div className="flex items-center gap-4.5">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-pink-200 overflow-hidden shrink-0 bg-white p-0.5 shadow-2xs">
+            <div className="flex items-center gap-6 sm:gap-8">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-pink-200 overflow-hidden shrink-0 bg-white p-0.5 shadow-2xs">
                 <img 
                   src="/images/farhan-avatar.png" 
                   alt={activeAnak?.nama || 'Farhan'} 
@@ -1242,7 +1570,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
               {/* Card 2: Status Perkembangan */}
               <div className="bg-white rounded-2xl px-4 py-3 border border-slate-100 shadow-xs flex items-center gap-3 min-w-[160px]">
-                <Activity size={18} className="text-[#FF4D80] shrink-0" />
+                <BarChart2 size={18} className="text-[#FF4D80] shrink-0" />
                 <div>
                   <span className="text-[10px] text-slate-400 font-medium block">Status Perkembangan</span>
                   <span className="text-xs sm:text-sm font-bold text-emerald-600 mt-0.5 block">Sesuai Usia</span>
@@ -1279,7 +1607,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
               className="md:col-span-3 bg-white border border-slate-100 hover:border-pink-200 rounded-3xl p-5 sm:p-6 shadow-xs flex items-center justify-between cursor-pointer group transition-all"
             >
               <div className="flex items-center gap-3.5">
-                <Footprints size={22} className="text-[#8B5CF6] shrink-0" />
+                <Puzzle size={22} className="text-[#8B5CF6] shrink-0" />
                 <div>
                   <span className="text-[10px] text-slate-400 font-medium block">Stimulasi Hari Ini</span>
                   <div className="mt-0.5">
@@ -1300,7 +1628,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                 <h3 className="text-sm font-bold text-slate-900">Pencapaian Perkembangan</h3>
                 <button 
                   type="button"
-                  onClick={() => onShowToast && onShowToast('Membuka checklist lengkap KPSP Buku KIA...', 'info')}
+                  onClick={() => setShowAllPencapaian(true)}
                   className="text-xs font-semibold text-[#FF4D80] hover:text-[#E11D48] cursor-pointer"
                 >
                   Lihat Semua
@@ -1327,7 +1655,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
             {/* Grafik Pertumbuhan */}
             <div className="lg:col-span-7 bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
-              <h3 className="text-sm font-bold text-slate-900">Grafik Pertumbuhan</h3>
+              <h3 className="text-base font-bold text-slate-900">Grafik Pertumbuhan</h3>
 
               {/* Tabs Metrik Grafik */}
               <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -1347,56 +1675,107 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                 ))}
               </div>
 
-              {/* Line Chart SVG */}
-              <div className="relative pt-4">
-                <svg viewBox="0 0 500 200" className="w-full h-44 overflow-visible">
-                  <line x1="40" y1="20" x2="480" y2="20" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="60" x2="480" y2="60" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="100" x2="480" y2="100" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="140" x2="480" y2="140" stroke="#F1F5F9" strokeDasharray="3 3" />
-                  <line x1="40" y1="180" x2="480" y2="180" stroke="#E2E8F0" />
-
-                  <text x="30" y="25" fontSize="10" fill="#94A3B8" textAnchor="end">100</text>
-                  <text x="30" y="65" fontSize="10" fill="#94A3B8" textAnchor="end">80</text>
-                  <text x="30" y="105" fontSize="10" fill="#94A3B8" textAnchor="end">60</text>
-                  <text x="30" y="145" fontSize="10" fill="#94A3B8" textAnchor="end">40</text>
-                  <text x="30" y="183" fontSize="10" fill="#94A3B8" textAnchor="end">0</text>
-
-                  <text x="60" y="195" fontSize="10" fill="#64748B" textAnchor="middle">12</text>
-                  <text x="160" y="195" fontSize="10" fill="#64748B" textAnchor="middle">16</text>
-                  <text x="260" y="195" fontSize="10" fill="#64748B" textAnchor="middle">20</text>
-                  <text x="360" y="195" fontSize="10" fill="#64748B" textAnchor="middle">24</text>
-                  <text x="460" y="195" fontSize="10" fill="#64748B" textAnchor="middle">28</text>
-
-                  {/* Gradient Area under line */}
+              {/* Line Chart SVG (Lebar Responsif Sesuai Desain Figma) */}
+              <div ref={chartContainerRef2} className="w-full pt-2 pb-2">
+                <svg viewBox={`0 0 ${chartWidth} 248`} className="w-full h-auto select-none block">
                   <defs>
                     <linearGradient id="perkembanganGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FF4D80" stopOpacity="0.25" />
-                      <stop offset="100%" stopColor="#FF4D80" stopOpacity="0.0" />
+                      <stop offset="0%" stopColor="#FB7185" stopOpacity="0.32" />
+                      <stop offset="100%" stopColor="#FFF1F2" stopOpacity="0.04" />
                     </linearGradient>
                   </defs>
 
-                  <path 
-                    d="M 60 120 L 160 100 L 260 96 L 360 88 L 460 82 L 460 180 L 60 180 Z" 
-                    fill="url(#perkembanganGrad)" 
+                  {/* Horizontal Grid lines (Y: 100, 80, 60, 40, 20, 0) */}
+                  {[100, 80, 60, 40, 20, 0].map((val) => {
+                    const y = getChartY(val);
+                    return (
+                      <g key={val}>
+                        <line
+                          x1={chartPaddingLeft}
+                          y1={y}
+                          x2={chartWidth - chartPaddingRight}
+                          y2={y}
+                          stroke="#E2E8F0"
+                          strokeDasharray="3 3"
+                        />
+                        <text
+                          x={chartPaddingLeft - 10}
+                          y={y + 3.5}
+                          textAnchor="end"
+                          fontSize="10"
+                          fill="#94A3B8"
+                        >
+                          {val}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Vertical Grid lines at each week point */}
+                  {chartPoints.map((p, i) => {
+                    const x = getChartX(i);
+                    return (
+                      <g key={p.week}>
+                        <line
+                          x1={x}
+                          y1="20"
+                          x2={x}
+                          y2="220"
+                          stroke="#E2E8F0"
+                          strokeDasharray="3 3"
+                        />
+                        <text
+                          x={x}
+                          y="238"
+                          textAnchor="middle"
+                          fontSize="11"
+                          fill="#64748B"
+                          fontWeight="500"
+                        >
+                          {p.week}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Shaded Area Under Curve */}
+                  <polygon
+                    points={`${chartPaddingLeft},220 ${chartPoints.map((p, i) => `${getChartX(i)},${getChartY(p.bb)}`).join(' ')} ${chartWidth - chartPaddingRight},220`}
+                    fill="url(#perkembanganGrad)"
                   />
 
-                  <path 
-                    d="M 60 120 L 160 100 L 260 96 L 360 88 L 460 82" 
-                    fill="none" 
-                    stroke="#FF4D80" 
-                    strokeWidth="2.5" 
+                  {/* Curve Line */}
+                  <polyline
+                    points={chartPoints.map((p, i) => `${getChartX(i)},${getChartY(p.bb)}`).join(' ')}
+                    fill="none"
+                    stroke="#F43F5E"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
 
-                  {[[60, 120], [160, 100], [260, 96], [360, 88], [460, 82]].map(([cx, cy], i) => (
-                    <circle key={i} cx={cx} cy={cy} r="4" fill="#FFFFFF" stroke="#FF4D80" strokeWidth="2" />
+                  {/* Data Points */}
+                  {chartPoints.map((p, i) => (
+                    <circle
+                      key={p.week}
+                      cx={getChartX(i)}
+                      cy={getChartY(p.bb)}
+                      r="4.5"
+                      fill="#FFFFFF"
+                      stroke="#F43F5E"
+                      strokeWidth="2.5"
+                    />
                   ))}
                 </svg>
+              </div>
 
-                <div className="flex items-center justify-center gap-2 mt-2 text-[11px] text-slate-500 font-medium">
-                  <span className="w-3 h-0.5 bg-[#FF4D80]" />
-                  <span>{activeChartTab}</span>
-                </div>
+              {/* Chart Legend */}
+              <div className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-600">
+                <svg width="24" height="12" viewBox="0 0 24 12" className="inline-block shrink-0">
+                  <line x1="0" y1="6" x2="24" y2="6" stroke="#F43F5E" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="12" cy="6" r="3.5" fill="#FFFFFF" stroke="#F43F5E" strokeWidth="2" />
+                </svg>
+                <span className="font-medium text-slate-700">{activeChartTab}</span>
               </div>
             </div>
           </div>
@@ -1437,38 +1816,22 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
           SUB-PAGE 3: IMUNISASI (Image 3 - Sesuai Figma QA)
       ====================================================================== */}
       {activeSub === 'Imunisasi' && (() => {
-        const defaultJadwalRingkas = [
-          { nama_vaksin: 'Hepatitis B', jadwal_usia: 'Usia 0–7 Hari', tanggal_diberikan: '20 Feb 2026', status: 'Selesai' },
-          { nama_vaksin: 'BCG', jadwal_usia: 'Usia 1 Bulan', tanggal_diberikan: '20 Feb 2026', status: 'Selesai' },
-          { nama_vaksin: 'Polio 1', jadwal_usia: 'Usia 0–7 Hari', tanggal_diberikan: '20 Feb 2026', status: 'Selesai' },
-          { nama_vaksin: 'Polio 2', jadwal_usia: 'Usia 0–7 Hari', tanggal_diberikan: '20 Feb 2026', status: 'Selesai' }
-        ];
-
-        const displayJadwalRingkas = daftarImunisasi.length > 0
-          ? daftarImunisasi.slice(0, 4).map(i => ({
-              nama_vaksin: i.nama_vaksin ? i.nama_vaksin.replace(/\s*\(.*?\)/g, '') : 'Hepatitis B',
-              jadwal_usia: i.jadwal_usia ? (i.jadwal_usia.toLowerCase().startsWith('usia') ? i.jadwal_usia : 'Usia ' + i.jadwal_usia) : 'Usia 0–7 Hari',
-              tanggal_diberikan: formatTanggalIndo(i.tanggal_diberikan) || '20 Feb 2026',
-              status: i.status || 'Selesai'
-            }))
-          : defaultJadwalRingkas;
-
-        const defaultRiwayatImunisasi = [
-          { no: 1, tanggal: '12 Sep 2026', usia: '14 Bulan', jenis: 'DPT-HB-Hb 3', lokasi: 'Puskesmas Maju Jaya', petugas: 'Bidan Sari' },
-          { no: 1, tanggal: '12 Sep 2026', usia: '14 Bulan', jenis: 'DPT-HB-Hb 3', lokasi: 'Puskesmas Maju Jaya', petugas: 'Bidan Sari' }
-        ];
+        const displayJadwalRingkas = daftarImunisasi.slice(0, 4).map(i => ({
+          nama_vaksin: i.nama_vaksin ? i.nama_vaksin.replace(/\s*\(.*?\)/g, '') : 'Vaksin',
+          jadwal_usia: i.jadwal_usia ? (i.jadwal_usia.toLowerCase().startsWith('usia') ? i.jadwal_usia : 'Usia ' + i.jadwal_usia) : 'Sesuai Jadwal',
+          tanggal_diberikan: i.status === 'Selesai' && i.tanggal_diberikan ? (formatTanggalIndo(i.tanggal_diberikan) || i.tanggal_diberikan) : (i.status || 'Akan Datang'),
+          status: i.status || 'Selesai'
+        }));
 
         const riwayatSelesai = daftarImunisasi.filter(i => i.status === 'Selesai' || i.tanggal_diberikan);
-        const displayRiwayatImunisasi = riwayatSelesai.length > 0
-          ? riwayatSelesai.map((vax, idx) => ({
-              no: idx + 1,
-              tanggal: formatTanggalIndo(vax.tanggal_diberikan) || vax.tanggal_diberikan || '12 Sep 2026',
-              usia: vax.jadwal_usia || '14 Bulan',
-              jenis: vax.nama_vaksin || 'DPT-HB-Hb 3',
-              lokasi: vax.lokasi || 'Puskesmas Maju Jaya',
-              petugas: vax.petugas || 'Bidan Sari'
-            }))
-          : defaultRiwayatImunisasi;
+        const displayRiwayatImunisasi = riwayatSelesai.map((vax, idx) => ({
+          no: idx + 1,
+          tanggal: formatTanggalIndo(vax.tanggal_diberikan) || vax.tanggal_diberikan || '-',
+          usia: vax.jadwal_usia || '-',
+          jenis: vax.nama_vaksin || '-',
+          lokasi: vax.lokasi || 'Posyandu Anggrek',
+          petugas: vax.petugas || 'Bidan Siti, S.Tr.Keb'
+        }));
 
         return (
           <div className="space-y-6">
@@ -1505,7 +1868,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                   <div>
                     <span className="text-[10px] text-slate-500 font-medium block">Imunisasi Selesai</span>
                     <span className="text-base sm:text-lg font-extrabold text-slate-900 block leading-tight">
-                      {daftarImunisasi.length > 0 ? `${daftarImunisasi.filter(i => i.status === 'Selesai').length} / ${daftarImunisasi.length}` : '7/9'}
+                      {daftarImunisasi.length > 0 ? `${daftarImunisasi.filter(i => i.status === 'Selesai').length} / ${daftarImunisasi.length}` : '0 / 0'}
                     </span>
                   </div>
                 </div>
@@ -1568,28 +1931,36 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
               {/* Kolom Kanan: Detail Campak Rubella & Tips Setelah Imunisasi */}
               <div className="lg:col-span-7 space-y-4">
-                {/* 2 Kartu Atas: Jadwal Campak & Manfaat */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex items-start gap-3.5">
-                    <Calendar size={22} className="text-[#8B5CF6] shrink-0 mt-0.5" />
-                    <div>
-                      <span className="text-xs font-bold text-slate-800 block">Campak Rubella</span>
-                      <span className="text-sm font-bold text-[#FF168B] leading-tight block mt-0.5">
-                        20 Desember 2026
-                      </span>
-                    </div>
-                  </div>
+                {/* 2 Kartu Atas: Jadwal Vaksin Berikutnya & Manfaat */}
+                {(() => {
+                  const nextVaksin = daftarImunisasi.find(i => i.status === 'Akan Datang' || !i.tanggal_diberikan) || (daftarImunisasi.length > 0 ? daftarImunisasi[daftarImunisasi.length - 1] : null);
+                  const nextTitle = nextVaksin?.nama_vaksin || 'Campak Rubella (MR)';
+                  const nextDate = nextVaksin?.tanggal_diberikan ? (formatTanggalIndo(nextVaksin.tanggal_diberikan) || nextVaksin.tanggal_diberikan) : (nextVaksin?.jadwal_usia ? `Usia ${nextVaksin.jadwal_usia}` : 'Sesuai Jadwal');
 
-                  <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex items-start gap-3.5">
-                    <Heart size={22} className="text-[#8B5CF6] shrink-0 mt-0.5" />
-                    <div>
-                      <span className="text-xs font-bold text-slate-800 block">Manfaat</span>
-                      <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
-                        Melindungi anak dari penyakit campak dan rubella yang dapat menyebabkan komplikasi serius
-                      </p>
+                  return (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex items-start gap-3.5">
+                        <Calendar size={22} className="text-[#8B5CF6] shrink-0 mt-0.5" />
+                        <div>
+                          <span className="text-xs font-bold text-slate-800 block">{nextTitle}</span>
+                          <span className="text-sm font-bold text-[#FF168B] leading-tight block mt-0.5">
+                            {nextDate}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex items-start gap-3.5">
+                        <Heart size={22} className="text-[#8B5CF6] shrink-0 mt-0.5" />
+                        <div>
+                          <span className="text-xs font-bold text-slate-800 block">Manfaat</span>
+                          <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
+                            Melindungi anak dari penyakit menular berbahaya dan komplikasi serius melalui imunisasi lengkap.
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* Tips Setelah Imunisasi */}
                 <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs space-y-4">
@@ -1663,7 +2034,13 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700">
-                      {displayRiwayatImunisasi.map((row, idx) => (
+                      {displayRiwayatImunisasi.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="py-8 text-center text-slate-400">
+                            Belum ada riwayat imunisasi yang tercatat untuk anak ini.
+                          </td>
+                        </tr>
+                      ) : displayRiwayatImunisasi.map((row, idx) => (
                         <tr key={idx} className="hover:bg-pink-50/20 transition-colors">
                           <td className="py-3.5 px-4 text-center font-medium text-slate-700">{row.no || idx + 1}</td>
                           <td className="py-3.5 px-4 font-semibold text-slate-900">{row.tanggal}</td>
@@ -1751,6 +2128,160 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
                 type="button"
                 onClick={() => setSelectedStimulasi(null)}
                 className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    
+      {/* Modal Checklist Lengkap Pencapaian Perkembangan KPSP Buku KIA */}
+      {showAllPencapaian && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-4 border-b border-slate-100 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                  <ClipboardCheck size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                    Pencapaian Perkembangan ({activeAnak?.nama || 'Farhan'})
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Checklist Lengkap Kuesioner Pra Skrining Perkembangan (KPSP) Buku KIA Kemenkes RI
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowAllPencapaian(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer shrink-0"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Child Info Badge & Filter Tabs */}
+            <div className="space-y-3 shrink-0">
+              <div className="p-3 bg-pink-50/50 rounded-2xl border border-pink-100/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-4">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Nama Anak:</span>
+                    <span className="font-bold text-slate-800">{activeAnak?.nama || 'Farhan'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Usia Saat Ini:</span>
+                    <span className="font-bold text-[#E11D48]">{activeAnak?.usia || '1 Tahun 2 bulan'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Tahap Perkembangan:</span>
+                    <span className="font-medium text-slate-700">12 - 18 Bulan</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-pink-100 shadow-2xs">
+                  <CheckCircle2 size={14} className="text-emerald-600" />
+                  <span className="text-[11px] font-bold text-emerald-700">
+                    {getChecklistKpspLengkap().filter(m => m.status === 'Tercapai').length} dari {getChecklistKpspLengkap().length} Indikator Tercapai
+                  </span>
+                </div>
+              </div>
+
+              {/* Kategori Filter Tabs */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {['Semua', 'Motorik Kasar', 'Motorik Halus', 'Bicara & Bahasa', 'Sosialisasi & Kemandirian'].map((kat) => (
+                  <button
+                    key={kat}
+                    type="button"
+                    onClick={() => setFilterKpspKategori(kat)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      filterKpspKategori === kat
+                        ? 'bg-[#E11D48] text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {kat === 'Semua' 
+                      ? `Semua (${getChecklistKpspLengkap().length})`
+                      : `${kat} (${getChecklistKpspLengkap().filter(m => m.kategori === kat).length})`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* List KPSP Milestones */}
+            <div className="space-y-3 overflow-y-auto pr-1 flex-1">
+              {getChecklistKpspLengkap()
+                .filter(m => filterKpspKategori === 'Semua' || m.kategori === filterKpspKategori)
+                .map((milestone) => (
+                  <div 
+                    key={milestone.id}
+                    className="p-4 rounded-2xl border border-slate-100 bg-white hover:border-pink-200 transition-all shadow-2xs space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                          milestone.status === 'Tercapai' 
+                            ? 'bg-emerald-50 text-emerald-600' 
+                            : 'bg-amber-50 text-amber-600'
+                        }`}>
+                          {milestone.status === 'Tercapai' ? <CheckCircle2 size={18} /> : <Clock size={18} />}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-sm font-bold text-slate-900">{milestone.title}</h4>
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-pink-50 text-[#E11D48] border border-pink-100">
+                              {milestone.kategori}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                            {milestone.deskripsi}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 whitespace-nowrap ${
+                        milestone.status === 'Tercapai' 
+                          ? 'bg-[#DCFCE7] text-[#15803D]' 
+                          : 'bg-amber-50 text-amber-700 border border-amber-200'
+                      }`}>
+                        {milestone.status}
+                      </span>
+                    </div>
+
+                    {/* Metadata Detail */}
+                    <div className="p-2.5 bg-slate-50/70 rounded-xl flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-400">Rekomendasi Usia:</span>
+                        <span className="font-bold text-slate-800">{milestone.usia}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-400">Pencapaian:</span>
+                        <span className="font-semibold text-slate-800">{milestone.tanggal}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
+              <a
+                href="https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-[#E11D48] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <BookOpen size={14} />
+                <span>Panduan KPSP Buku KIA 2024</span>
+                <ExternalLink size={12} />
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowAllPencapaian(false)}
+                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold cursor-pointer active:scale-95 transition-transform"
               >
                 Tutup
               </button>

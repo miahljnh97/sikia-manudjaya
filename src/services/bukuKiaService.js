@@ -155,7 +155,7 @@ export const bukuKiaService = {
           .eq('peserta_id', pesertaId)
           .maybeSingle();
 
-        if (data && (data.status_kehamilan === 'Aktif' || data.usia_kehamilan_minggu)) {
+        if (data && data.status_kehamilan === 'Aktif' && data.usia_kehamilan_minggu) {
           return data;
         }
       } catch (e) {
@@ -405,13 +405,8 @@ export const bukuKiaService = {
 
         if (pesertaId) {
           const { data, error } = await query.eq('peserta_id', pesertaId);
-          if (!error && data && data.length > 0) return data;
-          // Jika untuk peserta ini belum ada jadwal spesifik, ambil jadwal Posyandu umum
-          const { data: allData, error: allErr } = await supabase
-            .from('jadwal_peserta')
-            .select('*')
-            .order('tanggal', { ascending: true });
-          if (!allErr && allData) return allData;
+          if (!error && data) return data;
+          return [];
         } else {
           const { data, error } = await query;
           if (!error && data) return data;

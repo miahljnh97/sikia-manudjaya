@@ -210,11 +210,11 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
                       ? "/images/ibu-balita-avatar.png"
                       : (userEmail.includes('hamil') && !userEmail.includes('anak'))
                       ? "/images/najwa-avatar.png"
-                      : "/images/siti-aminah-avatar.png"
+                      : "/images/profil-ibu.png"
                   }
                   alt={displayName} 
                   className="w-full h-full object-cover" 
-                  onError={(e) => { e.target.src = '/images/siti-aminah-avatar.png'; }}
+                  onError={(e) => { e.target.src = '/images/profil-ibu.png'; }}
                 />
               ) : (
                 <User size={18} />
