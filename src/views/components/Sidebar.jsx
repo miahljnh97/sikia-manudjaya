@@ -189,18 +189,20 @@ export default function Sidebar({
               <span>Riwayat Kunjungan</span>
             </button>
 
-            {/* 5. Laporan */}
-            <button
-              onClick={() => handleSelect('Laporan')}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
-                activeMenu === 'Laporan'
-                  ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <TrendingUp size={18} className={activeMenu === 'Laporan' ? 'text-[#2563EB]' : 'text-slate-400'} />
-              <span>Laporan</span>
-            </button>
+            {/* 5. Laporan (Hanya untuk Super Admin, Bidan, Kader) */}
+            {isStaff && (
+              <button
+                onClick={() => handleSelect('Laporan')}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                  activeMenu === 'Laporan'
+                    ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <TrendingUp size={18} className={activeMenu === 'Laporan' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                <span>Laporan</span>
+              </button>
+            )}
 
             {/* 6. Accordion: Kesehatan Ibu */}
             <div className="pt-1">

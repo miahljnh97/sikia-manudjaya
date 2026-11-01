@@ -9,6 +9,7 @@ import RegistrasiPage from '../../features/pbi-03-registrasi/RegistrasiPage';
 import DataPesertaPage from '../../features/data-peserta/DataPesertaPage';
 import RiwayatKunjunganPage from '../../features/riwayat-kunjungan/RiwayatKunjunganPage';
 import KelolaKaderPage from '../../features/super-admin/KelolaKaderPage';
+import LaporanPage from '../../features/laporan/LaporanPage';
 import UnderDevelopmentPage from '../../shared/components/UnderDevelopmentPage';
 import IbuDashboardView from '../../features/dashboard/components/IbuDashboardView';
 import KehamilanView from '../../features/buku-kia/KehamilanView';
@@ -226,6 +227,29 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
               currentUser={currentUser}
               onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
             />
+          ) : activeMenu === 'Laporan' ? (
+            !isStaff ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-3xl p-8 text-center text-amber-800 shadow-xs max-w-xl mx-auto my-12">
+                <h3 className="font-bold text-lg mb-2 text-amber-900">Akses Terbatas</h3>
+                <p className="text-xs text-amber-700 mb-6 leading-relaxed">
+                  Fitur Laporan hanya dapat diakses oleh Bidan Desa, Kader Posyandu, atau Super Admin.
+                </p>
+                <button 
+                  type="button" 
+                  onClick={() => handleMenuChange('Dashboard')}
+                  className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+                >
+                  Kembali ke Dashboard
+                </button>
+              </div>
+            ) : (
+              <LaporanPage
+                currentUser={currentUser}
+                currentPath={currentPath}
+                onNavigate={onNavigate}
+                onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })}
+              />
+            )
           ) : activeMenu === 'Registrasi Kunjungan' ? (
             <RegistrasiPage 
               currentUser={currentUser} 
