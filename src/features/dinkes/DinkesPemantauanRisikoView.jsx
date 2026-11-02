@@ -36,8 +36,22 @@ export default function DinkesPemantauanRisikoView() {
   const [selectedBalitaDetail, setSelectedBalitaDetail] = useState(null);
 
   useEffect(() => {
-    setIbuList(dinkesService.getIbuHamilRisiko());
-    setBalitaList(dinkesService.getBalitaStunting());
+    let isMounted = true;
+    const loadRisiko = async () => {
+      try {
+        const [ibuData, balitaData] = await Promise.all([
+          dinkesService.getIbuHamilRisiko(),
+          dinkesService.getBalitaStunting()
+        ]);
+        if (!isMounted) return;
+        if (ibuData) setIbuList(ibuData);
+        if (balitaData) setBalitaList(balitaData);
+      } catch (err) {
+        console.warn('Gagal memuat data pemantauan risiko:', err);
+      }
+    };
+    loadRisiko();
+    return () => { isMounted = false; };
   }, [filters]);
 
   const handleFilterChange = (key, value) => {

@@ -33,8 +33,22 @@ export default function DinkesPersebaranWilayahView() {
   const [desaData, setDesaData] = useState([]);
 
   useEffect(() => {
-    setPosyanduData(dinkesService.getRekapitulasiByPosyandu());
-    setDesaData(dinkesService.getRekapitulasiByDesa());
+    let isMounted = true;
+    const loadData = async () => {
+      try {
+        const [posData, desData] = await Promise.all([
+          dinkesService.getRekapitulasiByPosyandu(),
+          dinkesService.getRekapitulasiByDesa()
+        ]);
+        if (!isMounted) return;
+        if (posData) setPosyanduData(posData);
+        if (desData) setDesaData(desData);
+      } catch (err) {
+        console.warn('Gagal memuat data persebaran wilayah:', err);
+      }
+    };
+    loadData();
+    return () => { isMounted = false; };
   }, [filters]);
 
   const handleFilterChange = (key, value) => {

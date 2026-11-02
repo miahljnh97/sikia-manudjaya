@@ -51,15 +51,26 @@ export default function DinkesDashboardView({ onNavigate }) {
 
   useEffect(() => {
     let isMounted = true;
-    dinkesService.getDashboardStats().then((res) => {
-      if (isMounted && res) setStats(res);
-    });
-
-    setTopPosyanduList(dinkesService.getTopPosyandu());
-    setIbuRisikoList(dinkesService.getIbuHamilRisiko().slice(0, 5));
-    setBalitaStuntingList(dinkesService.getBalitaStunting().slice(0, 5));
-    setTrenData(dinkesService.getTrenKunjungan());
-
+    const loadAll = async () => {
+      try {
+        const [statsRes, topRes, ibuRes, balitaRes, trenRes] = await Promise.all([
+          dinkesService.getDashboardStats(),
+          dinkesService.getTopPosyandu(),
+          dinkesService.getIbuHamilRisiko(),
+          dinkesService.getBalitaStunting(),
+          dinkesService.getTrenKunjungan()
+        ]);
+        if (!isMounted) return;
+        if (statsRes) setStats(statsRes);
+        if (topRes) setTopPosyanduList(topRes);
+        if (ibuRes) setIbuRisikoList(ibuRes.slice(0, 5));
+        if (balitaRes) setBalitaStuntingList(balitaRes.slice(0, 5));
+        if (trenRes) setTrenData(trenRes);
+      } catch (err) {
+        console.warn('Gagal memuat data dashboard dinkes:', err);
+      }
+    };
+    loadAll();
     return () => { isMounted = false; };
   }, [filters]);
 
