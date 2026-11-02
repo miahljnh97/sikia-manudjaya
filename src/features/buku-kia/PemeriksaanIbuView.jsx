@@ -59,106 +59,6 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
     return isIbuRole ? (getPesertaIdFromUser(user) || null) : null;
   };
 
-  const defaultAncList = [
-    {
-      no: 1,
-      id: 'anc-1',
-      tanggal: '15 Jan 2026',
-      usiaKehamilan: '8 Minggu',
-      jenis: 'ANC 1',
-      hasil: 'Normal',
-      catatan: 'Keluhan mual, diberikan edukasi gizi',
-      tekananDarah: '110/70 mmHg',
-      beratBadan: '58 kg',
-      tinggiFundus: '12 cm',
-      djj: '140 x/menit',
-      petugas: 'Bidan Siti Nurhayati'
-    },
-    {
-      no: 2,
-      id: 'anc-2',
-      tanggal: '12 Feb 2026',
-      usiaKehamilan: '12 Minggu',
-      jenis: 'ANC 2',
-      hasil: 'Normal',
-      catatan: 'Tidak ada keluhan khusus',
-      tekananDarah: '110/75 mmHg',
-      beratBadan: '59.5 kg',
-      tinggiFundus: '16 cm',
-      djj: '144 x/menit',
-      petugas: 'Bidan Siti Nurhayati'
-    },
-    {
-      no: 3,
-      id: 'anc-3',
-      tanggal: '14 Apr 2026',
-      usiaKehamilan: '20 Minggu',
-      jenis: 'ANC 3',
-      hasil: 'Normal',
-      catatan: 'Janin aktif bergerak',
-      tekananDarah: '115/75 mmHg',
-      beratBadan: '61 kg',
-      tinggiFundus: '20 cm',
-      djj: '142 x/menit',
-      petugas: 'Bidan Siti Nurhayati'
-    },
-    {
-      no: 4,
-      id: 'anc-4',
-      tanggal: '10 Jul 2026',
-      usiaKehamilan: '24 Minggu',
-      jenis: 'ANC 4',
-      hasil: 'Normal',
-      catatan: 'TD Sedikit tinggi, observasi',
-      tekananDarah: '125/80 mmHg',
-      beratBadan: '63 kg',
-      tinggiFundus: '24 cm',
-      djj: '140 x/menit',
-      petugas: 'Bidan Siti Nurhayati'
-    },
-    {
-      no: 5,
-      id: 'anc-5',
-      tanggal: '12 Sep 2026',
-      usiaKehamilan: '28 Minggu',
-      jenis: 'ANC 5',
-      hasil: 'Normal',
-      catatan: 'Pertumbuhan janin baik',
-      tekananDarah: '115/75 mmHg',
-      beratBadan: '64.5 kg',
-      tinggiFundus: '28 cm',
-      djj: '142 x/menit',
-      petugas: 'Bidan Siti Nurhayati'
-    }
-  ];
-
-  const defaultDokumenList = [
-    {
-      id: 'doc-1',
-      name: 'USH_12Sep2026.pdf',
-      type: 'Ultrasonografi (USG)',
-      tanggal: '12 Sep 2026',
-      size: '2.4 MB',
-      keterangan: 'Hasil USG Trimester 3: Janin tunggal hidup intrauterin, presentasi kepala, DJJ 142 bpm reguler, taksiran berat janin (TBJ) 2.100 gram, cairan ketuban cukup dan jernih.'
-    },
-    {
-      id: 'doc-2',
-      name: 'Hasil laboratorium.pdf',
-      type: 'Laboratorium Terpadu',
-      tanggal: '12 Sep 2026',
-      size: '1.8 MB',
-      keterangan: 'Pemeriksaan Darah Lengkap & Skrining: Hemoglobin (Hb) 12.0 g/dL, Golongan Darah O Rhesus (+), Glukosa Darah Puasa 88 mg/dL, Protein Urin Negatif, Skrining Triple Eliminasi (HIV, Sifilis, HBsAg) Non-Reaktif.'
-    },
-    {
-      id: 'doc-3',
-      name: 'USH_10Jul2026.pdf',
-      type: 'Ultrasonografi (USG)',
-      tanggal: '10 Jul 2026',
-      size: '2.1 MB',
-      keterangan: 'Hasil USG Trimester 2: Janin berkembang sesuai usia gestasi 24 minggu, anatomi janin dasar dalam batas normal, plasenta di korpus posterior jauh dari OUI.'
-    }
-  ];
-
   const catatanTindakLanjutList = [
     'Lanjutkan konsumsi tablet Fe dan asam folat',
     'Jaga pola makan bergizi dan istirahat cukup',
@@ -171,7 +71,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
   const [peserta, setPeserta] = useState(null);
   const [kehamilan, setKehamilan] = useState(null);
   const [riwayatList, setRiwayatList] = useState([]);
-  const [dokumenList, setDokumenList] = useState(defaultDokumenList);
+  const [dokumenList, setDokumenList] = useState([]);
   const [selectedDokumen, setSelectedDokumen] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
