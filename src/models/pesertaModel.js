@@ -56,6 +56,12 @@ export const DUMMY_ACCOUNTS = {
     email: 'admin.desa@manudjaya.id',
     role: 'Super Admin',
     nama: 'Bambang Sudarmono, S.STP',
+  },
+  dinkes: {
+    email: 'dinkes.kabupaten@manudjaya.id',
+    role: 'Dinas Kesehatan',
+    nama: 'Dinas Kesehatan',
+    instansi: 'Kabupaten Administrasi',
   }
 };
 

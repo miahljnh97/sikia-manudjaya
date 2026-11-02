@@ -19,6 +19,9 @@ import PersalinanView from '../../features/buku-kia/PersalinanView';
 import NifasMenyusuiView from '../../features/buku-kia/NifasMenyusuiView';
 import KesehatanAnakView from '../../features/buku-kia/KesehatanAnakView';
 import PengaturanView from '../../features/buku-kia/PengaturanView';
+import DinkesDashboardView from '../../features/dinkes/DinkesDashboardView';
+import DinkesPersebaranWilayahView from '../../features/dinkes/DinkesPersebaranWilayahView';
+import DinkesPemantauanRisikoView from '../../features/dinkes/DinkesPemantauanRisikoView';
 import Toast from '../../shared/components/Toast';
 import { useDashboardController } from '../../controllers/useDashboardController';
 
@@ -28,7 +31,8 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
   const isSuperAdmin = roleNormalized.includes('admin') || roleNormalized === 'superadmin' || roleNormalized === 'super admin' || emailNormalized.includes('admin');
   const isBidan = (roleNormalized.includes('bidan') || emailNormalized.includes('bidan')) && !roleNormalized.includes('ibu') && !emailNormalized.includes('ibu');
   const isKader = (roleNormalized.includes('kader') || emailNormalized.includes('kader')) && !roleNormalized.includes('ibu') && !emailNormalized.includes('ibu');
-  const isStaff = isSuperAdmin || isBidan || isKader;
+  const isDinkes = roleNormalized.includes('dinkes') || roleNormalized.includes('dinas') || emailNormalized.includes('dinkes');
+  const isStaff = isSuperAdmin || isBidan || isKader || isDinkes;
   const isIbuRole = !isStaff;
   const getMenuFromPath = (path) => {
     if (!path) return 'Dashboard';
@@ -37,6 +41,8 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
     if (path.startsWith('/pemeriksaan')) return 'Pemeriksaan';
     if (path.startsWith('/riwayat-kunjungan')) return 'Riwayat Kunjungan';
     if (path.startsWith('/kelola-kader')) return 'Kelola Kader';
+    if (path.startsWith('/pemantauan-risiko')) return 'Pemantauan Risiko';
+    if (path.startsWith('/persebaran-wilayah')) return 'Persebaran Wilayah';
     if (path.startsWith('/laporan')) return 'Laporan';
     // Buku KIA - Kesehatan Ibu
     if (path.startsWith('/kesehatan-ibu/kehamilan')) return 'Kehamilan';
@@ -63,6 +69,8 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
     'Pemeriksaan': '/pemeriksaan',
     'Riwayat Kunjungan': '/riwayat-kunjungan',
     'Kelola Kader': '/kelola-kader',
+    'Pemantauan Risiko': '/pemantauan-risiko',
+    'Persebaran Wilayah': '/persebaran-wilayah',
     'Laporan': '/laporan',
     'Kehamilan': '/kesehatan-ibu/kehamilan',
     'Pemeriksaan Ibu': '/kesehatan-ibu/pemeriksaan',
@@ -192,7 +200,21 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
         />
 
         <main className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
-          {activeMenu === 'Data Peserta' || activeMenu === 'Data Pasien' ? (
+          {isDinkes ? (
+            activeMenu === 'Pemantauan Risiko' ? (
+              <DinkesPemantauanRisikoView />
+            ) : activeMenu === 'Persebaran Wilayah' ? (
+              <DinkesPersebaranWilayahView />
+            ) : activeMenu === 'Pengaturan' ? (
+              <PengaturanView 
+                user={currentUser} 
+                onNavigate={handleMenuChangeByPath} 
+                onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} 
+              />
+            ) : (
+              <DinkesDashboardView onNavigate={handleMenuChangeByPath} />
+            )
+          ) : activeMenu === 'Data Peserta' || activeMenu === 'Data Pasien' ? (
             !isStaff ? (
               <div className="bg-amber-50 border border-amber-200 rounded-3xl p-8 text-center text-amber-800 shadow-xs max-w-xl mx-auto my-12">
                 <h3 className="font-bold text-lg mb-2 text-amber-900">Akses Terbatas</h3>

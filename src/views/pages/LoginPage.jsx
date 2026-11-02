@@ -29,6 +29,9 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
     } else if (type === "admin") {
       setEmail(DUMMY_ACCOUNTS.admin.email);
       setPassword("Admin123!");
+    } else if (type === "dinkes") {
+      setEmail(DUMMY_ACCOUNTS.dinkes?.email || "dinkes.kabupaten@manudjaya.id");
+      setPassword("Dinkes123!");
     }
   };
 
@@ -207,13 +210,23 @@ export default function LoginPage({ onLoginSuccess, onGoToLupaPassword }) {
                 </button>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleQuickFill("admin")}
-                className="w-full py-1 px-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded text-[11px] font-bold text-left truncate"
-              >
-                Super Admin
-              </button>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill("admin")}
+                  className="py-1 px-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded text-[11px] font-bold text-center truncate"
+                >
+                  Super Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill("dinkes")}
+                  className="py-1 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded text-[11px] font-bold text-center truncate border border-emerald-200"
+                  title="Akun Dinas Kesehatan Kabupaten Administrasi"
+                >
+                  Dinas Kesehatan
+                </button>
+              </div>
             </div>
           </div>
         )}
