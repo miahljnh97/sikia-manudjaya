@@ -37,31 +37,31 @@ export default function ParticipantTable({
     switch (jenis) {
       case 'Ibu Hamil':
         return (
-          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#FEE2E2] text-[#991B1B] border border-[#FECDD3]">
+          <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-1 rounded-md text-xs font-semibold bg-[#FEE2E2] text-[#991B1B] border border-[#FECDD3]">
             Ibu Hamil
           </span>
         );
       case 'Balita':
         return (
-          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]">
+          <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-1 rounded-md text-xs font-semibold bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]">
             Balita
           </span>
         );
       case 'Bayi':
         return (
-          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#DBEAFE] text-[#1D4ED8] border border-[#BFDBFE]">
+          <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-1 rounded-md text-xs font-semibold bg-[#DBEAFE] text-[#1D4ED8] border border-[#BFDBFE]">
             Bayi
           </span>
         );
       case 'Lansia':
         return (
-          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+          <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-1 rounded-md text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
             Lansia
           </span>
         );
       default:
         return (
-          <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600">
+          <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600">
             {jenis}
           </span>
         );

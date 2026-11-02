@@ -9,6 +9,7 @@ import { resolveDusunId, resolveTipeId } from '../../utils/pesertaAdapter';
 import { toISODateString } from '../../utils/dateUtils';
 import Toast from '../../shared/components/Toast';
 import ConfirmModal from '../../views/components/ConfirmModal';
+import CatatPemeriksaanBidanModal from '../buku-kia/CatatPemeriksaanBidanModal';
 import { INITIAL_DUMMY_PESERTA, getPesertaIdFromUser } from '../../models/pesertaModel';
 
 // Master data peserta resmi Posyandu Desa Manud Jaya
@@ -33,12 +34,15 @@ export default function DataPesertaPage({
                     emailStr.includes('bidan') || 
                     emailStr.includes('admin');
 
+  const isBidan = (roleStr.includes('bidan') || emailStr.includes('bidan')) && !roleStr.includes('ibu') && !emailStr.includes('ibu');
   const isIbuRole = !isPetugas;
 
   const [loading, setLoading] = useState(false);
   const [listPeserta, setListPeserta] = useState(() => dataStoreService.getPesertaList());
   const [dusunList, setDusunList] = useState([]);
   const [pesertaToDelete, setPesertaToDelete] = useState(null);
+  const [modalBidanOpen, setModalBidanOpen] = useState(false);
+  const [selectedPasienForBidan, setSelectedPasienForBidan] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const notify = (message, type = 'success') => {
@@ -248,19 +252,23 @@ export default function DataPesertaPage({
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Data Peserta</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            {isBidan ? 'Data Pasien' : 'Data Peserta'}
+          </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Cari peserta yang akan melakukan kunjungan Posyandu.
+            {isBidan ? 'Cari pasien yang akan melakukan kunjungan Posyandu.' : 'Cari peserta yang akan melakukan kunjungan Posyandu.'}
           </p>
         </div>
 
-        <button
-          onClick={onTambahPesertaBaru}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98] cursor-pointer"
-        >
-          <Plus size={16} />
-          <span>Tambah Peserta Baru</span>
-        </button>
+        {!isBidan && (
+          <button
+            onClick={onTambahPesertaBaru}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <Plus size={16} />
+            <span>Tambah Peserta Baru</span>
+          </button>
+        )}
       </div>
 
       {/* Filter Card */}
@@ -380,22 +388,22 @@ export default function DataPesertaPage({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50/60 text-[#4B5563] text-xs font-bold border-b border-slate-100">
+              <tr className="bg-slate-50/60 text-[#4B5563] text-xs font-bold border-b border-slate-100 whitespace-nowrap">
                 <th className="py-3.5 px-5">No</th>
-                <th className="py-3.5 px-5">Nama Peserta</th>
+                <th className="py-3.5 px-5">{isBidan ? 'Nama Pasien' : 'Nama Peserta'}</th>
                 <th className="py-3.5 px-5">NIK</th>
-                <th className="py-3.5 px-5">Jenis Peserta</th>
+                <th className="py-3.5 px-5">{isBidan ? 'Jenis Pasien' : 'Jenis Peserta'}</th>
                 <th className="py-3.5 px-5">Tanggal Lahir</th>
                 <th className="py-3.5 px-5">Usia</th>
                 <th className="py-3.5 px-5">Alamat</th>
-                <th className="py-3.5 px-5">Status Peserta</th>
+                {!isBidan && <th className="py-3.5 px-5">Status Peserta</th>}
                 <th className="py-3.5 px-5 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {loading && listPeserta.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                  <td colSpan={isBidan ? 8 : 9} className="py-12 text-center text-slate-400">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                       <span className="text-xs text-slate-500 font-medium">Memuat data peserta...</span>
@@ -404,7 +412,7 @@ export default function DataPesertaPage({
                 </tr>
               ) : paginatedList.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                  <td colSpan={isBidan ? 8 : 9} className="py-12 text-center text-slate-400">
                     Tidak ada data peserta ditemukan.
                   </td>
                 </tr>
@@ -439,43 +447,62 @@ export default function DataPesertaPage({
                       {maskNik(item.nik)}
                     </td>
                     <td className="py-3.5 px-5">
-                      <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border ${badgeClass}`}>
+                      <span className={`inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-md text-[11px] font-semibold border shrink-0 ${badgeClass}`}>
                         {item.jenis_peserta}
                       </span>
                     </td>
-                    <td className="py-3.5 px-5 text-slate-500">{item.tanggal_lahir}</td>
+                    <td className="py-3.5 px-5 text-slate-500 whitespace-nowrap">{item.tanggal_lahir}</td>
                     <td className="py-3.5 px-5 text-slate-600">{item.usia}</td>
                     <td className="py-3.5 px-5 text-slate-600">{item.alamat}</td>
-                    <td className="py-3.5 px-5">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
-                        (item.status || 'Aktif') === 'Tidak Aktif'
-                          ? 'bg-rose-50 text-rose-700 border-rose-200'
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${
-                          (item.status || 'Aktif') === 'Tidak Aktif' ? 'bg-rose-500' : 'bg-emerald-500'
-                        }`} />
-                        {item.status || 'Aktif'}
-                      </span>
-                    </td>
+                    {!isBidan && (
+                      <td className="py-3.5 px-5">
+                        <span className={`inline-flex items-center whitespace-nowrap shrink-0 gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
+                          (item.status || 'Aktif') === 'Tidak Aktif'
+                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            (item.status || 'Aktif') === 'Tidak Aktif' ? 'bg-rose-500' : 'bg-emerald-500'
+                          }`} />
+                          {item.status || 'Aktif'}
+                        </span>
+                      </td>
+                    )}
                     <td className="py-3.5 px-5 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => handleOpenDetail(item)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 shadow-xs transition-colors cursor-pointer"
-                          title="Detail & Edit Peserta"
-                        >
-                          <FileText size={13} className="text-slate-400" />
-                          <span>Detail</span>
-                        </button>
-                        <button
-                          onClick={() => handleDeletePeserta(item)}
-                          className="inline-flex items-center justify-center p-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded-lg text-xs transition-colors cursor-pointer shadow-xs"
-                          title="Hapus Peserta"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
+                      {isBidan ? (
+                        <div className="flex items-center justify-end">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedPasienForBidan(item);
+                              setModalBidanOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 active:bg-slate-100 rounded-lg text-xs font-semibold text-slate-700 shadow-xs transition-colors cursor-pointer"
+                            title="Detail Catat Pemeriksaan"
+                          >
+                            <FileText size={13} className="text-slate-500" />
+                            <span>Detail</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleOpenDetail(item)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 shadow-xs transition-colors cursor-pointer"
+                            title="Detail & Edit Peserta"
+                          >
+                            <FileText size={13} className="text-slate-400" />
+                            <span>Detail</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeletePeserta(item)}
+                            className="inline-flex items-center justify-center p-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded-lg text-xs transition-colors cursor-pointer shadow-xs"
+                            title="Hapus Peserta"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -531,6 +558,21 @@ export default function DataPesertaPage({
           onClose={() => setToast((prev) => ({ ...prev, show: false }))}
         />
       )}
+
+      {/* Modal Catat Pemeriksaan Bidan */}
+      <CatatPemeriksaanBidanModal
+        isOpen={modalBidanOpen}
+        onClose={() => {
+          setModalBidanOpen(false);
+          setSelectedPasienForBidan(null);
+        }}
+        pasien={selectedPasienForBidan}
+        currentUser={currentUser}
+        onSuccess={() => {
+          notify('Pemeriksaan berhasil dicatat!', 'success');
+        }}
+        onShowToast={notify}
+      />
 
       {/* Modal Konfirmasi Hapus Peserta */}
       <ConfirmModal

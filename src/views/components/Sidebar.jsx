@@ -118,182 +118,215 @@ export default function Sidebar({
               <span>Dashboard</span>
             </button>
 
-            {/* Menu Khusus Super Admin */}
-            {isSuperAdmin && (
-              <button
-                onClick={() => handleSelect('Kelola Kader')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
-                  activeMenu === 'Kelola Kader'
-                    ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <UserCheck size={18} className={activeMenu === 'Kelola Kader' ? 'text-[#2563EB]' : 'text-slate-400'} />
-                <span>Kelola Kader</span>
-              </button>
-            )}
+            {/* Khusus Role Bidan: Tampilan Menu Ringkas Sesuai Figma (Dashboard, Data Pasien, Pemeriksaan, Pengaturan) */}
+            {isBidan ? (
+              <>
+                {/* 2. Data Pasien */}
+                <button
+                  onClick={() => handleSelect('Data Pasien')}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                    activeMenu === 'Data Pasien' || activeMenu === 'Data Peserta'
+                      ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <Users size={18} className={activeMenu === 'Data Pasien' || activeMenu === 'Data Peserta' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                  <span>Data Pasien</span>
+                </button>
 
-            {/* 2. Registrasi Kunjungan */}
-            <button
-              onClick={() => handleSelect('Registrasi Kunjungan')}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
-                activeMenu === 'Registrasi Kunjungan'
-                  ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <PlusCircle size={18} className={activeMenu === 'Registrasi Kunjungan' ? 'text-[#2563EB]' : 'text-slate-400'} />
-              <span>Registrasi Kunjungan</span>
-            </button>
-
-            {/* 3. Data Peserta (Hanya untuk Super Admin, Bidan, Kader) */}
-            {isStaff && (
-              <button
-                onClick={() => handleSelect('Data Peserta')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
-                  activeMenu === 'Data Peserta'
-                    ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <Users size={18} className={activeMenu === 'Data Peserta' ? 'text-[#2563EB]' : 'text-slate-400'} />
-                <span>Data Peserta</span>
-              </button>
-            )}
-
-            {/* Menu Pemeriksaan untuk Bidan / Kader (PBI 02C & Figma Bidan View) */}
-            {(isBidan || isKader) && (
-              <button
-                onClick={() => handleSelect('Pemeriksaan')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
-                  activeMenu === 'Pemeriksaan' || activeMenu === 'Pemeriksaan Ibu'
-                    ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <Stethoscope size={18} className={activeMenu === 'Pemeriksaan' || activeMenu === 'Pemeriksaan Ibu' ? 'text-[#2563EB]' : 'text-slate-400'} />
-                <span>Pemeriksaan</span>
-              </button>
-            )}
-
-            {/* 4. Riwayat Kunjungan */}
-            <button
-              onClick={() => handleSelect('Riwayat Kunjungan')}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
-                activeMenu === 'Riwayat Kunjungan'
-                  ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <ClipboardList size={18} className={activeMenu === 'Riwayat Kunjungan' ? 'text-[#2563EB]' : 'text-slate-400'} />
-              <span>Riwayat Kunjungan</span>
-            </button>
-
-            {/* 5. Laporan */}
-            <button
-              onClick={() => handleSelect('Laporan')}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
-                activeMenu === 'Laporan'
-                  ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <TrendingUp size={18} className={activeMenu === 'Laporan' ? 'text-[#2563EB]' : 'text-slate-400'} />
-              <span>Laporan</span>
-            </button>
-
-            {/* 6. Accordion: Kesehatan Ibu */}
-            <div className="pt-1">
-              <button
-                type="button"
-                onClick={() => setIsIbuExpanded(!isIbuExpanded)}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <Heart size={18} className="text-slate-400" />
-                  <span>Kesehatan Ibu</span>
-                </div>
-                {isIbuExpanded ? (
-                  <ChevronUp size={16} className="text-slate-400" />
-                ) : (
-                  <ChevronDown size={16} className="text-slate-400" />
+                {/* 3. Pemeriksaan */}
+                <button
+                  onClick={() => handleSelect('Pemeriksaan')}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                    activeMenu === 'Pemeriksaan' || activeMenu === 'Pemeriksaan Ibu'
+                      ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <Stethoscope size={18} className={activeMenu === 'Pemeriksaan' || activeMenu === 'Pemeriksaan Ibu' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                  <span>Pemeriksaan</span>
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Menu Khusus Super Admin */}
+                {isSuperAdmin && (
+                  <button
+                    onClick={() => handleSelect('Kelola Kader')}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                      activeMenu === 'Kelola Kader'
+                        ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <UserCheck size={18} className={activeMenu === 'Kelola Kader' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                    <span>Kelola Kader</span>
+                  </button>
                 )}
-              </button>
 
-              {isIbuExpanded && (
-                <div className="pl-9 pr-1 py-1 space-y-1">
-                  {subKesehatanIbu.map((sub) => {
-                    const isSubActive = activeMenu === sub.id;
-                    return (
-                      <button
-                        key={sub.id}
-                        onClick={() => handleSelect(sub.id)}
-                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                          isSubActive
-                            ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
-                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                        }`}
-                      >
-                        {sub.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                {/* 2. Registrasi Kunjungan */}
+                <button
+                  onClick={() => handleSelect('Registrasi Kunjungan')}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                    activeMenu === 'Registrasi Kunjungan'
+                      ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <PlusCircle size={18} className={activeMenu === 'Registrasi Kunjungan' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                  <span>Registrasi Kunjungan</span>
+                </button>
 
-            {/* 7. Accordion: Kesehatan Anak */}
-            <div className="pt-1">
-              <button
-                type="button"
-                onClick={() => setIsAnakExpanded(!isAnakExpanded)}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <Smile size={18} className="text-slate-400" />
-                  <span>Kesehatan Anak</span>
-                </div>
-                {isAnakExpanded ? (
-                  <ChevronUp size={16} className="text-slate-400" />
-                ) : (
-                  <ChevronDown size={16} className="text-slate-400" />
+                {/* 3. Data Peserta (Hanya untuk Super Admin & Kader) */}
+                {isStaff && (
+                  <button
+                    onClick={() => handleSelect('Data Peserta')}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                      activeMenu === 'Data Peserta'
+                        ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <Users size={18} className={activeMenu === 'Data Peserta' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                    <span>Data Peserta</span>
+                  </button>
                 )}
-              </button>
 
-              {isAnakExpanded && (
-                <div className="pl-9 pr-1 py-1 space-y-1">
-                  {subKesehatanAnak.map((sub) => {
-                    const isSubActive = activeMenu === sub.id;
-                    return (
-                      <button
-                        key={sub.id}
-                        onClick={() => handleSelect(sub.id)}
-                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                          isSubActive
-                            ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
-                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                        }`}
-                      >
-                        {sub.label}
-                      </button>
-                    );
-                  })}
+                {/* Menu Pemeriksaan untuk Kader */}
+                {isKader && (
+                  <button
+                    onClick={() => handleSelect('Pemeriksaan')}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                      activeMenu === 'Pemeriksaan' || activeMenu === 'Pemeriksaan Ibu'
+                        ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <Stethoscope size={18} className={activeMenu === 'Pemeriksaan' || activeMenu === 'Pemeriksaan Ibu' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                    <span>Pemeriksaan</span>
+                  </button>
+                )}
+
+                {/* 4. Riwayat Kunjungan */}
+                <button
+                  onClick={() => handleSelect('Riwayat Kunjungan')}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                    activeMenu === 'Riwayat Kunjungan'
+                      ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <ClipboardList size={18} className={activeMenu === 'Riwayat Kunjungan' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                  <span>Riwayat Kunjungan</span>
+                </button>
+
+                {/* 5. Laporan */}
+                <button
+                  onClick={() => handleSelect('Laporan')}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                    activeMenu === 'Laporan'
+                      ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <TrendingUp size={18} className={activeMenu === 'Laporan' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                  <span>Laporan</span>
+                </button>
+
+                {/* 6. Accordion: Kesehatan Ibu */}
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsIbuExpanded(!isIbuExpanded)}
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Heart size={18} className="text-slate-400" />
+                      <span>Kesehatan Ibu</span>
+                    </div>
+                    {isIbuExpanded ? (
+                      <ChevronUp size={16} className="text-slate-400" />
+                    ) : (
+                      <ChevronDown size={16} className="text-slate-400" />
+                    )}
+                  </button>
+
+                  {isIbuExpanded && (
+                    <div className="pl-9 pr-1 py-1 space-y-1">
+                      {subKesehatanIbu.map((sub) => {
+                        const isSubActive = activeMenu === sub.id;
+                        return (
+                          <button
+                            key={sub.id}
+                            onClick={() => handleSelect(sub.id)}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                              isSubActive
+                                ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                            }`}
+                          >
+                            {sub.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* 8. Jadwal Saya */}
-            <button
-              onClick={() => handleSelect('Jadwal Saya')}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
-                activeMenu === 'Jadwal Saya'
-                  ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <Calendar size={18} className={activeMenu === 'Jadwal Saya' ? 'text-[#2563EB]' : 'text-slate-400'} />
-              <span>Jadwal Saya</span>
-            </button>
+                {/* 7. Accordion: Kesehatan Anak */}
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsAnakExpanded(!isAnakExpanded)}
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Smile size={18} className="text-slate-400" />
+                      <span>Kesehatan Anak</span>
+                    </div>
+                    {isAnakExpanded ? (
+                      <ChevronUp size={16} className="text-slate-400" />
+                    ) : (
+                      <ChevronDown size={16} className="text-slate-400" />
+                    )}
+                  </button>
+
+                  {isAnakExpanded && (
+                    <div className="pl-9 pr-1 py-1 space-y-1">
+                      {subKesehatanAnak.map((sub) => {
+                        const isSubActive = activeMenu === sub.id;
+                        return (
+                          <button
+                            key={sub.id}
+                            onClick={() => handleSelect(sub.id)}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                              isSubActive
+                                ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                            }`}
+                          >
+                            {sub.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* 8. Jadwal Saya */}
+                <button
+                  onClick={() => handleSelect('Jadwal Saya')}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                    activeMenu === 'Jadwal Saya'
+                      ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <Calendar size={18} className={activeMenu === 'Jadwal Saya' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                  <span>Jadwal Saya</span>
+                </button>
+              </>
+            )}
           </nav>
 
           {/* Bottom Settings */}

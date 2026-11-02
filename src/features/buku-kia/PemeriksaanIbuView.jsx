@@ -23,6 +23,7 @@ import {
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
 import { maskNik } from '../../utils/nikUtils';
+import CatatPemeriksaanBidanModal from './CatatPemeriksaanBidanModal';
 import { formatTanggalIndo } from '../../utils/dateUtils';
 
 export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate, onShowToast }) {
@@ -792,8 +793,27 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
         </div>
       )}
 
-      {/* 6. Modal Input Pemeriksaan ANC Baru (Hanya Bidan & Kader) */}
-      {isModalTambahOpen && canInputPemeriksaan && (
+      {/* 6. Modal Input Pemeriksaan ANC Baru (Bidan vs Kader) */}
+      {isModalTambahOpen && canInputPemeriksaan && isBidan && (
+        <CatatPemeriksaanBidanModal
+          isOpen={isModalTambahOpen}
+          onClose={() => setIsModalTambahOpen(false)}
+          pasien={peserta || (activePesertaId ? { id: activePesertaId, nama: namaPasien, jenis_peserta: 'Ibu Hamil' } : null)}
+          currentUser={user}
+          onSuccess={() => {
+            setIsModalTambahOpen(false);
+            if (onShowToast) onShowToast('Catatan pemeriksaan berhasil disimpan!', 'success');
+            if (activePesertaId) {
+              bukuKiaService.getRiwayatPemeriksaanIbu(activePesertaId).then((data) => {
+                if (data && data.length > 0) setRiwayatList(data);
+              });
+            }
+          }}
+          onShowToast={onShowToast}
+        />
+      )}
+
+      {isModalTambahOpen && canInputPemeriksaan && !isBidan && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}

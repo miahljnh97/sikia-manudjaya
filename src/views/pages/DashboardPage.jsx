@@ -22,10 +22,17 @@ import Toast from '../../shared/components/Toast';
 import { useDashboardController } from '../../controllers/useDashboardController';
 
 export default function DashboardPage({ currentUser, onLogout, currentPath = '/dashboard', onNavigate }) {
+  const roleNormalized = (currentUser?.role || '').toLowerCase().trim();
+  const emailNormalized = (currentUser?.user?.email || currentUser?.email || '').toLowerCase().trim();
+  const isSuperAdmin = roleNormalized.includes('admin') || roleNormalized === 'superadmin' || roleNormalized === 'super admin' || emailNormalized.includes('admin');
+  const isBidan = (roleNormalized.includes('bidan') || emailNormalized.includes('bidan')) && !roleNormalized.includes('ibu') && !emailNormalized.includes('ibu');
+  const isKader = (roleNormalized.includes('kader') || emailNormalized.includes('kader')) && !roleNormalized.includes('ibu') && !emailNormalized.includes('ibu');
+  const isStaff = isSuperAdmin || isBidan || isKader;
+  const isIbuRole = !isStaff;
   const getMenuFromPath = (path) => {
     if (!path) return 'Dashboard';
     if (path.startsWith('/registrasi-kunjungan')) return 'Registrasi Kunjungan';
-    if (path.startsWith('/data-peserta')) return 'Data Peserta';
+    if (path.startsWith('/data-peserta') || path.startsWith('/data-pasien')) return isBidan ? 'Data Pasien' : 'Data Peserta';
     if (path.startsWith('/pemeriksaan')) return 'Pemeriksaan';
     if (path.startsWith('/riwayat-kunjungan')) return 'Riwayat Kunjungan';
     if (path.startsWith('/kelola-kader')) return 'Kelola Kader';
@@ -51,6 +58,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
     'Dashboard': '/dashboard',
     'Registrasi Kunjungan': '/registrasi-kunjungan',
     'Data Peserta': '/data-peserta',
+    'Data Pasien': '/data-pasien',
     'Pemeriksaan': '/pemeriksaan',
     'Riwayat Kunjungan': '/riwayat-kunjungan',
     'Kelola Kader': '/kelola-kader',
@@ -101,13 +109,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
 
   const [selectedPesertaIdForDetail, setSelectedPesertaIdForDetail] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-  const roleNormalized = (currentUser?.role || '').toLowerCase().trim();
-  const emailNormalized = (currentUser?.user?.email || currentUser?.email || '').toLowerCase().trim();
-  const isSuperAdmin = roleNormalized.includes('admin') || roleNormalized === 'superadmin' || roleNormalized === 'super admin' || emailNormalized.includes('admin');
-  const isBidan = (roleNormalized.includes('bidan') || emailNormalized.includes('bidan')) && !roleNormalized.includes('ibu') && !emailNormalized.includes('ibu');
-  const isKader = (roleNormalized.includes('kader') || emailNormalized.includes('kader')) && !roleNormalized.includes('ibu') && !emailNormalized.includes('ibu');
-  const isStaff = isSuperAdmin || isBidan || isKader;
-  const isIbuRole = !isStaff;
+// Roles defined at top of component
 
   // Di desktop default terbuka, di HP default tertutup
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
@@ -189,7 +191,7 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
         />
 
         <main className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
-          {activeMenu === 'Data Peserta' ? (
+          {activeMenu === 'Data Peserta' || activeMenu === 'Data Pasien' ? (
             !isStaff ? (
               <div className="bg-amber-50 border border-amber-200 rounded-3xl p-8 text-center text-amber-800 shadow-xs max-w-xl mx-auto my-12">
                 <h3 className="font-bold text-lg mb-2 text-amber-900">Akses Terbatas</h3>

@@ -310,7 +310,7 @@ export default function PencarianPasien({
                       <td className="py-3.5 px-5 text-slate-600">{item.usia || '-'}</td>
                       <td className="py-3.5 px-5 text-slate-600">{item.alamat || '-'}</td>
                       <td className="py-3.5 px-5">
-                        <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border ${item.status === 'Tidak Aktif' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                        <span className={`inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-1 rounded-md text-[11px] font-semibold border ${item.status === 'Tidak Aktif' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
                           {item.status || 'Aktif'}
                         </span>
                       </td>
