@@ -171,7 +171,15 @@ export default function CatatPemeriksaanBidanModal({
       const payload = {
         ...form,
         tindakan_diberikan: tindakanFinal,
-        lampiran_dokumen: uploadedFiles.map((f) => ({ name: f.name, size: f.size })),
+        lampiran_dokumen: uploadedFiles.map((f, i) => ({
+          id: `doc-${Date.now()}-${i}`,
+          name: f.name,
+          size: f.size,
+          type: f.type || 'Dokumen Tambahan',
+          url: f.url || 'https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf',
+          tanggal: formatTanggalIndo(form.tanggal_pemeriksaan),
+          keterangan: form.catatan_tindak_lanjut || form.catatan_nakes || 'Lampiran pemeriksaan bidan'
+        })),
         pemeriksa: currentUser?.nama || 'Bidan Khansa Fatin, S.Tr.Keb'
       };
 
