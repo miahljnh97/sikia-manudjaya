@@ -15,7 +15,7 @@ import DinkesFilterBar from './components/DinkesFilterBar';
 import PetaPersebaranWilayah from './components/PetaPersebaranWilayah';
 import { dinkesService } from '../../services/dinkesService';
 
-export default function DinkesPersebaranWilayahView() {
+export default function DinkesPersebaranWilayahView({ onShowToast }) {
   const [filters, setFilters] = useState({
     periode: 'Oktober 2024',
     kecamatan: 'Semua Kecamatan',
@@ -77,8 +77,47 @@ export default function DinkesPersebaranWilayahView() {
   const paginatedList = currentList.slice(startIndex, startIndex + itemsPerPage);
 
   const handleExport = () => {
-    const filename = `rekapitulasi-kunjungan-${activeTab}-${filters.periode.replace(/\s+/g, '-').toLowerCase()}.csv`;
-    dinkesService.exportToCsv(currentList, filename);
+    try {
+      if (activeTab === 'posyandu') {
+        const headers = ['No', 'Nama Posyandu', 'Desa/Kelurahan', 'Total Kunjungan', 'Total Pasien', 'Total Bayi', 'Total Balita', 'Total Ibu Hamil', 'Total Ibu Nifas', 'Tren Kunjungan', 'Terakhir Diperbarui'];
+        const rows = filteredPosyandu.map((row, idx) => [
+          idx + 1,
+          row.nama || '',
+          row.desa || '',
+          row.totalKunjungan ?? 0,
+          row.totalPasien ?? 0,
+          row.totalBayi ?? 0,
+          row.totalBalita ?? 0,
+          row.totalIbuHamil ?? 0,
+          row.totalIbuNifas ?? 0,
+          row.trend || '',
+          row.terakhirDiperbarui || row.tanggal || ''
+        ]);
+        const filename = `Rekapitulasi_Kunjungan_Posyandu_${(filters.periode || 'Oktober_2024').replace(/\s+/g, '_')}.csv`;
+        dinkesService.exportToCsv(filename, headers, rows);
+        if (onShowToast) onShowToast(`Rekapitulasi Kunjungan Posyandu (${rows.length} posyandu) berhasil diunduh!`, 'success');
+      } else {
+        const headers = ['No', 'Desa/Kelurahan', 'Jumlah Posyandu', 'Total Pasien', 'Total Bayi', 'Total Balita', 'Total Ibu Hamil', 'Total Ibu Nifas', 'Tren Kunjungan', 'Terakhir Diperbarui'];
+        const rows = filteredDesa.map((row, idx) => [
+          idx + 1,
+          row.desa || '',
+          row.jumlahPosyandu ?? 0,
+          row.totalPasien ?? 0,
+          row.totalBayi ?? 0,
+          row.totalBalita ?? 0,
+          row.totalIbuHamil ?? 0,
+          row.totalIbuNifas ?? 0,
+          row.trend || '',
+          row.terakhirDiperbarui || row.tanggal || ''
+        ]);
+        const filename = `Rekapitulasi_Kunjungan_Desa_${(filters.periode || 'Oktober_2024').replace(/\s+/g, '_')}.csv`;
+        dinkesService.exportToCsv(filename, headers, rows);
+        if (onShowToast) onShowToast(`Rekapitulasi Kunjungan Desa (${rows.length} desa) berhasil diunduh!`, 'success');
+      }
+    } catch (e) {
+      console.error('Export persebaran error:', e);
+      if (onShowToast) onShowToast('Gagal mengunduh laporan', 'error');
+    }
   };
 
   return (
