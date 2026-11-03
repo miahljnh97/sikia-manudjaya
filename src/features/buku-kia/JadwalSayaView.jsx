@@ -27,6 +27,26 @@ const resolveJadwalStatus = (item) => {
   return item.status || 'Akan Datang';
 };
 
+const parseDateSafe = (dateVal) => {
+  if (!dateVal) return null;
+  if (typeof dateVal === 'string' && dateVal.includes('-')) {
+    const parts = dateVal.split('T')[0].split('-');
+    if (parts.length === 3) {
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10) - 1;
+      const d = parseInt(parts[2], 10);
+      if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+        return { year: y, month: m, day: d };
+      }
+    }
+  }
+  const dt = new Date(dateVal);
+  if (!isNaN(dt.getTime())) {
+    return { year: dt.getFullYear(), month: dt.getMonth(), day: dt.getDate() };
+  }
+  return null;
+};
+
 
 const monthNames = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -168,72 +188,63 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
     });
   }, [user, isIbuRole, isStaff]);
 
-  // Metrik terhitung dinamis dari jadwal aktif (PBI 01A AC 1)
+  // Daftar jadwal yang ada pada bulan & tahun yang sedang aktif di kalender
+  const monthlyJadwalList = useMemo(() => {
+    return jadwalList.filter(item => {
+      const p = parseDateSafe(item.tanggal);
+      return p && p.month === currentMonth && p.year === currentYear;
+    });
+  }, [jadwalList, currentMonth, currentYear]);
+
+  // Metrik terhitung dinamis dari jadwal aktif pada bulan & tahun yang sedang dipilih (PBI 01A AC 1)
   const countPemeriksaan = useMemo(() => {
-    return jadwalList.filter(j => {
+    return monthlyJadwalList.filter(j => {
       const s = (j.jenis || '').toLowerCase();
       return s.includes('pemeriksaan') || s.includes('anc') || s.includes('usg');
     }).length;
-  }, [jadwalList]);
+  }, [monthlyJadwalList]);
 
   const countImunisasi = useMemo(() => {
-    return jadwalList.filter(j => {
+    return monthlyJadwalList.filter(j => {
       const s = (j.jenis || '').toLowerCase();
       return s.includes('imunisasi') || s.includes('vaksin');
     }).length;
-  }, [jadwalList]);
+  }, [monthlyJadwalList]);
 
   const countKonseling = useMemo(() => {
-    return jadwalList.filter(j => {
+    return monthlyJadwalList.filter(j => {
       const s = (j.jenis || '').toLowerCase();
       return s.includes('konseling') || s.includes('gizi');
     }).length;
-  }, [jadwalList]);
+  }, [monthlyJadwalList]);
 
   const countKelasIbu = useMemo(() => {
-    return jadwalList.filter(j => {
+    return monthlyJadwalList.filter(j => {
       const s = (j.jenis || '').toLowerCase();
       return s.includes('kelas') || s.includes('senam') || s.includes('edukasi');
     }).length;
-  }, [jadwalList]);
+  }, [monthlyJadwalList]);
 
   // Ekstrak hari-hari yang memiliki jadwal di bulan & tahun aktif
   const eventDays = useMemo(() => {
     const days = new Set();
-    jadwalList.forEach(item => {
-      try {
-        const d = new Date(item.tanggal);
-        if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
-          days.add(d.getDate());
-        }
-      } catch {
-        // ignore
-      }
+    monthlyJadwalList.forEach(item => {
+      const p = parseDateSafe(item.tanggal);
+      if (p) days.add(p.day);
     });
     return days;
-  }, [jadwalList, currentYear, currentMonth]);
+  }, [monthlyJadwalList]);
 
   // Filter daftar jadwal jika ada tanggal kalender yang diklik atau bulan aktif
   const filteredJadwalList = useMemo(() => {
     if (selectedDay) {
-      return jadwalList.filter(item => {
-        try {
-          const d = new Date(item.tanggal);
-          return d.getDate() === selectedDay && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-        } catch {
-          return false;
-        }
+      return monthlyJadwalList.filter(item => {
+        const p = parseDateSafe(item.tanggal);
+        return p && p.day === selectedDay;
       });
     }
-    return jadwalList.filter(item => {
-      try {
-        const d = new Date(item.tanggal);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-      } catch {
-        return false;
-      }
-    });
-  }, [jadwalList, selectedDay, currentMonth, currentYear]);
+    return monthlyJadwalList;
+  }, [monthlyJadwalList, selectedDay]);
 
   // Cek apakah tanggal/bulan yang sedang dilihat adalah tanggal lampau (backdate) atau masa depan (future)
   const isBackdate = useMemo(() => {
@@ -263,21 +274,16 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
 
   // Jadwal terdekat yang selaras dengan kalender (bulan/tanggal aktif)
   const displayJadwalTerdekat = useMemo(() => {
-    const list = jadwalList.filter(item => {
-      try {
-        const d = new Date(item.tanggal);
-        if (selectedDay) {
-          return d.getDate() === selectedDay && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-        }
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-      } catch {
-        return false;
-      }
-    });
+    const list = selectedDay
+      ? monthlyJadwalList.filter(item => {
+          const p = parseDateSafe(item.tanggal);
+          return p && p.day === selectedDay;
+        })
+      : [...monthlyJadwalList];
 
     list.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
     return list.slice(0, 4);
-  }, [jadwalList, selectedDay, currentMonth, currentYear]);
+  }, [monthlyJadwalList, selectedDay]);
 
   const handleKirimWhatsApp = async (item) => {
     setIsSendingWa(true);
@@ -549,16 +555,10 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
               </div>
             ) : displayJadwalTerdekat.map((item, idx) => {
               const reminder = getReminderStatus(item.tanggal);
-              let dayStr = '12';
-              let monthStr = 'Sep';
-              try {
-                const d = new Date(item.tanggal);
-                dayStr = String(d.getDate()).padStart(2, '0');
-                const mNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-                monthStr = mNames[d.getMonth()] || 'Sep';
-              } catch {
-                // fallback
-              }
+              const p = parseDateSafe(item.tanggal);
+              const dayStr = p ? String(p.day).padStart(2, '0') : '12';
+              const mNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+              const monthStr = p ? (mNames[p.month] || 'Sep') : 'Sep';
 
               return (
                 <div 

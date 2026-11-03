@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
+import { storageService } from '../../services/storageService';
 import { maskNik } from '../../utils/nikUtils';
 import CatatPemeriksaanBidanModal from './CatatPemeriksaanBidanModal';
 import { formatTanggalIndo } from '../../utils/dateUtils';
@@ -233,7 +234,8 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
       validFiles.push({
         id: Date.now() + Math.random().toString(36).substring(2, 7),
         name: f.name,
-        size: (f.size / (1024 * 1024)).toFixed(2) + ' MB'
+        size: (f.size / (1024 * 1024)).toFixed(2) + ' MB',
+        file: f
       });
     }
 
@@ -265,15 +267,33 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
         return;
       }
 
-      const formattedDocs = (uploadedFiles || []).map((f, i) => ({
-        id: `doc-${Date.now()}-${i}`,
-        name: f.name,
-        type: f.type || 'Dokumen Tambahan',
-        size: f.size || '1.0 MB',
-        url: f.url || 'https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf',
-        tanggal: formatTanggalIndo(formAnc.tanggal_pemeriksaan),
-        keterangan: formAnc.catatan_tindak_lanjut || 'Lampiran pemeriksaan rekam medis'
-      }));
+      // Upload berkas fisik ke Supabase Storage
+      const formattedDocs = [];
+      for (let i = 0; i < (uploadedFiles || []).length; i++) {
+        const f = uploadedFiles[i];
+        let finalUrl = f.url;
+
+        if (f.file) {
+          try {
+            const uploaded = await storageService.uploadDokumen(f.file, 'anc');
+            if (uploaded?.url) {
+              finalUrl = uploaded.url;
+            }
+          } catch (uploadErr) {
+            console.warn('Supabase storage upload fallback:', uploadErr);
+          }
+        }
+
+        formattedDocs.push({
+          id: `doc-${Date.now()}-${i}`,
+          name: f.name,
+          type: f.type || 'Dokumen Tambahan',
+          size: f.size || '1.0 MB',
+          url: finalUrl || 'https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf',
+          tanggal: formatTanggalIndo(formAnc.tanggal_pemeriksaan),
+          keterangan: formAnc.catatan_tindak_lanjut || 'Lampiran pemeriksaan rekam medis'
+        });
+      }
 
       const payload = {
         kehamilan_id: activeKehamilan.id,
@@ -326,9 +346,18 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
     }
   };
 
-  const handleDownloadDoc = (doc) => {
+  const handleDownloadDoc = async (doc) => {
     try {
       if (doc.url && doc.url.startsWith('http')) {
+        try {
+          // Unduh langsung sebagai blob agar nama file lokal sesuai nama dokumen
+          await storageService.downloadFileAsBlob(doc.url, doc.name);
+          if (onShowToast) onShowToast(`Dokumen "${doc.name}" berhasil diunduh.`, 'success');
+          return;
+        } catch (blobErr) {
+          console.warn('Direct blob download fallback:', blobErr);
+        }
+
         const a = document.createElement('a');
         a.href = doc.url;
         a.target = '_blank';
@@ -336,6 +365,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+        if (onShowToast) onShowToast(`Membuka dokumen "${doc.name}" di tab baru...`, 'info');
       } else {
         const dummyContent = `%PDF-1.4\n% Dokumen Rekam Medis: ${doc.name}\nPasien: ${namaPasien}\nTanggal: ${doc.tanggal}\nKeterangan: ${doc.keterangan || ''}`;
         const blob = new Blob([dummyContent], { type: 'application/pdf' });
@@ -347,9 +377,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-      }
-      if (onShowToast) {
-        onShowToast(`Dokumen "${doc.name}" siap diunduh/dibuka.`, 'success');
+        if (onShowToast) onShowToast(`Dokumen "${doc.name}" siap diunduh.`, 'success');
       }
     } catch (e) {
       console.error(e);
