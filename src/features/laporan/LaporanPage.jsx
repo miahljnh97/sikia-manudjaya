@@ -1,4 +1,4 @@
-import { exportToCsvFile } from '../../utils/exportUtils';
+import { exportToCsvFile, printLaporanToPdf } from '../../utils/exportUtils';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, FileText, Download, Search, RefreshCw } from 'lucide-react';
 import { laporanService } from '../../services/laporanService';
@@ -181,6 +181,63 @@ export default function LaporanPage({ currentUser, currentPath = '/laporan', onN
     }
   };
 
+  const handleExportPdf = () => {
+    try {
+      const kpiStats = [
+        { label: 'Total Kunjungan', value: laporanData?.statCards?.totalKunjungan?.value ?? 0 },
+        { label: 'Balita Ditimbang', value: laporanData?.statCards?.balitaDitimbang?.value ?? 0 },
+        { label: 'Imunisasi Diberi', value: laporanData?.statCards?.imunisasiDiberi?.value ?? 0 },
+        { label: 'Pemeriksaan Ibu', value: laporanData?.statCards?.pemeriksaanIbu?.value ?? 0 }
+      ];
+
+      if (activeTab === 'Rekapitulasi') {
+        const headers = ['No', 'Kategori Pelayanan', 'Jumlah Sasaran', 'Laki-laki', 'Perempuan', 'Keterangan'];
+        const rows = (laporanData.rekapitulasiTable || []).map((r) => [
+          r.no,
+          r.kategori,
+          r.jumlah,
+          r.lakiLaki,
+          r.perempuan,
+          r.keterangan
+        ]);
+        printLaporanToPdf({
+          judul: 'LAPORAN REKAPITULASI PELAYANAN POSYANDU',
+          periode: selectedPeriode || 'Oktober 2026',
+          posyandu: 'Posyandu Desa Manud Jaya',
+          kpiStats,
+          headers,
+          rows,
+          catatan: 'Data digenerate secara otomatis oleh SIKIA berdasarkan input harian tanpa selisih hitung (PBI 04).'
+        });
+      } else {
+        const headers = ['No', 'Tanggal', 'Nama Pasien', 'NIK', 'Jenis Pasien', 'Jenis Pelayanan', 'Status', 'Hasil / Catatan'];
+        const rows = (filteredDataKunjungan || []).map((item, idx) => [
+          idx + 1,
+          item.tanggal_kunjungan || '',
+          item.nama || '',
+          item.nik || '',
+          item.jenis_pasien || '',
+          item.jenis_pelayanan || '',
+          item.status || '',
+          item.hasil_catatan || ''
+        ]);
+        printLaporanToPdf({
+          judul: 'LAPORAN DATA KUNJUNGAN PASIEN POSYANDU',
+          periode: selectedPeriode || 'Oktober 2026',
+          posyandu: 'Posyandu Desa Manud Jaya',
+          kpiStats,
+          headers,
+          rows,
+          catatan: 'Data kehadiran dan riwayat pemeriksaan pasien Posyandu Desa Manud Jaya.'
+        });
+      }
+      if (onShowToast) onShowToast('Dokumen cetak PDF siap diunduh!', 'info');
+    } catch (err) {
+      console.error('PDF print error:', err);
+      if (onShowToast) onShowToast('Gagal menyiapkan dokumen PDF', 'error');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* 1. Header Laporan Bulanan Sesuai Gambar 1 & 2 */}
@@ -194,15 +251,25 @@ export default function LaporanPage({ currentUser, currentPath = '/laporan', onN
           </p>
         </div>
 
-        {/* Tombol Export Laporan */}
-        <div>
+        {/* Tombol Export Laporan (PDF & Excel) Sesuai PBI 04 */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleExportPdf}
+            className="w-full sm:w-auto px-3.5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer active:scale-95"
+            title="Unduh laporan bulanan format PDF siap cetak"
+          >
+            <FileText size={16} className="text-rose-600" />
+            <span>Unduh PDF</span>
+          </button>
           <button
             type="button"
             onClick={handleExportLaporan}
-            className="w-full sm:w-auto px-4 py-2.5 bg-[#E11D48] hover:bg-[#BE123C] text-white rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+            className="w-full sm:w-auto px-4 py-2.5 bg-[#E11D48] hover:bg-[#BE123C] text-white rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer active:scale-95"
+            title="Unduh laporan bulanan format Excel (CSV)"
           >
             <Download size={16} />
-            <span>Export Laporan</span>
+            <span>Unduh Excel</span>
           </button>
         </div>
       </div>

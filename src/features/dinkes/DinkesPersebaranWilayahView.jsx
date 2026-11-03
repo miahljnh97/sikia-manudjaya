@@ -24,13 +24,18 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
   });
 
   const [selectedIndikator, setSelectedIndikator] = useState('Kasus Stunting (Balita)');
-  const [activeTab, setActiveTab] = useState('posyandu'); // 'posyandu' | 'desa'
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
+  // Table 1: Posyandu state
+  const [searchPosyandu, setSearchPosyandu] = useState('');
+  const [posyanduPage, setPosyanduPage] = useState(1);
   const [posyanduData, setPosyanduData] = useState([]);
+
+  // Table 2: Desa state
+  const [searchDesa, setSearchDesa] = useState('');
+  const [desaPage, setDesaPage] = useState(1);
   const [desaData, setDesaData] = useState([]);
+
+  const itemsPerPage = 10;
 
   useEffect(() => {
     let isMounted = true;
@@ -55,67 +60,80 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Filtered lists based on search query
+  // Filtered Posyandu list
   const filteredPosyandu = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
+    const q = searchPosyandu.toLowerCase().trim();
     if (!q) return posyanduData;
     return posyanduData.filter(
       (item) => item.nama.toLowerCase().includes(q) || item.desa.toLowerCase().includes(q)
     );
-  }, [posyanduData, searchQuery]);
+  }, [posyanduData, searchPosyandu]);
 
+  // Filtered Desa list
   const filteredDesa = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
+    const q = searchDesa.toLowerCase().trim();
     if (!q) return desaData;
     return desaData.filter((item) => item.desa.toLowerCase().includes(q));
-  }, [desaData, searchQuery]);
+  }, [desaData, searchDesa]);
 
-  const currentList = activeTab === 'posyandu' ? filteredPosyandu : filteredDesa;
-  const totalPages = Math.max(1, Math.ceil(currentList.length / itemsPerPage));
-  const currentActualPage = Math.min(currentPage, totalPages);
-  const startIndex = (currentActualPage - 1) * itemsPerPage;
-  const paginatedList = currentList.slice(startIndex, startIndex + itemsPerPage);
+  // Pagination for Posyandu
+  const totalPosyanduPages = Math.max(1, Math.ceil(filteredPosyandu.length / itemsPerPage));
+  const currentPosyanduPage = Math.min(posyanduPage, totalPosyanduPages);
+  const posyanduStartIndex = (currentPosyanduPage - 1) * itemsPerPage;
+  const paginatedPosyandu = filteredPosyandu.slice(posyanduStartIndex, posyanduStartIndex + itemsPerPage);
 
-  const handleExport = () => {
+  // Pagination for Desa
+  const totalDesaPages = Math.max(1, Math.ceil(filteredDesa.length / itemsPerPage));
+  const currentDesaPage = Math.min(desaPage, totalDesaPages);
+  const desaStartIndex = (currentDesaPage - 1) * itemsPerPage;
+  const paginatedDesa = filteredDesa.slice(desaStartIndex, desaStartIndex + itemsPerPage);
+
+  // Export Handlers
+  const handleExportPosyandu = () => {
     try {
-      if (activeTab === 'posyandu') {
-        const headers = ['No', 'Nama Posyandu', 'Desa/Kelurahan', 'Total Kunjungan', 'Total Pasien', 'Total Bayi', 'Total Balita', 'Total Ibu Hamil', 'Total Ibu Nifas', 'Tren Kunjungan', 'Terakhir Diperbarui'];
-        const rows = filteredPosyandu.map((row, idx) => [
-          idx + 1,
-          row.nama || '',
-          row.desa || '',
-          row.totalKunjungan ?? 0,
-          row.totalPasien ?? 0,
-          row.totalBayi ?? 0,
-          row.totalBalita ?? 0,
-          row.totalIbuHamil ?? 0,
-          row.totalIbuNifas ?? 0,
-          row.trend || '',
-          row.terakhirDiperbarui || row.tanggal || ''
-        ]);
-        const filename = `Rekapitulasi_Kunjungan_Posyandu_${(filters.periode || 'Oktober_2024').replace(/\s+/g, '_')}.csv`;
-        dinkesService.exportToCsv(filename, headers, rows);
-        if (onShowToast) onShowToast(`Rekapitulasi Kunjungan Posyandu (${rows.length} posyandu) berhasil diunduh!`, 'success');
-      } else {
-        const headers = ['No', 'Desa/Kelurahan', 'Jumlah Posyandu', 'Total Pasien', 'Total Bayi', 'Total Balita', 'Total Ibu Hamil', 'Total Ibu Nifas', 'Tren Kunjungan', 'Terakhir Diperbarui'];
-        const rows = filteredDesa.map((row, idx) => [
-          idx + 1,
-          row.desa || '',
-          row.jumlahPosyandu ?? 0,
-          row.totalPasien ?? 0,
-          row.totalBayi ?? 0,
-          row.totalBalita ?? 0,
-          row.totalIbuHamil ?? 0,
-          row.totalIbuNifas ?? 0,
-          row.trend || '',
-          row.terakhirDiperbarui || row.tanggal || ''
-        ]);
-        const filename = `Rekapitulasi_Kunjungan_Desa_${(filters.periode || 'Oktober_2024').replace(/\s+/g, '_')}.csv`;
-        dinkesService.exportToCsv(filename, headers, rows);
-        if (onShowToast) onShowToast(`Rekapitulasi Kunjungan Desa (${rows.length} desa) berhasil diunduh!`, 'success');
-      }
+      const headers = ['No', 'Nama Posyandu', 'Desa/Kelurahan', 'Total Kunjungan', 'Total Pasien', 'Total Bayi', 'Total Balita', 'Total Ibu Hamil', 'Total Ibu Nifas', 'Tren Kunjungan', 'Terakhir Diperbarui'];
+      const rows = filteredPosyandu.map((row, idx) => [
+        idx + 1,
+        row.nama || '',
+        row.desa || '',
+        row.totalKunjungan ?? 0,
+        row.totalPasien ?? 0,
+        row.totalBayi ?? 0,
+        row.totalBalita ?? 0,
+        row.totalIbuHamil ?? 0,
+        row.totalIbuNifas ?? 0,
+        row.trend || '',
+        row.terakhirDiperbarui || row.tanggal || ''
+      ]);
+      const filename = `Rekapitulasi_Kunjungan_Posyandu_${(filters.periode || 'Oktober_2024').replace(/\s+/g, '_')}.csv`;
+      dinkesService.exportToCsv(filename, headers, rows);
+      if (onShowToast) onShowToast(`Rekapitulasi Kunjungan Posyandu (${rows.length} posyandu) berhasil diunduh!`, 'success');
     } catch (e) {
-      console.error('Export persebaran error:', e);
+      console.error('Export posyandu error:', e);
+      if (onShowToast) onShowToast('Gagal mengunduh laporan', 'error');
+    }
+  };
+
+  const handleExportDesa = () => {
+    try {
+      const headers = ['No', 'Desa/Kelurahan', 'Jumlah Posyandu', 'Total Pasien', 'Total Bayi', 'Total Balita', 'Total Ibu Hamil', 'Total Ibu Nifas', 'Tren Kunjungan', 'Terakhir Diperbarui'];
+      const rows = filteredDesa.map((row, idx) => [
+        idx + 1,
+        row.desa || '',
+        row.jumlahPosyandu ?? 0,
+        row.totalPasien ?? 0,
+        row.totalBayi ?? 0,
+        row.totalBalita ?? 0,
+        row.totalIbuHamil ?? 0,
+        row.totalIbuNifas ?? 0,
+        row.trend || '',
+        row.terakhirDiperbarui || row.tanggal || ''
+      ]);
+      const filename = `Rekapitulasi_Kunjungan_Desa_${(filters.periode || 'Oktober_2024').replace(/\s+/g, '_')}.csv`;
+      dinkesService.exportToCsv(filename, headers, rows);
+      if (onShowToast) onShowToast(`Rekapitulasi Kunjungan Desa (${rows.length} desa) berhasil diunduh!`, 'success');
+    } catch (e) {
+      console.error('Export desa error:', e);
       if (onShowToast) onShowToast('Gagal mengunduh laporan', 'error');
     }
   };
@@ -224,7 +242,7 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
       </div>
 
       {/* ==================================================================== */}
-      {/* 3. Peta Persebaran Wilayah Interaktif (Full Width)                  */}
+      {/* 3. Peta Persebaran Wilayah Interaktif (Full Width Sesuai Gambar 1 & 3)*/}
       {/* ==================================================================== */}
       <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
         <div>
@@ -233,7 +251,7 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
         </div>
 
         <PetaPersebaranWilayah
-          height="420px"
+          height="450px"
           isCompact={false}
           selectedIndikator={selectedIndikator}
           onIndikatorChange={setSelectedIndikator}
@@ -241,38 +259,12 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
       </div>
 
       {/* ==================================================================== */}
-      {/* 4. Tabel Rekapitulasi Kunjungan (Posyandu & Desa)                    */}
+      {/* 4. Tabel 1: Rekapitulasi Kunjungan Berdasarkan Posyandu (Gambar 2 & 3)*/}
       {/* ==================================================================== */}
       <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
-        {/* Sub Header & Switch Tab Posyandu vs Desa */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900">Rekapitulasi Kunjungan</h3>
-            <p className="text-[11px] text-slate-400">
-              {activeTab === 'posyandu' ? 'Jumlah kunjungan berdasarkan posyandu' : 'Jumlah kunjungan berdasarkan desa/kelurahan'}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => { setActiveTab('posyandu'); setCurrentPage(1); }}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                activeTab === 'posyandu' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              Berdasarkan Posyandu
-            </button>
-            <button
-              type="button"
-              onClick={() => { setActiveTab('desa'); setCurrentPage(1); }}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                activeTab === 'desa' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              Berdasarkan Desa
-            </button>
-          </div>
+        <div>
+          <h3 className="text-sm font-bold text-slate-900">Rekapitulasi Kunjungan</h3>
+          <p className="text-[11px] text-slate-400">Jumlah kunjungan berdasarkan posyandu</p>
         </div>
 
         {/* Search & Export Button */}
@@ -281,8 +273,8 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+              value={searchPosyandu}
+              onChange={(e) => { setSearchPosyandu(e.target.value); setPosyanduPage(1); }}
               placeholder="Cari nama Desa/Kelurahan, Posyandu..."
               className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
             />
@@ -290,7 +282,7 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
 
           <button
             type="button"
-            onClick={handleExport}
+            onClick={handleExportPosyandu}
             className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
           >
             <Download size={14} />
@@ -298,118 +290,75 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
           </button>
         </div>
 
-        {/* Table Content */}
+        {/* Table Posyandu */}
         <div className="overflow-x-auto">
-          {activeTab === 'posyandu' ? (
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-slate-50/60 text-slate-600 font-bold border-b border-slate-100 whitespace-nowrap">
-                  <th className="py-3 px-4 w-10">No</th>
-                  <th className="py-3 px-4">Nama Posyandu</th>
-                  <th className="py-3 px-4">Desa/Kelurahan</th>
-                  <th className="py-3 px-4 text-center">Total Kunjungan</th>
-                  <th className="py-3 px-4 text-center">Total Pasien</th>
-                  <th className="py-3 px-4 text-center">Total Bayi</th>
-                  <th className="py-3 px-4 text-center">Total Balita</th>
-                  <th className="py-3 px-4 text-center">Total Ibu Hamil</th>
-                  <th className="py-3 px-4 text-center">Total Ibu Nifas</th>
-                  <th className="py-3 px-4 text-center">Tren Kunjungan</th>
-                  <th className="py-3 px-4 text-right">Terakhir Diperbarui</th>
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-slate-50/60 text-slate-600 font-bold border-b border-slate-100 whitespace-nowrap">
+                <th className="py-3 px-4 w-10">No</th>
+                <th className="py-3 px-4">Nama Posyandu</th>
+                <th className="py-3 px-4">Desa/Kelurahan</th>
+                <th className="py-3 px-4 text-center">Total Kunjungan</th>
+                <th className="py-3 px-4 text-center">Total Pasien</th>
+                <th className="py-3 px-4 text-center">Total Bayi</th>
+                <th className="py-3 px-4 text-center">Total Balita</th>
+                <th className="py-3 px-4 text-center">Total Ibu Hamil</th>
+                <th className="py-3 px-4 text-center">Total Ibu Nifas</th>
+                <th className="py-3 px-4 text-center">Tren Kunjungan</th>
+                <th className="py-3 px-4 text-right">Terakhir Diperbarui</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-slate-700 whitespace-nowrap">
+              {paginatedPosyandu.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="py-8 text-center text-slate-400">
+                    Tidak ada data posyandu ditemukan.
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700 whitespace-nowrap">
-                {paginatedList.length === 0 ? (
-                  <tr>
-                    <td colSpan={11} className="py-8 text-center text-slate-400">
-                      Tidak ada data posyandu ditemukan.
-                    </td>
+              ) : (
+                paginatedPosyandu.map((row, idx) => (
+                  <tr key={`${row.nama}-${idx}`} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-3 px-4 text-slate-400 font-medium">{posyanduStartIndex + idx + 1}</td>
+                    <td className="py-3 px-4 font-bold text-slate-900">{row.nama}</td>
+                    <td className="py-3 px-4 text-slate-600">{row.desa}</td>
+                    <td className="py-3 px-4 text-center font-semibold text-slate-900">{row.totalKunjungan}</td>
+                    <td className="py-3 px-4 text-center">{row.totalPasien}</td>
+                    <td className="py-3 px-4 text-center">{row.totalBayi}</td>
+                    <td className="py-3 px-4 text-center">{row.totalBalita}</td>
+                    <td className="py-3 px-4 text-center">{row.totalIbuHamil}</td>
+                    <td className="py-3 px-4 text-center">{row.totalIbuNifas}</td>
+                    <td className="py-3 px-4 text-center text-emerald-600 font-bold">{row.trend}</td>
+                    <td className="py-3 px-4 text-right text-slate-400 font-mono text-[11px]">{row.terakhirDiperbarui || row.tanggal || '30/10/2026 21:50'}</td>
                   </tr>
-                ) : (
-                  paginatedList.map((row, idx) => (
-                    <tr key={`${row.nama}-${idx}`} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4 text-slate-400 font-medium">{startIndex + idx + 1}</td>
-                      <td className="py-3 px-4 font-bold text-slate-900">{row.nama}</td>
-                      <td className="py-3 px-4 text-slate-600">{row.desa}</td>
-                      <td className="py-3 px-4 text-center font-semibold text-slate-900">{row.totalKunjungan}</td>
-                      <td className="py-3 px-4 text-center">{row.totalPasien}</td>
-                      <td className="py-3 px-4 text-center">{row.totalBayi}</td>
-                      <td className="py-3 px-4 text-center">{row.totalBalita}</td>
-                      <td className="py-3 px-4 text-center">{row.totalIbuHamil}</td>
-                      <td className="py-3 px-4 text-center">{row.totalIbuNifas}</td>
-                      <td className="py-3 px-4 text-center text-emerald-600 font-bold">{row.trend}</td>
-                      <td className="py-3 px-4 text-right text-slate-400 font-mono text-[11px]">{row.tanggal}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          ) : (
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-slate-50/60 text-slate-600 font-bold border-b border-slate-100 whitespace-nowrap">
-                  <th className="py-3 px-4 w-10">No</th>
-                  <th className="py-3 px-4">Desa/Kelurahan</th>
-                  <th className="py-3 px-4 text-center">Jumlah Posyandu</th>
-                  <th className="py-3 px-4 text-center">Total Pasien</th>
-                  <th className="py-3 px-4 text-center">Total Bayi</th>
-                  <th className="py-3 px-4 text-center">Total Balita</th>
-                  <th className="py-3 px-4 text-center">Total Ibu Hamil</th>
-                  <th className="py-3 px-4 text-center">Total Ibu Nifas</th>
-                  <th className="py-3 px-4 text-center">Tren Kunjungan</th>
-                  <th className="py-3 px-4 text-right">Terakhir Diperbarui</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700 whitespace-nowrap">
-                {paginatedList.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="py-8 text-center text-slate-400">
-                      Tidak ada data desa ditemukan.
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedList.map((row, idx) => (
-                    <tr key={`${row.desa}-${idx}`} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4 text-slate-400 font-medium">{startIndex + idx + 1}</td>
-                      <td className="py-3 px-4 font-bold text-slate-900">{row.desa}</td>
-                      <td className="py-3 px-4 text-center font-semibold text-slate-900">{row.jumlahPosyandu}</td>
-                      <td className="py-3 px-4 text-center">{row.totalPasien}</td>
-                      <td className="py-3 px-4 text-center">{row.totalBayi}</td>
-                      <td className="py-3 px-4 text-center">{row.totalBalita}</td>
-                      <td className="py-3 px-4 text-center">{row.totalIbuHamil}</td>
-                      <td className="py-3 px-4 text-center">{row.totalIbuNifas}</td>
-                      <td className="py-3 px-4 text-center text-emerald-600 font-bold">{row.trend}</td>
-                      <td className="py-3 px-4 text-right text-slate-400 font-mono text-[11px]">{row.tanggal}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
 
-        {/* Pagination Footer */}
+        {/* Pagination Posyandu */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500 pt-3 border-t border-slate-100">
           <div>
-            Menampilkan {currentList.length > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + itemsPerPage, currentList.length)} dari {currentList.length} {activeTab === 'posyandu' ? 'Posyandu' : 'Desa'}
+            Menampilkan {filteredPosyandu.length > 0 ? posyanduStartIndex + 1 : 0}-{Math.min(posyanduStartIndex + itemsPerPage, filteredPosyandu.length)} dari {filteredPosyandu.length} Posyandu
           </div>
 
           <div className="flex items-center gap-1">
             <button
               type="button"
-              disabled={currentActualPage === 1}
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPosyanduPage === 1}
+              onClick={() => setPosyanduPage((p) => Math.max(1, p - 1))}
               className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
               <ChevronLeft size={16} />
             </button>
-            {Array.from({ length: totalPages }).map((_, i) => {
+            {Array.from({ length: totalPosyanduPages }).map((_, i) => {
               const pageNum = i + 1;
-              const isAct = pageNum === currentActualPage;
+              const isAct = pageNum === currentPosyanduPage;
               return (
                 <button
                   key={pageNum}
                   type="button"
-                  onClick={() => setCurrentPage(pageNum)}
+                  onClick={() => setPosyanduPage(pageNum)}
                   className={`w-7 h-7 rounded-lg font-semibold text-xs flex items-center justify-center transition-colors cursor-pointer ${
                     isAct ? 'bg-[#E11D48] text-white' : 'hover:bg-slate-100 text-slate-600'
                   }`}
@@ -420,8 +369,127 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
             })}
             <button
               type="button"
-              disabled={currentActualPage >= totalPages}
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPosyanduPage === totalPosyanduPages}
+              onClick={() => setPosyanduPage((p) => Math.min(totalPosyanduPages, p + 1))}
+              className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ==================================================================== */}
+      {/* 5. Tabel 2: Rekapitulasi Kunjungan Berdasarkan Desa (Gambar 2 & 3)   */}
+      {/* ==================================================================== */}
+      <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
+        <div>
+          <h3 className="text-sm font-bold text-slate-900">Rekapitulasi Kunjungan</h3>
+          <p className="text-[11px] text-slate-400">Jumlah kunjungan berdasarkan posyandu</p>
+        </div>
+
+        {/* Search & Export Button */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="relative w-full sm:w-80">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={searchDesa}
+              onChange={(e) => { setSearchDesa(e.target.value); setDesaPage(1); }}
+              placeholder="Cari nama Desa/Kelurahan, Posyandu..."
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleExportDesa}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
+          >
+            <Download size={14} />
+            <span>Export Laporan</span>
+          </button>
+        </div>
+
+        {/* Table Desa */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-slate-50/60 text-slate-600 font-bold border-b border-slate-100 whitespace-nowrap">
+                <th className="py-3 px-4 w-10">No</th>
+                <th className="py-3 px-4">Desa/Kelurahan</th>
+                <th className="py-3 px-4 text-center">Jumlah Posyandu</th>
+                <th className="py-3 px-4 text-center">Total Pasien</th>
+                <th className="py-3 px-4 text-center">Total Bayi</th>
+                <th className="py-3 px-4 text-center">Total Balita</th>
+                <th className="py-3 px-4 text-center">Total Ibu Hamil</th>
+                <th className="py-3 px-4 text-center">Total Ibu Nifas</th>
+                <th className="py-3 px-4 text-center">Tren Kunjungan</th>
+                <th className="py-3 px-4 text-right">Terakhir Diperbarui</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-slate-700 whitespace-nowrap">
+              {paginatedDesa.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="py-8 text-center text-slate-400">
+                    Tidak ada data desa ditemukan.
+                  </td>
+                </tr>
+              ) : (
+                paginatedDesa.map((row, idx) => (
+                  <tr key={`${row.desa}-${idx}`} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-3 px-4 text-slate-400 font-medium">{desaStartIndex + idx + 1}</td>
+                    <td className="py-3 px-4 font-bold text-slate-900">{row.desa}</td>
+                    <td className="py-3 px-4 text-center font-semibold text-slate-900">{row.jumlahPosyandu}</td>
+                    <td className="py-3 px-4 text-center">{row.totalPasien}</td>
+                    <td className="py-3 px-4 text-center">{row.totalBayi}</td>
+                    <td className="py-3 px-4 text-center">{row.totalBalita}</td>
+                    <td className="py-3 px-4 text-center">{row.totalIbuHamil}</td>
+                    <td className="py-3 px-4 text-center">{row.totalIbuNifas}</td>
+                    <td className="py-3 px-4 text-center text-emerald-600 font-bold">{row.trend}</td>
+                    <td className="py-3 px-4 text-right text-slate-400 font-mono text-[11px]">{row.terakhirDiperbarui || row.tanggal || '30/10/2026 21:50'}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Desa */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500 pt-3 border-t border-slate-100">
+          <div>
+            Menampilkan {filteredDesa.length > 0 ? desaStartIndex + 1 : 0}-{Math.min(desaStartIndex + itemsPerPage, filteredDesa.length)} dari {filteredDesa.length} Posyandu
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              disabled={currentDesaPage === 1}
+              onClick={() => setDesaPage((p) => Math.max(1, p - 1))}
+              className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            {Array.from({ length: totalDesaPages }).map((_, i) => {
+              const pageNum = i + 1;
+              const isAct = pageNum === currentDesaPage;
+              return (
+                <button
+                  key={pageNum}
+                  type="button"
+                  onClick={() => setDesaPage(pageNum)}
+                  className={`w-7 h-7 rounded-lg font-semibold text-xs flex items-center justify-center transition-colors cursor-pointer ${
+                    isAct ? 'bg-[#E11D48] text-white' : 'hover:bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              disabled={currentDesaPage === totalDesaPages}
+              onClick={() => setDesaPage((p) => Math.min(totalDesaPages, p + 1))}
               className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
               <ChevronRight size={16} />

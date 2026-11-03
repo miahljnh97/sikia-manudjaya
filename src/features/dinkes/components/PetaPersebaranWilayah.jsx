@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, Minus, MapPin } from 'lucide-react';
+import { Plus, Minus } from 'lucide-react';
 
 export default function PetaPersebaranWilayah({
-  height = '420px',
+  height = '440px',
   isCompact = false,
   selectedIndikator = 'Kasus Stunting (Balita)',
   onIndikatorChange = null
@@ -10,23 +10,23 @@ export default function PetaPersebaranWilayah({
   const [zoomLevel, setZoomLevel] = useState(1);
   const [hoveredRegion, setHoveredRegion] = useState(null);
 
-  // Data Wilayah & Kasus Sesuai Desain Figma
+  // Data Wilayah & Kasus Sesuai Desain Figma (Gambar 1)
   const regions = [
     {
       id: 'manud-jaya',
       nama: 'Desa Manud Jaya',
       shortName: 'Manud Jaya',
       kasus: 32,
-      fill: '#E11D48', // > 30 (deep rose)
+      fill: '#BE123C', // > 30 (deep crimson)
       textColor: '#FFFFFF',
-      d: 'M 220,160 L 360,150 L 400,210 L 370,270 L 260,260 L 200,210 Z',
+      d: 'M 220,150 L 360,140 L 400,205 L 375,270 L 260,265 L 195,205 Z',
       labelX: 285,
-      labelY: 205,
+      labelY: 195,
       posyandus: [
-        { x: 250, y: 190 },
-        { x: 310, y: 185 },
-        { x: 330, y: 230 },
-        { x: 260, y: 240 }
+        { x: 235, y: 185 },
+        { x: 300, y: 175 },
+        { x: 325, y: 245 },
+        { x: 250, y: 240 }
       ]
     },
     {
@@ -36,13 +36,13 @@ export default function PetaPersebaranWilayah({
       kasus: 24,
       fill: '#FB7185', // 21 - 30 (rose-400)
       textColor: '#FFFFFF',
-      d: 'M 280,70 L 380,60 L 410,120 L 360,150 L 250,140 L 230,100 Z',
-      labelX: 320,
-      labelY: 105,
+      d: 'M 275,55 L 405,45 L 430,110 L 360,140 L 245,130 L 225,85 Z',
+      labelX: 335,
+      labelY: 95,
       posyandus: [
-        { x: 300, y: 85 },
-        { x: 350, y: 100 },
-        { x: 365, y: 135 }
+        { x: 300, y: 75 },
+        { x: 360, y: 90 },
+        { x: 380, y: 125 }
       ]
     },
     {
@@ -51,13 +51,13 @@ export default function PetaPersebaranWilayah({
       shortName: 'Desa Soreang Baru',
       kasus: 18,
       fill: '#FDA4AF', // 11 - 20 (rose-300)
-      textColor: '#9F1239',
-      d: 'M 140,90 L 230,100 L 250,140 L 220,160 L 170,160 L 120,130 Z',
-      labelX: 185,
-      labelY: 130,
+      textColor: '#881337',
+      d: 'M 140,80 L 225,85 L 245,130 L 220,150 L 165,155 L 120,120 Z',
+      labelX: 180,
+      labelY: 120,
       posyandus: [
-        { x: 160, y: 120 },
-        { x: 200, y: 145 }
+        { x: 155, y: 110 },
+        { x: 195, y: 135 }
       ]
     },
     {
@@ -66,14 +66,14 @@ export default function PetaPersebaranWilayah({
       shortName: 'Tanjung Sari',
       kasus: 14,
       fill: '#FDA4AF', // 11 - 20 (rose-300)
-      textColor: '#9F1239',
-      d: 'M 360,150 L 450,140 L 480,220 L 430,270 L 370,270 L 400,210 Z',
-      labelX: 420,
-      labelY: 205,
+      textColor: '#881337',
+      d: 'M 360,140 L 450,130 L 485,210 L 435,270 L 375,270 L 400,205 Z',
+      labelX: 425,
+      labelY: 200,
       posyandus: [
-        { x: 390, y: 175 },
-        { x: 440, y: 190 },
-        { x: 425, y: 240 }
+        { x: 395, y: 170 },
+        { x: 445, y: 185 },
+        { x: 430, y: 240 }
       ]
     },
     {
@@ -83,12 +83,12 @@ export default function PetaPersebaranWilayah({
       kasus: 8,
       fill: '#FECDD3', // 6 - 10 (rose-200)
       textColor: '#881337',
-      d: 'M 170,160 L 220,160 L 200,210 L 260,260 L 200,290 L 140,240 L 130,180 Z',
+      d: 'M 165,155 L 220,150 L 195,205 L 260,265 L 195,295 L 140,240 L 125,180 Z',
       labelX: 175,
       labelY: 215,
       posyandus: [
-        { x: 170, y: 195 },
-        { x: 180, y: 250 }
+        { x: 165, y: 190 },
+        { x: 175, y: 250 }
       ]
     },
     {
@@ -98,12 +98,12 @@ export default function PetaPersebaranWilayah({
       kasus: 6,
       fill: '#FECDD3', // 6 - 10 (rose-200)
       textColor: '#881337',
-      d: 'M 370,270 L 430,270 L 410,340 L 330,350 L 320,290 L 360,280 Z',
-      labelX: 375,
+      d: 'M 375,270 L 435,270 L 415,340 L 335,350 L 320,290 L 365,280 Z',
+      labelX: 380,
       labelY: 310,
       posyandus: [
-        { x: 360, y: 315 },
-        { x: 395, y: 325 }
+        { x: 365, y: 315 },
+        { x: 400, y: 325 }
       ]
     },
     {
@@ -111,9 +111,9 @@ export default function PetaPersebaranWilayah({
       nama: 'Desa Purnama',
       shortName: 'Desa Purnama',
       kasus: 5,
-      fill: '#FFF1F2', // 0 - 5 (rose-50)
+      fill: '#FFF1F2', // 1 - 5 (rose-50)
       textColor: '#9F1239',
-      d: 'M 200,290 L 260,260 L 320,290 L 330,350 L 240,360 L 190,320 Z',
+      d: 'M 195,295 L 260,265 L 320,290 L 335,350 L 240,360 L 190,325 Z',
       labelX: 255,
       labelY: 315,
       posyandus: [
@@ -124,17 +124,17 @@ export default function PetaPersebaranWilayah({
   ];
 
   const legendItems = [
-    { label: '> 30', color: '#E11D48' },
+    { label: '> 30', color: '#BE123C' },
     { label: '21 - 30', color: '#FB7185' },
     { label: '11 - 20', color: '#FDA4AF' },
     { label: '6 - 10', color: '#FECDD3' },
     { label: '1 - 5', color: '#FFF1F2' },
-    { label: '0', color: '#F1F5F9' }
+    { label: '0', color: '#FFFFFF' }
   ];
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden bg-[#F4F6F9] border border-slate-200/80 shadow-2xs">
-      {/* Top Header / Indikator Filter (Hanya tampil di mode non-compact) */}
+    <div className="relative w-full rounded-2xl overflow-hidden bg-[#F8FAFC] border border-slate-200/80 shadow-2xs">
+      {/* Top Header / Indikator Filter Sesuai Gambar 1 */}
       {!isCompact && (
         <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-2">
           <div className="bg-white/95 backdrop-blur-xs border border-slate-200 rounded-xl px-3 py-1.5 shadow-xs flex items-center gap-2 text-xs">
@@ -152,12 +152,12 @@ export default function PetaPersebaranWilayah({
         </div>
       )}
 
-      {/* Kontrol Zoom (+ / -) */}
+      {/* Kontrol Zoom (+ / -) Sesuai Gambar 1 */}
       <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-1">
         <button
           type="button"
           onClick={() => setZoomLevel((z) => Math.min(1.4, z + 0.1))}
-          className="w-8 h-8 rounded-lg bg-white/95 hover:bg-white text-slate-600 flex items-center justify-center shadow-xs border border-slate-200 cursor-pointer active:scale-95 transition-all"
+          className="w-8 h-8 rounded-lg bg-white/95 hover:bg-white text-slate-600 flex items-center justify-center shadow-xs border border-slate-200 cursor-pointer active:scale-95 transition-all font-bold text-sm"
           title="Zoom In"
         >
           <Plus size={16} />
@@ -165,19 +165,19 @@ export default function PetaPersebaranWilayah({
         <button
           type="button"
           onClick={() => setZoomLevel((z) => Math.max(0.8, z - 0.1))}
-          className="w-8 h-8 rounded-lg bg-white/95 hover:bg-white text-slate-600 flex items-center justify-center shadow-xs border border-slate-200 cursor-pointer active:scale-95 transition-all"
+          className="w-8 h-8 rounded-lg bg-white/95 hover:bg-white text-slate-600 flex items-center justify-center shadow-xs border border-slate-200 cursor-pointer active:scale-95 transition-all font-bold text-sm"
           title="Zoom Out"
         >
           <Minus size={16} />
         </button>
       </div>
 
-      {/* Legenda Jumlah Kasus (Pojok Kiri / Kanan Atas) */}
-      <div className={`absolute ${isCompact ? 'top-3 left-3' : 'top-4 right-4 sm:top-14'} z-10 bg-white/95 backdrop-blur-xs border border-slate-200 rounded-xl p-2.5 shadow-xs text-[11px] space-y-1.5`}>
+      {/* Legenda Jumlah Kasus Sesuai Gambar 1 */}
+      <div className={`absolute ${isCompact ? 'top-3 left-3' : 'top-4 right-4 sm:top-14'} z-10 bg-white/95 backdrop-blur-xs border border-slate-200 rounded-xl p-3 shadow-xs text-[11px] space-y-1.5 min-w-[110px]`}>
         <span className="block font-bold text-slate-800 text-[10px] uppercase tracking-wider">
           Jumlah Kasus
         </span>
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {legendItems.map((item) => (
             <div key={item.label} className="flex items-center gap-2">
               <span
@@ -193,22 +193,32 @@ export default function PetaPersebaranWilayah({
       {/* SVG Canvas Map */}
       <div className="w-full flex items-center justify-center overflow-hidden" style={{ height }}>
         <svg
-          viewBox="100 40 420 330"
+          viewBox="100 30 430 350"
           className="w-full h-full transition-transform duration-200 ease-out"
           style={{ transform: `scale(${zoomLevel})` }}
         >
+          {/* Subtle River / Waterway Curve Sesuai Gambar 1 */}
+          <path
+            d="M 500,80 Q 430,120 460,190 T 520,300"
+            fill="none"
+            stroke="#BAE6FD"
+            strokeWidth="5"
+            strokeLinecap="round"
+            opacity="0.75"
+          />
+
           {/* Background Map Context Labels (Kecamatan Tetangga) */}
           <text x="120" y="270" fill="#94A3B8" fontSize="10" fontWeight="600" opacity="0.6">
             Kecamatan Sumberrejo
           </text>
-          <text x="140" y="380" fill="#94A3B8" fontSize="10" fontWeight="600" opacity="0.6">
+          <text x="135" y="380" fill="#94A3B8" fontSize="10" fontWeight="600" opacity="0.6">
             Kecamatan Karangrejo
           </text>
-          <text x="390" y="70" fill="#94A3B8" fontSize="10" fontWeight="600" opacity="0.6">
+          <text x="390" y="65" fill="#94A3B8" fontSize="10" fontWeight="600" opacity="0.6">
             Kecamatan Melati Jaya
           </text>
 
-          {/* Poligon Wilayah Desa */}
+          {/* Poligon Wilayah Desa Sesuai Gambar 1 */}
           {regions.map((reg) => {
             const isHovered = hoveredRegion?.id === reg.id;
             return (
@@ -221,13 +231,13 @@ export default function PetaPersebaranWilayah({
                 <path
                   d={reg.d}
                   fill={reg.fill}
-                  stroke={isHovered ? '#BE123C' : '#FFFFFF'}
-                  strokeWidth={isHovered ? 2.5 : 1.5}
+                  stroke={isHovered ? '#9F1239' : '#FFFFFF'}
+                  strokeWidth={isHovered ? 3 : 1.5}
                   strokeLinejoin="round"
                   className="transition-all hover:filter hover:brightness-95"
                 />
 
-                {/* Label Nama Desa & Kasus */}
+                {/* Label Nama Desa & Kasus Sesuai Gambar 1 */}
                 <text
                   x={reg.labelX}
                   y={reg.labelY - 5}
@@ -252,13 +262,13 @@ export default function PetaPersebaranWilayah({
                   {reg.kasus} kasus
                 </text>
 
-                {/* Titik Lokasi Posyandu (Yellow Dots Sesuai Gambar 3) */}
+                {/* Titik Lokasi Posyandu (Yellow Dots dengan Outline Putih) */}
                 {reg.posyandus.map((p, pIdx) => (
                   <circle
                     key={`${reg.id}-p-${pIdx}`}
                     cx={p.x}
                     cy={p.y}
-                    r={3.5}
+                    r={3.8}
                     fill="#FACC15"
                     stroke="#FFFFFF"
                     strokeWidth={1.5}
