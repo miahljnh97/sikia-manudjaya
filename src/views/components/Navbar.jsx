@@ -8,6 +8,7 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
   const getNormalizedRole = (role, email = '') => {
     const e = (email || '').toLowerCase();
     const r = (role || '').toLowerCase();
+    if (r.includes('dinkes') || r.includes('dinas') || e.includes('dinkes')) return 'Kabupaten Administrasi';
     if (r.includes('admin') || e.includes('admin')) return 'Super Admin';
     if (r.includes('bidan') || e.includes('bidan')) return 'Bidan Desa';
     if (r.includes('kader') || e.includes('kader')) return 'Kader Posyandu';
@@ -24,6 +25,11 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
   const isIbuRole = (user?.role || '').toLowerCase().includes('ibu') || userEmail.includes('ibu') || userEmail.includes('hamil') || userEmail.includes('balita');
   // displayName sudah didefinisikan secara dinamis
   const roleName = getNormalizedRole(user?.role, userEmail);
+  const isDinkes = (user?.role || '').toLowerCase().includes('dinkes') || 
+                   (user?.role || '').toLowerCase().includes('dinas') || 
+                   userEmail.includes('dinkes');
+  const finalDisplayName = isDinkes ? 'Dinas Kesehatan' : displayName;
+  const finalRoleName = isDinkes ? 'Kabupaten Administrasi' : roleName;
 
   // State Notifikasi dengan LocalStorage Persistence
   const [isOpenNotif, setIsOpenNotif] = useState(false);
@@ -202,31 +208,40 @@ export default function Navbar({ user, onLogout, onToggleSidebar }) {
             onClick={() => setIsOpenProfile((prev) => !prev)}
             className="flex items-center gap-2.5 sm:gap-3 pl-1 sm:pl-2 p-1.5 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer text-left border border-transparent hover:border-slate-100"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-500 font-semibold shrink-0 overflow-hidden">
-              {isIbuRole ? (
-                <img 
-                  src={
-                    (userEmail.includes('balita') || (user?.role || '').toLowerCase().includes('balita'))
-                      ? "/images/ibu-balita-avatar.png"
-                      : (userEmail.includes('hamil') && !userEmail.includes('anak'))
-                      ? "/images/najwa-avatar.png"
-                      : "/images/profil-ibu.png"
-                  }
-                  alt={displayName} 
-                  className="w-full h-full object-cover" 
-                  onError={(e) => { e.target.src = '/images/profil-ibu.png'; }}
-                />
-              ) : (
-                <User size={18} />
-              )}
-            </div>
+            {isDinkes ? (
+              <div className="w-9 h-10 rounded-lg bg-emerald-800 border border-emerald-900 flex items-center justify-center p-1 shadow-xs shrink-0">
+                <svg viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400 fill-current">
+                  <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" fill="#2e7d32" stroke="#fbc02d" strokeWidth="1.5" />
+                  <path d="M12 6l-3.5 1.5v3c0 2.5 1.8 4.7 3.5 5.5 1.7-.8 3.5-3 3.5-5.5v-3L12 6z" fill="#fbc02d" />
+                </svg>
+              </div>
+            ) : (
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-500 font-semibold shrink-0 overflow-hidden">
+                {isIbuRole ? (
+                  <img 
+                    src={
+                      (userEmail.includes('balita') || (user?.role || '').toLowerCase().includes('balita'))
+                        ? "/images/ibu-balita-avatar.png"
+                        : (userEmail.includes('hamil') && !userEmail.includes('anak'))
+                        ? "/images/najwa-avatar.png"
+                        : "/images/profil-ibu.png"
+                    }
+                    alt={finalDisplayName} 
+                    className="w-full h-full object-cover" 
+                    onError={(e) => { e.target.src = '/images/profil-ibu.png'; }}
+                  />
+                ) : (
+                  <User size={18} />
+                )}
+              </div>
+            )}
             <div className="text-left hidden sm:block">
               <h4 className="text-xs sm:text-sm font-semibold text-slate-800 leading-tight flex items-center gap-1">
-                {displayName}
+                {finalDisplayName}
                 <ChevronDown size={14} className="text-slate-400" />
               </h4>
               <p className={`text-[11px] font-medium ${isIbuRole ? 'text-rose-500 font-semibold' : 'text-slate-400'}`}>
-                {roleName}
+                {finalRoleName}
               </p>
             </div>
           </button>

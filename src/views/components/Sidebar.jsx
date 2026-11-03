@@ -13,7 +13,9 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
-  Stethoscope
+  Stethoscope,
+  AlertCircle,
+  MapPin
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -28,7 +30,8 @@ export default function Sidebar({
   const isSuperAdmin = roleNormalized.includes('admin') || roleNormalized === 'superadmin' || roleNormalized === 'super admin' || emailNormalized.includes('admin');
   const isBidan = (roleNormalized.includes('bidan') || emailNormalized.includes('bidan')) && !roleNormalized.includes('ibu') && !emailNormalized.includes('ibu');
   const isKader = (roleNormalized.includes('kader') || emailNormalized.includes('kader')) && !roleNormalized.includes('ibu') && !emailNormalized.includes('ibu');
-  const isStaff = isSuperAdmin || isBidan || isKader;
+  const isDinkes = roleNormalized.includes('dinkes') || roleNormalized.includes('dinas') || emailNormalized.includes('dinkes');
+  const isStaff = isSuperAdmin || isBidan || isKader || isDinkes;
   const isIbuBalitaOnly = roleNormalized === 'ibu balita' || emailNormalized === 'ibu.balita@manudjaya.id' || (emailNormalized.includes('balita') && !emailNormalized.includes('hamil'));
 
   // State Accordion Submenu Kesehatan Ibu & Anak
@@ -118,8 +121,36 @@ export default function Sidebar({
               <span>Dashboard</span>
             </button>
 
-            {/* Khusus Role Bidan: Tampilan Menu Ringkas Sesuai Figma (Dashboard, Data Pasien, Pemeriksaan, Pengaturan) */}
-            {isBidan ? (
+            {/* Khusus Role Dinas Kesehatan: Tampilan Menu Sesuai Figma (Dashboard, Pemantauan Risiko, Persebaran Wilayah, Pengaturan) */}
+            {isDinkes ? (
+              <>
+                {/* 2. Pemantauan Risiko */}
+                <button
+                  onClick={() => handleSelect('Pemantauan Risiko')}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                    activeMenu === 'Pemantauan Risiko'
+                      ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <AlertCircle size={18} className={activeMenu === 'Pemantauan Risiko' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                  <span>Pemantauan Risiko</span>
+                </button>
+
+                {/* 3. Persebaran Wilayah */}
+                <button
+                  onClick={() => handleSelect('Persebaran Wilayah')}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all cursor-pointer ${
+                    activeMenu === 'Persebaran Wilayah'
+                      ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <MapPin size={18} className={activeMenu === 'Persebaran Wilayah' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                  <span>Persebaran Wilayah</span>
+                </button>
+              </>
+            ) : isBidan ? (
               <>
                 {/* 2. Data Pasien */}
                 <button
