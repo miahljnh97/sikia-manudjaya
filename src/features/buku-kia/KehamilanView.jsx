@@ -979,57 +979,7 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         </div>
       </div>
 
-      {/* Modal Detail Panduan */}
-      {selectedPanduan && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-sm sm:text-base font-bold text-slate-900">{selectedPanduan.title}</h3>
-              <button 
-                type="button" 
-                onClick={() => setSelectedPanduan(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs text-slate-600">
-              <p className="font-medium text-slate-700">{selectedPanduan.desc}</p>
-              <div className="p-4 bg-pink-50/50 rounded-2xl border border-pink-100 space-y-2">
-                <span className="font-bold text-[#E11D48] block">Poin-poin penting:</span>
-                <ul className="space-y-1.5 list-disc pl-4 text-slate-700">
-                  {selectedPanduan.points.map((pt, i) => (
-                    <li key={i}>{pt}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2.5">
-              <a
-                href="https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs font-bold text-[#E11D48] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <BookOpen size={14} />
-                <span>Buka di Buku KIA 2024 (PDF Resmi)</span>
-                <ExternalLink size={12} />
-              </a>
-              <button
-                type="button"
-                onClick={() => setSelectedPanduan(null)}
-                className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer"
-              >
-                Tutup
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Semua Panduan untuk Ibu (Buku KIA 2024) */}
+            {/* Modal Semua Panduan untuk Ibu (Buku KIA 2024) */}
       {showAllPanduan && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150 overflow-hidden">
@@ -1167,6 +1117,55 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         </div>
       )}
 
+      {/* Modal Detail Panduan */}
+      {selectedPanduan && (
+        <div className="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900">{selectedPanduan.title}</h3>
+              <button 
+                type="button" 
+                onClick={() => setSelectedPanduan(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-600">
+              <p className="font-medium text-slate-700">{selectedPanduan.desc}</p>
+              <div className="p-4 bg-pink-50/50 rounded-2xl border border-pink-100 space-y-2">
+                <span className="font-bold text-[#E11D48] block">Poin-poin penting:</span>
+                <ul className="space-y-1.5 list-disc pl-4 text-slate-700">
+                  {selectedPanduan.points.map((pt, i) => (
+                    <li key={i}>{pt}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+              <a
+                href="https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-[#E11D48] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <BookOpen size={14} />
+                <span>Buka di Buku KIA 2024 (PDF Resmi)</span>
+                <ExternalLink size={12} />
+              </a>
+              <button
+                type="button"
+                onClick={() => setSelectedPanduan(null)}
+                className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
