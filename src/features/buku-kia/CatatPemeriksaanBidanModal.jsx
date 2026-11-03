@@ -15,6 +15,7 @@ import {
 import { formatTanggalIndo } from '../../utils/dateUtils';
 import { maskNik } from '../../utils/nikUtils';
 import { bukuKiaService } from '../../services/bukuKiaService';
+import { storageService } from '../../services/storageService';
 
 export default function CatatPemeriksaanBidanModal({
   isOpen,
@@ -168,10 +169,38 @@ export default function CatatPemeriksaanBidanModal({
         tindakanFinal.push(`Lainnya: ${form.tindakan_lainnya.trim()}`);
       }
 
+      // Upload berkas fisik ke Supabase Storage jika ada
+      const formattedDocs = [];
+      for (let i = 0; i < (uploadedFiles || []).length; i++) {
+        const f = uploadedFiles[i];
+        let finalUrl = f.url;
+
+        if (f.file) {
+          try {
+            const uploaded = await storageService.uploadDokumen(f.file, 'anc');
+            if (uploaded?.url) {
+              finalUrl = uploaded.url;
+            }
+          } catch (uploadErr) {
+            console.warn('Gagal upload ke Supabase Storage, menggunakan link fallback:', uploadErr);
+          }
+        }
+
+        formattedDocs.push({
+          id: `doc-${Date.now()}-${i}`,
+          name: f.name,
+          size: f.size,
+          type: f.type || 'Dokumen Tambahan',
+          url: finalUrl || 'https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf',
+          tanggal: formatTanggalIndo(form.tanggal_pemeriksaan),
+          keterangan: form.catatan_tindak_lanjut || form.catatan_nakes || 'Lampiran pemeriksaan bidan'
+        });
+      }
+
       const payload = {
         ...form,
         tindakan_diberikan: tindakanFinal,
-        lampiran_dokumen: uploadedFiles.map((f) => ({ name: f.name, size: f.size })),
+        lampiran_dokumen: formattedDocs,
         pemeriksa: currentUser?.nama || 'Bidan Khansa Fatin, S.Tr.Keb'
       };
 

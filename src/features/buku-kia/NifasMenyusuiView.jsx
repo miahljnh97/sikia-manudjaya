@@ -31,11 +31,11 @@ export default function NifasMenyusuiView({ user, currentPath = '', onNavigate, 
       if (sp.get('peserta_id')) return sp.get('peserta_id');
       if (sp.get('id')) return sp.get('id');
     }
-    return isIbuRole ? (getPesertaIdFromUser(user) || '55af67c9-6695-4435-b4ea-2720efd73c92') : null;
+    return isIbuRole ? (getPesertaIdFromUser(user) || (isIbuBalitaOnly ? 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73' : '55af67c9-6695-4435-b4ea-2720efd73c92')) : null;
   };
 
   const [daftarIbu, setDaftarIbu] = useState([]);
-  const [activePesertaId, setActivePesertaId] = useState(() => extractPesertaId() || '55af67c9-6695-4435-b4ea-2720efd73c92');
+  const [activePesertaId, setActivePesertaId] = useState(() => extractPesertaId() || (isIbuBalitaOnly ? 'd5eeb9a6-3509-44ec-8fce-e95f3edd1a73' : '55af67c9-6695-4435-b4ea-2720efd73c92'));
   const [peserta, setPeserta] = useState(null);
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [riwayatKF, setRiwayatKF] = useState([]);
