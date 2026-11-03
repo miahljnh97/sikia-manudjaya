@@ -28,6 +28,11 @@ const resolveJadwalStatus = (item) => {
 };
 
 
+const monthNames = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
+
 export default function JadwalSayaView({ user, currentPath = '', onNavigate, onShowToast }) {
 
   // Helper ekstrak tanggal dari URL parameter (?tanggal=YYYY-MM-DD)
@@ -68,10 +73,7 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
   const [blastJenisPengingat, setBlastJenisPengingat] = useState('H-3');
   const [blastMetode, setBlastMetode] = useState('gateway');
 
-  const monthNames = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-  ];
+
 
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
@@ -198,7 +200,7 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
     return days;
   }, [jadwalList, currentYear, currentMonth]);
 
-  // Filter daftar jadwal jika ada tanggal kalender yang diklik
+  // Filter daftar jadwal jika ada tanggal kalender yang diklik atau bulan aktif
   const filteredJadwalList = useMemo(() => {
     if (selectedDay) {
       return jadwalList.filter(item => {
@@ -210,7 +212,7 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
         }
       });
     }
-    const monthFiltered = jadwalList.filter(item => {
+    return jadwalList.filter(item => {
       try {
         const d = new Date(item.tanggal);
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
@@ -218,12 +220,37 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
         return false;
       }
     });
-    return monthFiltered.length > 0 ? monthFiltered : jadwalList;
   }, [jadwalList, selectedDay, currentMonth, currentYear]);
+
+  // Cek apakah tanggal/bulan yang sedang dilihat adalah tanggal lampau (backdate) atau masa depan (future)
+  const isBackdate = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDay) {
+      const selectedDate = new Date(currentYear, currentMonth, selectedDay);
+      selectedDate.setHours(0, 0, 0, 0);
+      return selectedDate.getTime() < today.getTime();
+    }
+
+    // Jika tidak ada hari spesifik, periksa apakah bulan yang dipilih sudah berakhir
+    const endOfMonth = new Date(currentYear, currentMonth + 1, 0);
+    endOfMonth.setHours(23, 59, 59, 999);
+    return endOfMonth.getTime() < today.getTime();
+  }, [currentYear, currentMonth, selectedDay]);
+
+  // Keterangan empty state sesuai kondisi: 'Tidak ada jadwal...' jika backdate, 'Belum ada jadwal...' untuk future
+  const emptyScheduleText = useMemo(() => {
+    const prefix = isBackdate ? 'Tidak ada jadwal' : 'Belum ada jadwal';
+    if (selectedDay) {
+      return `${prefix} kegiatan pada tanggal ${selectedDay} ${monthNames[currentMonth]} ${currentYear}.`;
+    }
+    return `${prefix} kegiatan pada bulan ${monthNames[currentMonth]} ${currentYear}.`;
+  }, [isBackdate, selectedDay, currentMonth, currentYear]);
 
   // Jadwal terdekat yang selaras dengan kalender (bulan/tanggal aktif)
   const displayJadwalTerdekat = useMemo(() => {
-    let list = jadwalList.filter(item => {
+    const list = jadwalList.filter(item => {
       try {
         const d = new Date(item.tanggal);
         if (selectedDay) {
@@ -236,14 +263,6 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
     });
 
     list.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
-
-    if (list.length === 0 && !selectedDay) {
-      const upcoming = jadwalList
-        .filter(item => resolveJadwalStatus(item) === 'Akan Datang')
-        .sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
-      return upcoming.slice(0, 3);
-    }
-
     return list.slice(0, 4);
   }, [jadwalList, selectedDay, currentMonth, currentYear]);
 
@@ -513,7 +532,7 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
           <div className="space-y-3">
             {displayJadwalTerdekat.length === 0 ? (
               <div className="py-6 text-center text-xs text-slate-400">
-                Belum ada agenda jadwal kegiatan pada {selectedDay ? `tanggal ${selectedDay} ` : 'bulan '}{monthNames[currentMonth]} {currentYear}.
+                {emptyScheduleText}
               </div>
             ) : displayJadwalTerdekat.map((item, idx) => {
               const reminder = getReminderStatus(item.tanggal);
@@ -565,7 +584,7 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
             <p className="text-[11px] text-slate-400 mt-0.5">
               {selectedDay 
                 ? `Menampilkan ${filteredJadwalList.length} kegiatan pada tanggal ${selectedDay} ${monthNames[currentMonth]} ${currentYear}`
-                : `Menampilkan semua ${filteredJadwalList.length} jadwal kegiatan aktif`
+                : `Menampilkan ${filteredJadwalList.length} jadwal kegiatan pada bulan ${monthNames[currentMonth]} ${currentYear}`
               }
             </p>
           </div>
@@ -588,7 +607,7 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
               {filteredJadwalList.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-slate-400">
-                    Tidak ada jadwal kegiatan pada tanggal yang dipilih.
+                    {emptyScheduleText}
                   </td>
                 </tr>
               ) : (
