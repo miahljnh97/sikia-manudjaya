@@ -27,6 +27,19 @@ import { storageService } from '../../services/storageService';
 import { maskNik } from '../../utils/nikUtils';
 import CatatPemeriksaanBidanModal from './CatatPemeriksaanBidanModal';
 import { formatTanggalIndo } from '../../utils/dateUtils';
+import { supabase } from '../../config/supabaseClient';
+
+const resolveDocUrl = (doc) => {
+  if (doc?.url && !doc.url.includes('Buku_KIA_2024.pdf') && doc.url.startsWith('http')) {
+    return doc.url;
+  }
+  if (supabase && doc?.name) {
+    const cleanName = doc.name.trim();
+    const { data } = supabase.storage.from('dokumen-kia').getPublicUrl(cleanName);
+    if (data?.publicUrl) return data.publicUrl;
+  }
+  return doc?.url || 'https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf';
+};
 
 export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate, onShowToast }) {
   const userRole = (user?.role || '').toLowerCase().trim();
@@ -169,7 +182,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
                       type: doc.type || 'Dokumen Tambahan',
                       tanggal: doc.tanggal || formatTanggalIndo(item.tanggal_pemeriksaan),
                       size: doc.size || '1.0 MB',
-                      url: doc.url || 'https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf',
+                      url: resolveDocUrl(doc),
                       keterangan: doc.keterangan || item.catatan_tindak_lanjut || 'Lampiran dokumen pemeriksaan rekam medis'
                     });
                   });
