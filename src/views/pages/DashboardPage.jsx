@@ -202,9 +202,9 @@ export default function DashboardPage({ currentUser, onLogout, currentPath = '/d
         <main className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
           {isDinkes ? (
             activeMenu === 'Pemantauan Risiko' ? (
-              <DinkesPemantauanRisikoView />
+              <DinkesPemantauanRisikoView onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} />
             ) : activeMenu === 'Persebaran Wilayah' ? (
-              <DinkesPersebaranWilayahView />
+              <DinkesPersebaranWilayahView onShowToast={(msg, type) => setToast({ show: true, message: msg, type: type || 'success' })} />
             ) : activeMenu === 'Pengaturan' ? (
               <PengaturanView 
                 user={currentUser} 
