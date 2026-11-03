@@ -60,10 +60,18 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
 
   const userRole = (user?.role || '').toLowerCase().trim();
   const userEmail = (user?.user?.email || user?.email || '').toLowerCase().trim();
-  const isIbuRole = userRole.includes('ibu') || userEmail.includes('ibu') || userEmail.includes('hamil') || userEmail.includes('balita');
+  const isStaff = userRole.includes('kader') || 
+                  userRole.includes('bidan') || 
+                  userRole.includes('admin') || 
+                  userRole.includes('dinkes') ||
+                  userEmail.includes('kader') || 
+                  userEmail.includes('bidan') || 
+                  userEmail.includes('admin') || 
+                  userEmail.includes('dinkes');
+  const isIbuRole = !isStaff && (userRole.includes('ibu') || userEmail.includes('ibu') || userEmail.includes('hamil') || userEmail.includes('balita'));
 
   // Tombol Kirim WA hanya untuk Bidan, Kader, dan Super Admin. Akun Ibu di-hide.
-  const canSendWa = !isIbuRole;
+  const canSendWa = isStaff;
   const [currentDate, setCurrentDate] = useState(() => initialUrlDate ? new Date(initialUrlDate.getFullYear(), initialUrlDate.getMonth(), 1) : new Date(2026, 9, 1)); // Default Oktober 2026
   const [selectedDay, setSelectedDay] = useState(() => initialUrlDate ? initialUrlDate.getDate() : null);
   const [selectedJadwal, setSelectedJadwal] = useState(null);
@@ -109,51 +117,56 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
   }, [currentPath]);
 
   useEffect(() => {
-    const targetIbuId = user?.peserta_id || (user && getPesertaIdFromUser(user)) || user?.id || null;
-    if (targetIbuId) {
-      bukuKiaService.getJadwalPesertaList(targetIbuId).then((res) => {
-        if (!res || res.length === 0) {
-          setJadwalList([]);
-          return;
-        }
+    // Role Ibu: Ambil jadwal terisolasi milik ibu tersebut.
+    // Role Staff (Kader, Bidan, Admin, Dinkes): Ambil SEMUA agenda jadwal kegiatan posyandu.
+    const targetIbuId = isIbuRole
+      ? (user?.peserta_id || (user && getPesertaIdFromUser(user)) || null)
+      : null;
 
-        const userSpecific = res.filter(j => !j.peserta_id || String(j.peserta_id) === String(targetIbuId));
-        const candidateList = userSpecific.length > 0 ? userSpecific : res;
-
-        if (candidateList && candidateList.length > 0) {
-          const mapped = candidateList.map((j, idx) => ({
-            no: idx + 1,
-            id: j.id,
-            tanggal: j.tanggal,
-            displayTanggal: formatTanggalIndo(j.tanggal) || j.tanggal,
-            waktu: j.waktu || '09.00 - 10.00',
-            jenis: j.jenis_kegiatan || 'Pemeriksaan Kesehatan',
-            lokasi: j.lokasi || 'Puskesmas Manud Jaya',
-            status: resolveJadwalStatus(j),
-            petugas: j.petugas || 'Bidan Siti, S.Tr.Keb',
-            keterangan: j.catatan || 'Pemeriksaan rutin posyandu.'
-          }));
-          setJadwalList(mapped);
-
-          // Jika ada jadwal tapi belum ada tanggal spesifik di URL, sesuaikan bulan ke jadwal pertama
-          const urlD = extractDateFromUrl();
-          if (!urlD && mapped.length > 0) {
-            try {
-              const firstD = new Date(mapped[0].tanggal);
-              if (!isNaN(firstD.getTime())) {
-                setCurrentDate(new Date(firstD.getFullYear(), firstD.getMonth(), 1));
-              }
-            } catch {}
-          }
-        } else {
-          setJadwalList([]);
-        }
-      }).catch(err => {
-        console.warn('Gagal fetch jadwal dari Supabase:', err);
+    bukuKiaService.getJadwalPesertaList(targetIbuId).then((res) => {
+      if (!res || res.length === 0) {
         setJadwalList([]);
-      });
-    }
-  }, [user, isIbuRole]);
+        return;
+      }
+
+      const candidateList = targetIbuId
+        ? res.filter(j => !j.peserta_id || String(j.peserta_id) === String(targetIbuId))
+        : res;
+
+      if (candidateList && candidateList.length > 0) {
+        const mapped = candidateList.map((j, idx) => ({
+          no: idx + 1,
+          id: j.id,
+          tanggal: j.tanggal,
+          displayTanggal: formatTanggalIndo(j.tanggal) || j.tanggal,
+          waktu: j.waktu || '09.00 - 10.00',
+          jenis: j.jenis_kegiatan || 'Pemeriksaan Kesehatan',
+          lokasi: j.lokasi || 'Puskesmas Manud Jaya',
+          status: resolveJadwalStatus(j),
+          petugas: j.petugas || 'Bidan Siti, S.Tr.Keb',
+          keterangan: j.catatan || 'Pemeriksaan rutin posyandu.',
+          peserta_id: j.peserta_id
+        }));
+        setJadwalList(mapped);
+
+        // Jika ada jadwal tapi belum ada tanggal spesifik di URL, sesuaikan bulan ke jadwal pertama
+        const urlD = extractDateFromUrl();
+        if (!urlD && mapped.length > 0) {
+          try {
+            const firstD = new Date(mapped[0].tanggal);
+            if (!isNaN(firstD.getTime())) {
+              setCurrentDate(new Date(firstD.getFullYear(), firstD.getMonth(), 1));
+            }
+          } catch {}
+        }
+      } else {
+        setJadwalList([]);
+      }
+    }).catch(err => {
+      console.warn('Gagal fetch jadwal dari Supabase:', err);
+      setJadwalList([]);
+    });
+  }, [user, isIbuRole, isStaff]);
 
   // Metrik terhitung dinamis dari jadwal aktif (PBI 01A AC 1)
   const countPemeriksaan = useMemo(() => {
