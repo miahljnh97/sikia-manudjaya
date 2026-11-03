@@ -1,3 +1,4 @@
+import { exportToCsvFile } from '../../utils/exportUtils';
 import React, { useState } from 'react';
 import { 
   Search, 
@@ -138,6 +139,33 @@ export default function ParticipantTable({
     );
   };
 
+  const handleExportPeserta = () => {
+    try {
+      const listToExport = pesertaList || [];
+      const headers = ['No', 'Nama Peserta', 'NIK', 'Jenis Peserta', 'Usia', 'Status Ibu', 'Alamat', 'Status Kehadiran'];
+      const rows = listToExport.map((p, idx) => [
+        idx + 1,
+        p.nama || '',
+        `'${p.nik || ''}`,
+        p.jenisPeserta || p.kategori || '',
+        p.usia || '',
+        p.statusIbu || '',
+        p.alamat || '',
+        p.status || p.statusKehadiran || ''
+      ]);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      exportToCsvFile({
+        filename: `Data_Peserta_Posyandu_${dateStr}.csv`,
+        headers,
+        rows
+      });
+      if (onShowToast) onShowToast(`Data peserta (${rows.length} data) berhasil diekspor!`, 'success');
+    } catch (err) {
+      console.error('Export peserta error:', err);
+      if (onShowToast) onShowToast('Gagal mengekspor data peserta', 'error');
+    }
+  };
+
   return (
     <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden">
       {/* Table Header Action Bar */}
@@ -184,8 +212,8 @@ export default function ParticipantTable({
           {/* Export Button */}
           <button 
             type="button"
-            onClick={() => onShowToast ? onShowToast('Data peserta berhasil disiapkan untuk diunduh.', 'info') : null}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+            onClick={handleExportPeserta}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer active:scale-95"
           >
             <Download size={13} className="text-slate-500" />
             <span>Export</span>

@@ -13,7 +13,7 @@ import {
 import DinkesFilterBar from './components/DinkesFilterBar';
 import { dinkesService } from '../../services/dinkesService';
 
-export default function DinkesPemantauanRisikoView() {
+export default function DinkesPemantauanRisikoView({ onShowToast }) {
   const [filters, setFilters] = useState({
     periode: 'Oktober 2024',
     kecamatan: 'Semua Kecamatan',
@@ -79,11 +79,52 @@ export default function DinkesPemantauanRisikoView() {
   }, [balitaList, balitaSearch, balitaTab]);
 
   const handleExportIbu = () => {
-    dinkesService.exportToCsv(filteredIbu, `pemantauan-ibu-hamil-risiko-${filters.periode.replace(/\s+/g, '-').toLowerCase()}.csv`);
+    try {
+      const headers = ['No', 'Nama Ibu', 'NIK', 'Usia Kehamilan', 'Hasil Pemeriksaan Terakhir', 'Posyandu', 'Desa', 'Tanggal Periksa', 'Status Tindak Lanjut'];
+      const rows = filteredIbu.map((item, idx) => [
+        idx + 1,
+        item.namaIbu || '',
+        `'${item.nik || ''}`,
+        item.usiaKehamilan || '',
+        item.hasilPemeriksaan || '',
+        item.posyandu || '',
+        item.desa || '',
+        item.tanggalPeriksa || '',
+        item.statusTindakLanjut || ''
+      ]);
+      const filename = `Pemantauan_Ibu_Hamil_Risiko_${(filters.periode || 'Oktober_2024').replace(/\s+/g, '_')}.csv`;
+      dinkesService.exportToCsv(filename, headers, rows);
+      if (onShowToast) onShowToast(`Laporan Ibu Hamil Berisiko (${rows.length} data) berhasil diunduh!`, 'success');
+    } catch (e) {
+      console.error('Export ibu error:', e);
+      if (onShowToast) onShowToast('Gagal mengunduh laporan', 'error');
+    }
   };
 
   const handleExportBalita = () => {
-    dinkesService.exportToCsv(filteredBalita, `pemantauan-balita-stunting-${filters.periode.replace(/\s+/g, '-').toLowerCase()}.csv`);
+    try {
+      const headers = ['No', 'Nama Anak', 'NIK', 'Usia', 'Jenis Kelamin', 'Hasil Ukur Terakhir', 'BB Terakhir', 'Posyandu', 'Desa', 'Tanggal Ukur', 'Status Tindak Lanjut', 'Status Gizi'];
+      const rows = filteredBalita.map((item, idx) => [
+        idx + 1,
+        item.namaAnak || '',
+        `'${item.nik || ''}`,
+        item.usia || '',
+        item.jenisKelamin || '',
+        item.hasilUkur || '',
+        item.bbUkur || '',
+        item.posyandu || '',
+        item.desa || '',
+        item.tanggalUkur || '',
+        item.statusTindakLanjut || '',
+        item.statusGizi || ''
+      ]);
+      const filename = `Pemantauan_Balita_Stunting_${(filters.periode || 'Oktober_2024').replace(/\s+/g, '_')}.csv`;
+      dinkesService.exportToCsv(filename, headers, rows);
+      if (onShowToast) onShowToast(`Laporan Balita Stunting (${rows.length} data) berhasil diunduh!`, 'success');
+    } catch (e) {
+      console.error('Export balita error:', e);
+      if (onShowToast) onShowToast('Gagal mengunduh laporan', 'error');
+    }
   };
 
   return (

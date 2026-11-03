@@ -1,3 +1,4 @@
+import { exportToCsvFile } from '../../utils/exportUtils';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, FileText, Download, Search, RefreshCw } from 'lucide-react';
 import { laporanService } from '../../services/laporanService';
@@ -131,51 +132,46 @@ export default function LaporanPage({ currentUser, currentPath = '/laporan', onN
     return list;
   }, [laporanData.dataKunjungan, selectedJenisLaporan]);
 
-  // Handler Export Laporan CSV
+  // Handler Export Laporan CSV (Menggunakan exportToCsvFile dengan UTF-8 BOM & Blob)
   const handleExportLaporan = () => {
     try {
+      const sanitizedPeriode = (selectedPeriode || 'Semua_Periode').replace(/[\s/]+/g, '_');
       if (activeTab === 'Rekapitulasi') {
         const headers = ['No', 'Kategori', 'Jumlah', 'Laki-laki', 'Perempuan', 'Keterangan'];
-        const rows = laporanData.rekapitulasiTable.map((r) => [
+        const rows = (laporanData.rekapitulasiTable || []).map((r) => [
           r.no,
-          `"${r.kategori}"`,
+          r.kategori,
           r.jumlah,
           r.lakiLaki,
           r.perempuan,
-          `"${r.keterangan}"`
+          r.keterangan
         ]);
-        const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement('a');
-        link.setAttribute('href', encodedUri);
-        link.setAttribute('download', `Laporan_Rekapitulasi_${selectedPeriode}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        exportToCsvFile({
+          filename: `Laporan_Rekapitulasi_${sanitizedPeriode}.csv`,
+          headers,
+          rows
+        });
       } else {
-        const headers = ['No', 'Tanggal Kunjungan', 'Nama', 'NIK', 'Jenis Pasien', 'Jenis Pelayanan', 'Status', 'Hasil/Catatan'];
-        const rows = filteredDataKunjungan.map((item, idx) => [
+        const headers = ['No', 'Tanggal Kunjungan', 'Nama Pasien', 'NIK', 'Jenis Pasien', 'Jenis Pelayanan', 'Status', 'Hasil / Catatan'];
+        const rows = (filteredDataKunjungan || []).map((item, idx) => [
           idx + 1,
-          `"${item.tanggal_kunjungan}"`,
-          `"${item.nama}"`,
-          `"${item.nik}"`,
-          `"${item.jenis_pasien}"`,
-          `"${item.jenis_pelayanan}"`,
-          `"${item.status}"`,
-          `"${item.hasil_catatan}"`
+          item.tanggal_kunjungan || '',
+          item.nama || '',
+          `'${item.nik || ''}`,
+          item.jenis_pasien || '',
+          item.jenis_pelayanan || '',
+          item.status || '',
+          item.hasil_catatan || ''
         ]);
-        const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement('a');
-        link.setAttribute('href', encodedUri);
-        link.setAttribute('download', `Laporan_Data_Kunjungan_${selectedPeriode}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        exportToCsvFile({
+          filename: `Laporan_Data_Kunjungan_${sanitizedPeriode}.csv`,
+          headers,
+          rows
+        });
       }
 
       if (onShowToast) {
-        onShowToast(`Laporan ${activeTab} (${selectedPeriode}) berhasil diekspor!`, 'success');
+        onShowToast(`Laporan ${activeTab} (${selectedPeriode}) berhasil diunduh!`, 'success');
       }
     } catch (err) {
       console.error('Export error:', err);

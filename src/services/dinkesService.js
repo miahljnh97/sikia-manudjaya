@@ -1,3 +1,4 @@
+import { exportToCsvFile } from '../utils/exportUtils';
 import { supabase, isSupabaseConfigured } from '../config/supabaseClient';
 
 // Baseline fallback data agar UI tetap interaktif saat database baru diinisialisasi
@@ -356,30 +357,29 @@ export const dinkesService = {
     return { success: true, localOnly: true };
   },
 
-  // 9. Export Data ke CSV
-  exportToCsv(filename, headers, rows) {
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) =>
-        row
-          .map((field) => {
-            const str = String(field ?? '');
-            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-              return `"${str.replace(/"/g, '""')}"`;
-            }
-            return str;
-          })
-          .join(',')
-      )
-    ].join('\r\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // 9. Export Data ke CSV (Mendukung fleksibel arguments)
+  exportToCsv(arg1, arg2, arg3) {
+    // Format A: exportToCsv(filename, headers, rows)
+    if (typeof arg1 === 'string' && Array.isArray(arg2) && Array.isArray(arg3)) {
+      return exportToCsvFile({ filename: arg1, headers: arg2, rows: arg3 });
+    }
+    // Format B: exportToCsv(rowsOrObjects, filename, customHeaders)
+    if (Array.isArray(arg1) && typeof arg2 === 'string') {
+      const data = arg1;
+      const filename = arg2;
+      if (data.length === 0) {
+        return exportToCsvFile({ filename, headers: ['Data Kosong'], rows: [] });
+      }
+      if (Array.isArray(data[0])) {
+        return exportToCsvFile({ filename, headers: arg3 || [], rows: data });
+      }
+      const headers = arg3 || Object.keys(data[0]);
+      const rows = data.map((item) => headers.map((h) => item[h] ?? ''));
+      return exportToCsvFile({ filename, headers, rows });
+    }
+    // Format C: exportToCsv({ filename, headers, rows })
+    if (arg1 && typeof arg1 === 'object') {
+      return exportToCsvFile(arg1);
+    }
   }
 };
