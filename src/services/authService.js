@@ -8,6 +8,14 @@ export const authService = {
   async login(email, password) {
     const lowerEmail = (email || '').toLowerCase().trim();
 
+    // Fast-path untuk Akun Dinkes demo
+    if ((lowerEmail === DUMMY_ACCOUNTS.dinkes?.email || lowerEmail === 'dinkes.kabupaten@manudjaya.id' || lowerEmail.includes('dinkes')) && (password === 'Dinkes123!' || password === 'Admin123!')) {
+      return {
+        user: { email: DUMMY_ACCOUNTS.dinkes.email, id: 'dinkes-kabupaten-id' },
+        ...DUMMY_ACCOUNTS.dinkes
+      };
+    }
+
     // Fast-path untuk Akun Ibu demo evaluasi
     if ((lowerEmail === DUMMY_ACCOUNTS.ibu_hamil?.email || lowerEmail === 'ibu.hamil@manudjaya.id') && password === 'Ibu123!') {
       return { 
@@ -86,7 +94,10 @@ export const authService = {
           }
 
           // 4. Fallback pencocokan email berdasarkan akun standar
-          if (lowerEmail.includes('admin') || lowerEmail === DUMMY_ACCOUNTS.admin.email) {
+          if (lowerEmail.includes('dinkes') || lowerEmail === DUMMY_ACCOUNTS.dinkes?.email) {
+            userRole = 'Dinas Kesehatan';
+            userName = userName || 'Dinas Kesehatan';
+          } else if (lowerEmail.includes('admin') || lowerEmail === DUMMY_ACCOUNTS.admin.email) {
             userRole = userRole || 'Super Admin';
             userName = userName || DUMMY_ACCOUNTS.admin.nama;
           } else if (lowerEmail.includes('bidan') || lowerEmail === DUMMY_ACCOUNTS.bidan.email) {
@@ -109,7 +120,9 @@ export const authService = {
           // Normalisasi role string (default ke 'Ibu' demi privasi kecuali terbukti staff)
           const r = (userRole || '').toLowerCase();
           let normalizedRole = 'Ibu';
-          if (r.includes('admin') || r === 'superadmin' || r === 'super_admin' || lowerEmail.includes('admin')) {
+          if (r.includes('dinkes') || r.includes('dinas') || lowerEmail.includes('dinkes')) {
+            normalizedRole = 'Dinas Kesehatan';
+          } else if (r.includes('admin') || r === 'superadmin' || r === 'super_admin' || lowerEmail.includes('admin')) {
             normalizedRole = 'Super Admin';
           } else if (r.includes('bidan') || r === 'bidan_desa' || lowerEmail.includes('bidan')) {
             normalizedRole = 'Bidan Desa';
@@ -163,6 +176,9 @@ export const authService = {
     }
     if (lowerEmail === DUMMY_ACCOUNTS.admin.email && password === 'Admin123!') {
       return { user: { email }, ...DUMMY_ACCOUNTS.admin };
+    }
+    if ((lowerEmail === DUMMY_ACCOUNTS.dinkes?.email || lowerEmail.includes('dinkes')) && (password === 'Dinkes123!' || password === 'Admin123!')) {
+      return { user: { email: DUMMY_ACCOUNTS.dinkes.email }, ...DUMMY_ACCOUNTS.dinkes };
     }
 
     throw new Error('Email atau password evaluasi salah.');

@@ -24,7 +24,7 @@ export const DUMMY_ACCOUNTS = {
   bidan: {
     email: 'bidan.desa@manudjaya.id',
     role: 'Bidan Desa',
-    nama: 'Bidan Siti, S.Tr.Keb',
+    nama: 'Khansa Fatin', // Sesuai profil Figma Bidan
     id: 'fb044287-90d3-4d64-b30e-e5fc58f85f91',
     petugas_id: 'fb044287-90d3-4d64-b30e-e5fc58f85f91',
   },
@@ -56,6 +56,12 @@ export const DUMMY_ACCOUNTS = {
     email: 'admin.desa@manudjaya.id',
     role: 'Super Admin',
     nama: 'Bambang Sudarmono, S.STP',
+  },
+  dinkes: {
+    email: 'dinkes.kabupaten@manudjaya.id',
+    role: 'Dinas Kesehatan',
+    nama: 'Dinas Kesehatan',
+    instansi: 'Kabupaten Administrasi',
   }
 };
 
