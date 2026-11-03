@@ -1,5 +1,5 @@
 import { getPesertaIdFromUser } from '../../models/pesertaModel';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Calendar, 
   HeartPulse, 
@@ -62,6 +62,7 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
     return 2; // Default langsung tampil Janin 1 dan Janin 2
   })();
   const [activeJaninId, setActiveJaninId] = useState('janin-1');
+  const [jadwalMendatangCount, setJadwalMendatangCount] = useState(null);
 
   // Dynamic responsive chart width & points for Perkembangan Kehamilan
   const chartContainerRef = useRef(null);
@@ -81,13 +82,50 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
     return () => ro.disconnect();
   }, []);
 
-  const chartPoints = [
-    { week: 12, bb: 50 },
-    { week: 16, bb: 60 },
-    { week: 20, bb: 62 },
-    { week: 24, bb: 65 },
-    { week: 28, bb: 68 },
-  ];
+  const chartPoints = useMemo(() => {
+    if (ancList && ancList.length >= 2) {
+      const valid = ancList.filter(a => a.berat_badan != null && !isNaN(Number(a.berat_badan)));
+      if (valid.length >= 2) {
+        return valid.map(a => {
+          const w = parseInt(String(a.usia_kehamilan || '').replace(/\D/g, ''), 10) || 12;
+          return {
+            week: w,
+            bb: Math.round(Number(a.berat_badan))
+          };
+        }).sort((a, b) => a.week - b.week);
+      }
+    }
+    return [
+      { week: 12, bb: 50 },
+      { week: 16, bb: 60 },
+      { week: 20, bb: 62 },
+      { week: 24, bb: 65 },
+      { week: 28, bb: 68 },
+    ];
+  }, [ancList]);
+
+  // Kalkulasi berat badan dan kenaikan berat badan real-time dari riwayat ANC Supabase
+  const weightGainData = useMemo(() => {
+    if (!ancList || ancList.length === 0) return null;
+    const valid = ancList.filter(a => a.berat_badan != null && !isNaN(Number(a.berat_badan)));
+    if (valid.length === 0) return null;
+
+    const latest = Number(valid[valid.length - 1].berat_badan);
+    const initial = Number(valid[0].berat_badan);
+    const delta = valid.length > 1 ? (latest - initial) : 0;
+    const deltaFormatted = Math.abs(delta) < 0.01 
+      ? '0' 
+      : (delta > 0 
+          ? `+${delta.toFixed(1).replace('.0', '').replace('.', ',')}` 
+          : `${delta.toFixed(1).replace('.0', '').replace('.', ',')}`);
+
+    return {
+      latestBb: latest,
+      latestBbFormatted: String(latest).replace('.', ','),
+      delta,
+      deltaStr: valid.length > 1 ? `${deltaFormatted} kg` : (delta !== 0 ? `${deltaFormatted} kg` : '0 kg')
+    };
+  }, [ancList]);
   const chartPaddingLeft = 38;
   const chartPaddingRight = 16;
   const availableChartWidth = Math.max(chartWidth - chartPaddingLeft - chartPaddingRight, 100);
@@ -181,7 +219,7 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
     });
   }, []);
 
-  // Fetch kehamilan untuk ibu yang dipilih
+  // Fetch kehamilan dan jadwal untuk ibu yang dipilih
   useEffect(() => {
     if (!activePesertaId) return;
     pesertaService.getPesertaById(activePesertaId).then(p => {
@@ -201,7 +239,28 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
         setKehamilan(null);
         setAncList([]);
       }
+    }).catch(() => {
+      setKehamilan(null);
+      setAncList([]);
     });
+
+    bukuKiaService.getJadwalPesertaList(activePesertaId).then(res => {
+      if (res && res.length > 0) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const upcoming = res.filter(item => {
+          try {
+            const d = new Date(item.tanggal);
+            return d >= today;
+          } catch {
+            return false;
+          }
+        });
+        setJadwalMendatangCount(upcoming.length);
+      } else {
+        setJadwalMendatangCount(0);
+      }
+    }).catch(() => setJadwalMendatangCount(0));
   }, [activePesertaId]);
 
   const handleSwitchPasien = (newId) => {
@@ -626,7 +685,9 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-medium block">Pemeriksaan Kehamilan</span>
-              <span className="text-sm font-bold text-slate-900 mt-0.5 block">{ancList.length} dari 6 Standar Kemenkes</span>
+              <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                {ancList && ancList.length > 0 ? `${ancList.length} dari 6 Standar Kemenkes` : '-'}
+              </span>
             </div>
           </div>
           <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
@@ -640,8 +701,12 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-medium block">Konsumsi TTD/MMS</span>
-              <span className="text-sm font-bold text-slate-900 mt-0.5 block">23 / 28</span>
-              <span className="text-[10px] text-slate-400 block -mt-0.5">hari konsumsi bulan ini</span>
+              <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                {kehamilan?.jumlah_tablet_fe_diminum != null ? `${kehamilan.jumlah_tablet_fe_diminum} / ${kehamilan.target_tablet_fe || 90}` : '-'}
+              </span>
+              <span className="text-[10px] text-slate-400 block -mt-0.5">
+                {kehamilan?.jumlah_tablet_fe_diminum != null ? 'tablet fe diminum' : 'belum ada data'}
+              </span>
             </div>
           </div>
           <ChevronRight size={16} className="text-slate-400" />
@@ -658,7 +723,9 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-medium block">Jadwal Mendatang</span>
-              <span className="text-sm font-bold text-slate-900 mt-0.5 block">2</span>
+              <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                {jadwalMendatangCount != null ? jadwalMendatangCount : '-'}
+              </span>
               <span className="text-[10px] text-slate-400 block -mt-0.5">Agenda berikutnya</span>
             </div>
           </div>
@@ -673,8 +740,14 @@ export default function KehamilanView({ user, currentPath = '', onNavigate, onSh
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-medium block">Berat badan</span>
-              <span className="text-sm font-bold text-slate-900 mt-0.5 block">62 kg</span>
-              <span className="text-[10px] text-emerald-600 font-semibold block -mt-0.5">+8 kg</span>
+              <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                {weightGainData ? `${weightGainData.latestBbFormatted} kg` : '-'}
+              </span>
+              {weightGainData?.deltaStr && (
+                <span className="text-[10px] text-emerald-600 font-semibold block -mt-0.5">
+                  {weightGainData.deltaStr}
+                </span>
+              )}
             </div>
           </div>
           <ChevronRight size={16} className="text-slate-400" />

@@ -147,11 +147,11 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
                 jenis: item.kunjungan_ke,
                 hasil: item.status_hasil || 'Normal',
                 catatan: item.catatan_tindak_lanjut || item.catatan || 'Kondisi normal',
-                tekananDarah: item.tekanan_darah ? `${item.tekanan_darah} mmHg` : '110/70 mmHg',
-                beratBadan: item.berat_badan ? `${item.berat_badan} kg` : '60 kg',
-                tinggiFundus: item.tinggi_fundus ? `${item.tinggi_fundus} cm` : '24 cm',
-                djj: item.djj ? `${item.djj} x/menit` : '140 x/menit',
-                petugas: item.pemeriksa || 'Bidan Siti, S.Tr.Keb'
+                tekananDarah: item.tekanan_darah ? `${item.tekanan_darah} mmHg` : '-',
+                beratBadan: item.berat_badan ? `${item.berat_badan} kg` : '-',
+                tinggiFundus: item.tinggi_fundus ? `${item.tinggi_fundus} cm` : '-',
+                djj: item.djj ? `${item.djj} x/menit` : '-',
+                petugas: item.pemeriksa || '-'
               })));
             } else {
               setRiwayatList([]);
