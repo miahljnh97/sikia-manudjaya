@@ -89,6 +89,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
   const [dokumenList, setDokumenList] = useState([]);
   const [selectedDokumen, setSelectedDokumen] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const [selectedPemeriksaan, setSelectedPemeriksaan] = useState(null);
   const [isModalTambahOpen, setIsModalTambahOpen] = useState(false);
@@ -209,7 +210,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
 
     fetchIbuData();
     return () => { isMounted = false; };
-  }, [activePesertaId]);
+  }, [activePesertaId, refreshTrigger]);
 
   // Handler pergantian pasien oleh Bidan/Kader
   const handleSwitchPasien = (newPesertaId) => {
@@ -826,11 +827,7 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
           onSuccess={() => {
             setIsModalTambahOpen(false);
             if (onShowToast) onShowToast('Catatan pemeriksaan berhasil disimpan!', 'success');
-            if (activePesertaId) {
-              bukuKiaService.getRiwayatPemeriksaanIbu(activePesertaId).then((data) => {
-                if (data && data.length > 0) setRiwayatList(data);
-              });
-            }
+            setRefreshTrigger(prev => prev + 1);
           }}
           onShowToast={onShowToast}
         />

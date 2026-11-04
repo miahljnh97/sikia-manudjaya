@@ -217,6 +217,26 @@ export const bukuKiaService = {
   },
 
   /**
+   * Mengambil riwayat pemeriksaan ANC seorang ibu berdasarkan pesertaId
+   * (Menghubungkan kehamilan aktif lalu mengambil daftar pemeriksaan ANC)
+   */
+  async getRiwayatPemeriksaanIbu(pesertaId) {
+    if (!pesertaId) return [];
+    try {
+      let kehamilan = await this.getKehamilanIbu(pesertaId);
+      if (!kehamilan?.id) {
+        kehamilan = await this.getOrCreateKehamilanIbu(pesertaId);
+      }
+      if (kehamilan?.id) {
+        return await this.getPemeriksaanAncList(kehamilan.id);
+      }
+    } catch (err) {
+      console.warn('Gagal getRiwayatPemeriksaanIbu:', err);
+    }
+    return [];
+  },
+
+  /**
    * Tambah pemeriksaan ANC baru (Input oleh Bidan / Kader - PBI 02C)
    */
   async tambahPemeriksaanAnc(ancData) {
