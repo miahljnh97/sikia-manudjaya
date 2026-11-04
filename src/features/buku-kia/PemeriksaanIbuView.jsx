@@ -147,7 +147,10 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
         if (isMounted) setPeserta(pData);
 
         // 2. Data Kehamilan Ibu
-        const khData = await bukuKiaService.getKehamilanIbu(activePesertaId);
+        let khData = await bukuKiaService.getKehamilanIbu(activePesertaId);
+        if (!khData?.id && (isBidan || isKader)) {
+          khData = await bukuKiaService.getOrCreateKehamilanIbu(activePesertaId);
+        }
         if (isMounted) setKehamilan(khData);
 
         // 3. Riwayat Pemeriksaan ANC TERISOLASI per kehamilanId
@@ -823,10 +826,10 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
           isOpen={isModalTambahOpen}
           onClose={() => setIsModalTambahOpen(false)}
           pasien={peserta || (activePesertaId ? { id: activePesertaId, nama: namaPasien, jenis_peserta: 'Ibu Hamil' } : null)}
+          kehamilan={kehamilan}
           currentUser={user}
           onSuccess={() => {
             setIsModalTambahOpen(false);
-            if (onShowToast) onShowToast('Catatan pemeriksaan berhasil disimpan!', 'success');
             setRefreshTrigger(prev => prev + 1);
           }}
           onShowToast={onShowToast}

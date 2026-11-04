@@ -153,10 +153,11 @@ export const bukuKiaService = {
           .from('kehamilan_ibu')
           .select('*')
           .eq('peserta_id', pesertaId)
-          .maybeSingle();
+          .order('created_at', { ascending: false });
 
-        if (data && data.status_kehamilan === 'Aktif' && data.usia_kehamilan_minggu) {
-          return data;
+        if (!error && data && data.length > 0) {
+          const aktif = data.find(k => (k.status_kehamilan || '').toLowerCase() === 'aktif');
+          return aktif || data[0];
         }
       } catch (e) {
         console.warn('Gagal fetch kehamilan_ibu dari Supabase:', e);
@@ -278,7 +279,10 @@ export const bukuKiaService = {
   }) {
     let activeKehamilanId = kehamilanId;
     if (!activeKehamilanId && pesertaId) {
-      const kh = await this.getKehamilanIbu(pesertaId);
+      let kh = await this.getKehamilanIbu(pesertaId);
+      if (!kh?.id) {
+        kh = await this.getOrCreateKehamilanIbu(pesertaId);
+      }
       if (kh?.id) activeKehamilanId = kh.id;
     }
 
