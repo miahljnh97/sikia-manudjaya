@@ -15,6 +15,42 @@ import DinkesFilterBar from './components/DinkesFilterBar';
 import PetaPersebaranWilayah from './components/PetaPersebaranWilayah';
 import { dinkesService } from '../../services/dinkesService';
 
+// Helper pengecekan filter global (Kecamatan, Desa, Posyandu)
+function matchesAreaFilter(item, filters) {
+  if (!item) return false;
+
+  // 1. Filter Posyandu
+  if (filters.posyandu && filters.posyandu !== 'Semua Posyandu') {
+    const targetPos = filters.posyandu.toLowerCase().trim();
+    const itemPos = (item.nama || item.posyandu || '').toLowerCase().trim();
+    if (!itemPos.includes(targetPos) && !targetPos.includes(itemPos)) {
+      return false;
+    }
+  }
+
+  // 2. Filter Desa / Kelurahan
+  if (filters.desa && filters.desa !== 'Semua Desa') {
+    const cleanFilterDesa = filters.desa.replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
+    const cleanItemDesa = (item.desa || '').replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
+    if (!cleanItemDesa.includes(cleanFilterDesa) && !cleanFilterDesa.includes(cleanItemDesa)) {
+      return false;
+    }
+  }
+
+  // 3. Filter Kecamatan
+  if (filters.kecamatan && filters.kecamatan !== 'Semua Kecamatan') {
+    const cleanKec = filters.kecamatan.replace(/^Kecamatan\s+/i, '').toLowerCase().trim();
+    if (item.kecamatan) {
+      const cleanItemKec = item.kecamatan.replace(/^Kecamatan\s+/i, '').toLowerCase().trim();
+      if (!cleanItemKec.includes(cleanKec) && !cleanKec.includes(cleanItemKec)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 export default function DinkesPersebaranWilayahView({ onShowToast }) {
   const [filters, setFilters] = useState({
     periode: 'Oktober 2024',
@@ -54,27 +90,65 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
     };
     loadData();
     return () => { isMounted = false; };
-  }, [filters]);
+  }, [filters.periode]);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
+    setPosyanduPage(1);
+    setDesaPage(1);
   };
 
-  // Filtered Posyandu list
+  // Filtered Posyandu list (Reaktif terhadap Filter Bar & Search)
   const filteredPosyandu = useMemo(() => {
-    const q = searchPosyandu.toLowerCase().trim();
-    if (!q) return posyanduData;
-    return posyanduData.filter(
-      (item) => item.nama.toLowerCase().includes(q) || item.desa.toLowerCase().includes(q)
-    );
-  }, [posyanduData, searchPosyandu]);
+    return posyanduData.filter((item) => {
+      const q = searchPosyandu.toLowerCase().trim();
+      const matchQuery = !q ||
+        (item.nama && item.nama.toLowerCase().includes(q)) ||
+        (item.desa && item.desa.toLowerCase().includes(q));
+      const matchArea = matchesAreaFilter(item, filters);
+      return matchQuery && matchArea;
+    });
+  }, [posyanduData, searchPosyandu, filters]);
 
-  // Filtered Desa list
+  // Filtered Desa list (Reaktif terhadap Filter Bar & Search)
   const filteredDesa = useMemo(() => {
-    const q = searchDesa.toLowerCase().trim();
-    if (!q) return desaData;
-    return desaData.filter((item) => item.desa.toLowerCase().includes(q));
-  }, [desaData, searchDesa]);
+    return desaData.filter((item) => {
+      const q = searchDesa.toLowerCase().trim();
+      const matchQuery = !q || (item.desa && item.desa.toLowerCase().includes(q));
+      const matchArea = matchesAreaFilter(item, {
+        kecamatan: filters.kecamatan,
+        desa: filters.desa,
+        posyandu: 'Semua Posyandu' // Posyandu filter tidak mengeliminasi desa jika desa bersangkutan memuat posyandu
+      });
+      return matchQuery && matchArea;
+    });
+  }, [desaData, searchDesa, filters]);
+
+  // Hitung Summary Stat Cards Dinamis
+  const summaryStats = useMemo(() => {
+    const isFiltered = (filters.desa && filters.desa !== 'Semua Desa') || (filters.posyandu && filters.posyandu !== 'Semua Posyandu');
+    if (!isFiltered) {
+      return {
+        totalPosyandu: 26,
+        totalBayi: '1.036',
+        totalBalita: '892',
+        totalIbuHamil: '168',
+        totalIbuNifas: '72'
+      };
+    }
+    const totalPos = filteredPosyandu.length;
+    const totalBayi = filteredPosyandu.reduce((acc, p) => acc + (p.totalBayi || 0), 0);
+    const totalBalita = filteredPosyandu.reduce((acc, p) => acc + (p.totalBalita || 0), 0);
+    const totalIbuHamil = filteredPosyandu.reduce((acc, p) => acc + (p.totalIbuHamil || 0), 0);
+    const totalIbuNifas = filteredPosyandu.reduce((acc, p) => acc + (p.totalIbuNifas || 0), 0);
+    return {
+      totalPosyandu: totalPos,
+      totalBayi: totalBayi.toLocaleString('id-ID'),
+      totalBalita: totalBalita.toLocaleString('id-ID'),
+      totalIbuHamil: totalIbuHamil.toLocaleString('id-ID'),
+      totalIbuNifas: totalIbuNifas.toLocaleString('id-ID')
+    };
+  }, [filteredPosyandu, filters]);
 
   // Pagination for Posyandu
   const totalPosyanduPages = Math.max(1, Math.ceil(filteredPosyandu.length / itemsPerPage));
@@ -167,7 +241,7 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
           </div>
           <div>
             <span className="block text-[11px] text-slate-500 font-medium">Total Posyandu Aktif</span>
-            <span className="block text-xl font-bold text-slate-900 leading-tight mt-0.5">26</span>
+            <span className="block text-xl font-bold text-slate-900 leading-tight mt-0.5">{summaryStats.totalPosyandu}</span>
           </div>
           <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
             <ArrowUpRight size={12} />
@@ -183,7 +257,7 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
           </div>
           <div>
             <span className="block text-[11px] text-slate-500 font-medium">Total Bayi</span>
-            <span className="block text-xl font-bold text-slate-900 leading-tight mt-0.5">1.036</span>
+            <span className="block text-xl font-bold text-slate-900 leading-tight mt-0.5">{summaryStats.totalBayi}</span>
           </div>
           <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
             <ArrowUpRight size={12} />
@@ -199,7 +273,7 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
           </div>
           <div>
             <span className="block text-[11px] text-slate-500 font-medium">Total Balita</span>
-            <span className="block text-xl font-bold text-slate-900 leading-tight mt-0.5">892</span>
+            <span className="block text-xl font-bold text-slate-900 leading-tight mt-0.5">{summaryStats.totalBalita}</span>
           </div>
           <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
             <ArrowUpRight size={12} />
@@ -215,7 +289,7 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
           </div>
           <div>
             <span className="block text-[11px] text-slate-500 font-medium">Total Ibu Hamil</span>
-            <span className="block text-xl font-bold text-slate-900 leading-tight mt-0.5">168</span>
+            <span className="block text-xl font-bold text-slate-900 leading-tight mt-0.5">{summaryStats.totalIbuHamil}</span>
           </div>
           <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
             <ArrowUpRight size={12} />
@@ -231,7 +305,7 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
           </div>
           <div>
             <span className="block text-[11px] text-slate-500 font-medium">Total Ibu Nifas & Menyusui</span>
-            <span className="block text-xl font-bold text-slate-900 leading-tight mt-0.5">72</span>
+            <span className="block text-xl font-bold text-slate-900 leading-tight mt-0.5">{summaryStats.totalIbuNifas}</span>
           </div>
           <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
             <ArrowUpRight size={12} />
@@ -245,9 +319,24 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
       {/* 3. Peta Persebaran Wilayah Interaktif (Full Width Sesuai Gambar 1 & 3)*/}
       {/* ==================================================================== */}
       <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
-        <div>
-          <h3 className="text-sm font-bold text-slate-900">Peta Persebaran Kesehatan Ibu & Anak</h3>
-          <p className="text-[11px] text-slate-400">Pemetaan sebaran kasus dan titik pelayanan posyandu per desa</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">Peta Persebaran Kesehatan Ibu & Anak</h3>
+            <p className="text-[11px] text-slate-400">Pemetaan sebaran kasus dan titik pelayanan posyandu per desa</p>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-xl px-3.5 py-1.5 shadow-2xs flex items-center gap-2 text-xs">
+            <span className="text-slate-400 font-medium">Tampilkan:</span>
+            <select
+              value={selectedIndikator}
+              onChange={(e) => setSelectedIndikator(e.target.value)}
+              className="bg-transparent font-bold text-slate-700 outline-none cursor-pointer text-xs pr-1"
+            >
+              <option value="Kasus Stunting (Balita)">Kasus Stunting (Balita)</option>
+              <option value="Ibu Hamil Berisiko">Ibu Hamil Berisiko</option>
+              <option value="Cakupan Imunisasi Rendah">Cakupan Imunisasi Rendah</option>
+            </select>
+          </div>
         </div>
 
         <PetaPersebaranWilayah
@@ -295,40 +384,46 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50/60 text-slate-600 font-bold border-b border-slate-100 whitespace-nowrap">
-                <th className="py-3 px-4 w-10">No</th>
-                <th className="py-3 px-4">Nama Posyandu</th>
-                <th className="py-3 px-4">Desa/Kelurahan</th>
-                <th className="py-3 px-4 text-center">Total Kunjungan</th>
-                <th className="py-3 px-4 text-center">Total Pasien</th>
-                <th className="py-3 px-4 text-center">Total Bayi</th>
-                <th className="py-3 px-4 text-center">Total Balita</th>
-                <th className="py-3 px-4 text-center">Total Ibu Hamil</th>
-                <th className="py-3 px-4 text-center">Total Ibu Nifas</th>
-                <th className="py-3 px-4 text-center">Tren Kunjungan</th>
-                <th className="py-3 px-4 text-right">Terakhir Diperbarui</th>
+                <th className="py-3 px-3 w-10">No.</th>
+                <th className="py-3 px-3">Nama Posyandu</th>
+                <th className="py-3 px-3">Desa/Kelurahan</th>
+                <th className="py-3 px-3 text-center">Total Kunjungan</th>
+                <th className="py-3 px-3 text-center">Total Pasien</th>
+                <th className="py-3 px-3 text-center">Total Bayi</th>
+                <th className="py-3 px-3 text-center">Total Balita</th>
+                <th className="py-3 px-3 text-center">Total Ibu Hamil</th>
+                <th className="py-3 px-3 text-center">Total Ibu Nifas</th>
+                <th className="py-3 px-3 text-center">Trend Kunjungan</th>
+                <th className="py-3 px-3 text-right">Terakhir Diperbarui</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700 whitespace-nowrap">
               {paginatedPosyandu.length === 0 ? (
                 <tr>
                   <td colSpan={11} className="py-8 text-center text-slate-400">
-                    Tidak ada data posyandu ditemukan.
+                    Tidak ada data posyandu pada filter ini.
                   </td>
                 </tr>
               ) : (
                 paginatedPosyandu.map((row, idx) => (
-                  <tr key={`${row.nama}-${idx}`} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 text-slate-400 font-medium">{posyanduStartIndex + idx + 1}</td>
-                    <td className="py-3 px-4 font-bold text-slate-900">{row.nama}</td>
-                    <td className="py-3 px-4 text-slate-600">{row.desa}</td>
-                    <td className="py-3 px-4 text-center font-semibold text-slate-900">{row.totalKunjungan}</td>
-                    <td className="py-3 px-4 text-center">{row.totalPasien}</td>
-                    <td className="py-3 px-4 text-center">{row.totalBayi}</td>
-                    <td className="py-3 px-4 text-center">{row.totalBalita}</td>
-                    <td className="py-3 px-4 text-center">{row.totalIbuHamil}</td>
-                    <td className="py-3 px-4 text-center">{row.totalIbuNifas}</td>
-                    <td className="py-3 px-4 text-center text-emerald-600 font-bold">{row.trend}</td>
-                    <td className="py-3 px-4 text-right text-slate-400 font-mono text-[11px]">{row.terakhirDiperbarui || row.tanggal || '30/10/2026 21:50'}</td>
+                  <tr key={row.id || `${row.nama}-${idx}`} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-3 px-3 text-slate-400 font-medium">{posyanduStartIndex + idx + 1}.</td>
+                    <td className="py-3 px-3 font-bold text-slate-900">{row.nama}</td>
+                    <td className="py-3 px-3 text-slate-600">{row.desa}</td>
+                    <td className="py-3 px-3 text-center font-bold text-slate-900">{row.totalKunjungan}</td>
+                    <td className="py-3 px-3 text-center font-medium text-slate-700">{row.totalPasien}</td>
+                    <td className="py-3 px-3 text-center text-slate-600">{row.totalBayi}</td>
+                    <td className="py-3 px-3 text-center text-slate-600">{row.totalBalita}</td>
+                    <td className="py-3 px-3 text-center text-slate-600">{row.totalIbuHamil}</td>
+                    <td className="py-3 px-3 text-center text-slate-600">{row.totalIbuNifas}</td>
+                    <td className="py-3 px-3 text-center">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {row.trend || '↑ 10%'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-right text-slate-500 font-mono text-[11px]">
+                      {row.terakhirDiperbarui || row.tanggal || '30/10/2026 21:50'}
+                    </td>
                   </tr>
                 ))
               )}
@@ -339,7 +434,12 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
         {/* Pagination Posyandu */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500 pt-3 border-t border-slate-100">
           <div>
-            Menampilkan {filteredPosyandu.length > 0 ? posyanduStartIndex + 1 : 0}-{Math.min(posyanduStartIndex + itemsPerPage, filteredPosyandu.length)} dari {filteredPosyandu.length} Posyandu
+            {filteredPosyandu.length === 0
+              ? 'Menampilkan 0 Posyandu'
+              : totalPosyanduPages === 1
+                ? `Menampilkan ${filteredPosyandu.length} dari ${filteredPosyandu.length} Posyandu`
+                : `Menampilkan ${posyanduStartIndex + 1} - ${Math.min(posyanduStartIndex + itemsPerPage, filteredPosyandu.length)} dari ${filteredPosyandu.length} Posyandu`
+            }
           </div>
 
           <div className="flex items-center gap-1">
@@ -385,7 +485,7 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
       <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
         <div>
           <h3 className="text-sm font-bold text-slate-900">Rekapitulasi Kunjungan</h3>
-          <p className="text-[11px] text-slate-400">Jumlah kunjungan berdasarkan posyandu</p>
+          <p className="text-[11px] text-slate-400">Jumlah kunjungan berdasarkan desa</p>
         </div>
 
         {/* Search & Export Button */}
@@ -396,7 +496,7 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
               type="text"
               value={searchDesa}
               onChange={(e) => { setSearchDesa(e.target.value); setDesaPage(1); }}
-              placeholder="Cari nama Desa/Kelurahan, Posyandu..."
+              placeholder="Cari nama Desa/Kelurahan..."
               className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
             />
           </div>
@@ -416,38 +516,44 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50/60 text-slate-600 font-bold border-b border-slate-100 whitespace-nowrap">
-                <th className="py-3 px-4 w-10">No</th>
-                <th className="py-3 px-4">Desa/Kelurahan</th>
-                <th className="py-3 px-4 text-center">Jumlah Posyandu</th>
-                <th className="py-3 px-4 text-center">Total Pasien</th>
-                <th className="py-3 px-4 text-center">Total Bayi</th>
-                <th className="py-3 px-4 text-center">Total Balita</th>
-                <th className="py-3 px-4 text-center">Total Ibu Hamil</th>
-                <th className="py-3 px-4 text-center">Total Ibu Nifas</th>
-                <th className="py-3 px-4 text-center">Tren Kunjungan</th>
-                <th className="py-3 px-4 text-right">Terakhir Diperbarui</th>
+                <th className="py-3 px-3 w-10">No.</th>
+                <th className="py-3 px-3">Desa/Kelurahan</th>
+                <th className="py-3 px-3 text-center">Jumlah Posyandu</th>
+                <th className="py-3 px-3 text-center">Total Pasien</th>
+                <th className="py-3 px-3 text-center">Total Bayi</th>
+                <th className="py-3 px-3 text-center">Total Balita</th>
+                <th className="py-3 px-3 text-center">Total Ibu Hamil</th>
+                <th className="py-3 px-3 text-center">Total Ibu Nifas</th>
+                <th className="py-3 px-3 text-center">Trend Kunjungan</th>
+                <th className="py-3 px-3 text-right">Terakhir Diperbarui</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700 whitespace-nowrap">
               {paginatedDesa.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="py-8 text-center text-slate-400">
-                    Tidak ada data desa ditemukan.
+                    Tidak ada data desa pada filter ini.
                   </td>
                 </tr>
               ) : (
                 paginatedDesa.map((row, idx) => (
-                  <tr key={`${row.desa}-${idx}`} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 text-slate-400 font-medium">{desaStartIndex + idx + 1}</td>
-                    <td className="py-3 px-4 font-bold text-slate-900">{row.desa}</td>
-                    <td className="py-3 px-4 text-center font-semibold text-slate-900">{row.jumlahPosyandu}</td>
-                    <td className="py-3 px-4 text-center">{row.totalPasien}</td>
-                    <td className="py-3 px-4 text-center">{row.totalBayi}</td>
-                    <td className="py-3 px-4 text-center">{row.totalBalita}</td>
-                    <td className="py-3 px-4 text-center">{row.totalIbuHamil}</td>
-                    <td className="py-3 px-4 text-center">{row.totalIbuNifas}</td>
-                    <td className="py-3 px-4 text-center text-emerald-600 font-bold">{row.trend}</td>
-                    <td className="py-3 px-4 text-right text-slate-400 font-mono text-[11px]">{row.terakhirDiperbarui || row.tanggal || '30/10/2026 21:50'}</td>
+                  <tr key={row.id || `${row.desa}-${idx}`} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-3 px-3 text-slate-400 font-medium">{desaStartIndex + idx + 1}.</td>
+                    <td className="py-3 px-3 font-bold text-slate-900">{row.desa}</td>
+                    <td className="py-3 px-3 text-center font-bold text-slate-800">{row.jumlahPosyandu}</td>
+                    <td className="py-3 px-3 text-center font-medium text-slate-700">{row.totalPasien}</td>
+                    <td className="py-3 px-3 text-center text-slate-600">{row.totalBayi}</td>
+                    <td className="py-3 px-3 text-center text-slate-600">{row.totalBalita}</td>
+                    <td className="py-3 px-3 text-center text-slate-600">{row.totalIbuHamil}</td>
+                    <td className="py-3 px-3 text-center text-slate-600">{row.totalIbuNifas}</td>
+                    <td className="py-3 px-3 text-center">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {row.trend || '↑ 10%'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-right text-slate-500 font-mono text-[11px]">
+                      {row.terakhirDiperbarui || row.tanggal || '30/10/2026 21:50'}
+                    </td>
                   </tr>
                 ))
               )}
@@ -458,7 +564,12 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
         {/* Pagination Desa */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500 pt-3 border-t border-slate-100">
           <div>
-            Menampilkan {filteredDesa.length > 0 ? desaStartIndex + 1 : 0}-{Math.min(desaStartIndex + itemsPerPage, filteredDesa.length)} dari {filteredDesa.length} Posyandu
+            {filteredDesa.length === 0
+              ? 'Menampilkan 0 Desa'
+              : totalDesaPages === 1
+                ? `Menampilkan ${filteredDesa.length} dari ${filteredDesa.length} Desa`
+                : `Menampilkan ${desaStartIndex + 1} - ${Math.min(desaStartIndex + itemsPerPage, filteredDesa.length)} dari ${filteredDesa.length} Desa`
+            }
           </div>
 
           <div className="flex items-center gap-1">

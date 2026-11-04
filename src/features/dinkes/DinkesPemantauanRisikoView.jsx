@@ -5,13 +5,48 @@ import {
   Smile, 
   Search, 
   Download, 
-  FileText, 
   X,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
 import DinkesFilterBar from './components/DinkesFilterBar';
 import { dinkesService } from '../../services/dinkesService';
+
+// Helper pengecekan filter global (Kecamatan, Desa, Posyandu)
+function matchesAreaFilter(item, filters) {
+  if (!item) return false;
+
+  // 1. Filter Posyandu
+  if (filters.posyandu && filters.posyandu !== 'Semua Posyandu') {
+    const targetPos = filters.posyandu.toLowerCase().trim();
+    const itemPos = (item.posyandu || item.nama || '').toLowerCase().trim();
+    if (!itemPos.includes(targetPos) && !targetPos.includes(itemPos)) {
+      return false;
+    }
+  }
+
+  // 2. Filter Desa / Kelurahan
+  if (filters.desa && filters.desa !== 'Semua Desa') {
+    const cleanFilterDesa = filters.desa.replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
+    const cleanItemDesa = (item.desa || '').replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
+    if (!cleanItemDesa.includes(cleanFilterDesa) && !cleanFilterDesa.includes(cleanItemDesa)) {
+      return false;
+    }
+  }
+
+  // 3. Filter Kecamatan
+  if (filters.kecamatan && filters.kecamatan !== 'Semua Kecamatan') {
+    const cleanKec = filters.kecamatan.replace(/^Kecamatan\s+/i, '').toLowerCase().trim();
+    if (item.kecamatan) {
+      const cleanItemKec = item.kecamatan.replace(/^Kecamatan\s+/i, '').toLowerCase().trim();
+      if (!cleanItemKec.includes(cleanKec) && !cleanKec.includes(cleanItemKec)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
 
 export default function DinkesPemantauanRisikoView({ onShowToast }) {
   const [filters, setFilters] = useState({
@@ -35,6 +70,8 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
   const [balitaPage, setBalitaPage] = useState(1);
   const [selectedBalitaDetail, setSelectedBalitaDetail] = useState(null);
 
+  const itemsPerPage = 10;
+
   useEffect(() => {
     let isMounted = true;
     const loadRisiko = async () => {
@@ -52,32 +89,76 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
     };
     loadRisiko();
     return () => { isMounted = false; };
-  }, [filters]);
+  }, [filters.periode]);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
+    setIbuPage(1);
+    setBalitaPage(1);
   };
 
-  // Filtered Ibu Hamil
+  // 1. Data terfilter berdasarkan filter area (Kecamatan, Desa, Posyandu)
+  const ibuListAreaFiltered = useMemo(() => {
+    return ibuList.filter((item) => matchesAreaFilter(item, filters));
+  }, [ibuList, filters]);
+
+  const balitaListAreaFiltered = useMemo(() => {
+    return balitaList.filter((item) => matchesAreaFilter(item, filters));
+  }, [balitaList, filters]);
+
+  // 2. Data terfilter penuh (termasuk Tab status tindak lanjut & text search)
   const filteredIbu = useMemo(() => {
-    return ibuList.filter((item) => {
+    return ibuListAreaFiltered.filter((item) => {
       const q = ibuSearch.toLowerCase().trim();
-      const matchQuery = !q || item.namaIbu.toLowerCase().includes(q) || item.nik.includes(q) || item.posyandu.toLowerCase().includes(q);
+      const matchQuery = !q ||
+        (item.namaIbu && item.namaIbu.toLowerCase().includes(q)) ||
+        (item.nik && item.nik.includes(q)) ||
+        (item.posyandu && item.posyandu.toLowerCase().includes(q));
       const matchTab = ibuTab === 'Semua' || item.statusTindakLanjut === ibuTab;
       return matchQuery && matchTab;
     });
-  }, [ibuList, ibuSearch, ibuTab]);
+  }, [ibuListAreaFiltered, ibuSearch, ibuTab]);
 
-  // Filtered Balita
   const filteredBalita = useMemo(() => {
-    return balitaList.filter((item) => {
+    return balitaListAreaFiltered.filter((item) => {
       const q = balitaSearch.toLowerCase().trim();
-      const matchQuery = !q || item.namaAnak.toLowerCase().includes(q) || item.nik.includes(q) || item.posyandu.toLowerCase().includes(q);
+      const matchQuery = !q ||
+        (item.namaAnak && item.namaAnak.toLowerCase().includes(q)) ||
+        (item.nik && item.nik.includes(q)) ||
+        (item.posyandu && item.posyandu.toLowerCase().includes(q));
       const matchTab = balitaTab === 'Semua' || item.statusTindakLanjut === balitaTab;
       return matchQuery && matchTab;
     });
-  }, [balitaList, balitaSearch, balitaTab]);
+  }, [balitaListAreaFiltered, balitaSearch, balitaTab]);
 
+  // 3. Paginasi Dinamis Ibu Hamil (10 per halaman)
+  const totalIbuPages = Math.max(1, Math.ceil(filteredIbu.length / itemsPerPage));
+  const currentIbuPage = Math.min(ibuPage, totalIbuPages);
+  const ibuStartIndex = (currentIbuPage - 1) * itemsPerPage;
+  const paginatedIbu = filteredIbu.slice(ibuStartIndex, ibuStartIndex + itemsPerPage);
+
+  // 4. Paginasi Dinamis Balita Stunting (10 per halaman)
+  const totalBalitaPages = Math.max(1, Math.ceil(filteredBalita.length / itemsPerPage));
+  const currentBalitaPage = Math.min(balitaPage, totalBalitaPages);
+  const balitaStartIndex = (currentBalitaPage - 1) * itemsPerPage;
+  const paginatedBalita = filteredBalita.slice(balitaStartIndex, balitaStartIndex + itemsPerPage);
+
+  // 5. Hitung Tab Counts Dinamis
+  const ibuCounts = useMemo(() => ({
+    semua: ibuListAreaFiltered.length,
+    perluTindakLanjut: ibuListAreaFiltered.filter(i => i.statusTindakLanjut === 'Perlu Tindak Lanjut').length,
+    rujuk: ibuListAreaFiltered.filter(i => i.statusTindakLanjut === 'Rujuk').length,
+    sudahDitindaklanjuti: ibuListAreaFiltered.filter(i => i.statusTindakLanjut === 'Sudah Ditindaklanjuti').length
+  }), [ibuListAreaFiltered]);
+
+  const balitaCounts = useMemo(() => ({
+    semua: balitaListAreaFiltered.length,
+    perluTindakLanjut: balitaListAreaFiltered.filter(b => b.statusTindakLanjut === 'Perlu Tindak Lanjut').length,
+    rujuk: balitaListAreaFiltered.filter(b => b.statusTindakLanjut === 'Rujuk').length,
+    sudahDitindaklanjuti: balitaListAreaFiltered.filter(b => b.statusTindakLanjut === 'Sudah Ditindaklanjuti').length
+  }), [balitaListAreaFiltered]);
+
+  // Export Handlers
   const handleExportIbu = () => {
     try {
       const headers = ['No', 'Nama Ibu', 'NIK', 'Usia Kehamilan', 'Hasil Pemeriksaan Terakhir', 'Posyandu', 'Desa', 'Tanggal Periksa', 'Status Tindak Lanjut'];
@@ -146,7 +227,7 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
       </div>
 
       {/* ==================================================================== */}
-      {/* 2. Empat Stat Cards Risiko (Sesuai Desain Figma Gambar 4)           */}
+      {/* 2. Empat Stat Cards Risiko Dinamis Sesuai Filter                    */}
       {/* ==================================================================== */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Card 1: Ibu Hamil Berisiko Tinggi */}
@@ -156,10 +237,12 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
           </div>
           <div>
             <span className="block text-[11px] text-slate-500 font-medium leading-tight">
-              Ibu Hamil Beresiko Tinggi
+              Ibu Hamil Berisiko Tinggi
             </span>
             <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-2xl font-bold text-slate-900 leading-tight">18</span>
+              <span className="text-2xl font-bold text-slate-900 leading-tight">
+                {ibuCounts.semua}
+              </span>
               <span className="text-xs text-slate-400 font-medium">/148</span>
             </div>
           </div>
@@ -174,7 +257,9 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
             <span className="block text-[11px] text-slate-500 font-medium leading-tight">
               Ibu Hamil Perlu Tindak Lanjut
             </span>
-            <span className="block text-2xl font-bold text-slate-900 leading-tight mt-0.5">12</span>
+            <span className="block text-2xl font-bold text-slate-900 leading-tight mt-0.5">
+              {ibuCounts.perluTindakLanjut}
+            </span>
           </div>
         </div>
 
@@ -188,7 +273,9 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
               Balita Indikasi Stunting
             </span>
             <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-2xl font-bold text-slate-900 leading-tight">32</span>
+              <span className="text-2xl font-bold text-slate-900 leading-tight">
+                {balitaCounts.semua}
+              </span>
               <span className="text-xs text-slate-400 font-medium">/1.023</span>
             </div>
           </div>
@@ -203,7 +290,9 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
             <span className="block text-[11px] text-slate-500 font-medium leading-tight">
               Balita Perlu Tindak Lanjut
             </span>
-            <span className="block text-2xl font-bold text-slate-900 leading-tight mt-0.5">12</span>
+            <span className="block text-2xl font-bold text-slate-900 leading-tight mt-0.5">
+              {balitaCounts.perluTindakLanjut}
+            </span>
           </div>
         </div>
       </div>
@@ -226,7 +315,7 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
             <input
               type="text"
               value={ibuSearch}
-              onChange={(e) => setIbuSearch(e.target.value)}
+              onChange={(e) => { setIbuSearch(e.target.value); setIbuPage(1); }}
               placeholder="Cari nama ibu, NIK atau Posyandu..."
               className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
             />
@@ -242,13 +331,13 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
           </button>
         </div>
 
-        {/* Filter Tabs */}
+        {/* Filter Tabs Dinamis */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-semibold">
           {[
-            { id: 'Semua', label: 'Semua (18)' },
-            { id: 'Perlu Tindak Lanjut', label: 'Perlu Tindak Lanjut' },
-            { id: 'Rujuk', label: 'Rujuk' },
-            { id: 'Sudah Ditindaklanjuti', label: 'Sudah Ditindaklanjuti' }
+            { id: 'Semua', label: `Semua (${ibuCounts.semua})` },
+            { id: 'Perlu Tindak Lanjut', label: `Perlu Tindak Lanjut (${ibuCounts.perluTindakLanjut})` },
+            { id: 'Rujuk', label: `Rujuk (${ibuCounts.rujuk})` },
+            { id: 'Sudah Ditindaklanjuti', label: `Sudah Ditindaklanjuti (${ibuCounts.sudahDitindaklanjuti})` }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -281,14 +370,14 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700 whitespace-nowrap">
-              {filteredIbu.length === 0 ? (
+              {paginatedIbu.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-8 text-center text-slate-400">
                     Tidak ada data ibu hamil berisiko pada filter ini.
                   </td>
                 </tr>
               ) : (
-                filteredIbu.map((row, idx) => {
+                paginatedIbu.map((row, idx) => {
                   let badgeClass = 'bg-blue-50 text-blue-700 border-blue-200';
                   if (row.statusTindakLanjut === 'Perlu Tindak Lanjut') {
                     badgeClass = 'bg-rose-50 text-rose-700 border-rose-200';
@@ -297,7 +386,7 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
                   }
                   return (
                     <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4 text-slate-400 font-medium">{idx + 1}.</td>
+                      <td className="py-3 px-4 text-slate-400 font-medium">{ibuStartIndex + idx + 1}.</td>
                       <td className="py-3 px-4 font-bold text-slate-900">{row.namaIbu}</td>
                       <td className="py-3 px-4">{row.usiaKehamilan}</td>
                       <td className="py-3 px-4 font-medium text-slate-800">{row.hasilPemeriksaan}</td>
@@ -325,20 +414,50 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
           </table>
         </div>
 
-        {/* Footer info & pagination */}
-        <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-          <div>Menampilkan {filteredIbu.length} dari 18 pasien</div>
+        {/* Footer info & pagination dinamis */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500 pt-3 border-t border-slate-100">
+          <div>
+            {filteredIbu.length === 0
+              ? 'Menampilkan 0 pasien'
+              : totalIbuPages === 1
+                ? `Menampilkan ${filteredIbu.length} dari ${filteredIbu.length} pasien`
+                : `Menampilkan ${ibuStartIndex + 1} - ${Math.min(ibuStartIndex + itemsPerPage, filteredIbu.length)} dari ${filteredIbu.length} pasien`
+            }
+          </div>
+
           <div className="flex items-center gap-1">
-            <button className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 cursor-pointer">
+            <button
+              type="button"
+              disabled={currentIbuPage === 1}
+              onClick={() => setIbuPage((p) => Math.max(1, p - 1))}
+              className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              title="Halaman Sebelumnya"
+            >
               <ChevronLeft size={16} />
             </button>
-            <button className="w-7 h-7 rounded-lg font-semibold text-xs bg-[#E11D48] text-white flex items-center justify-center">
-              1
-            </button>
-            <button className="w-7 h-7 rounded-lg font-semibold text-xs hover:bg-slate-100 text-slate-600 flex items-center justify-center">
-              2
-            </button>
-            <button className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 cursor-pointer">
+            {Array.from({ length: totalIbuPages }).map((_, i) => {
+              const pageNum = i + 1;
+              const isAct = pageNum === currentIbuPage;
+              return (
+                <button
+                  key={pageNum}
+                  type="button"
+                  onClick={() => setIbuPage(pageNum)}
+                  className={`w-7 h-7 rounded-lg font-semibold text-xs flex items-center justify-center transition-colors cursor-pointer ${
+                    isAct ? 'bg-[#E11D48] text-white' : 'hover:bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              disabled={currentIbuPage === totalIbuPages}
+              onClick={() => setIbuPage((p) => Math.min(totalIbuPages, p + 1))}
+              className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              title="Halaman Selanjutnya"
+            >
               <ChevronRight size={16} />
             </button>
           </div>
@@ -363,7 +482,7 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
             <input
               type="text"
               value={balitaSearch}
-              onChange={(e) => setBalitaSearch(e.target.value)}
+              onChange={(e) => { setBalitaSearch(e.target.value); setBalitaPage(1); }}
               placeholder="Cari nama balita, NIK, atau Posyandu..."
               className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
             />
@@ -379,13 +498,13 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
           </button>
         </div>
 
-        {/* Filter Tabs */}
+        {/* Filter Tabs Dinamis */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-semibold">
           {[
-            { id: 'Semua', label: 'Semua (32)' },
-            { id: 'Perlu Tindak Lanjut', label: 'Perlu Tindak Lanjut' },
-            { id: 'Rujuk', label: 'Rujuk' },
-            { id: 'Sudah Ditindaklanjuti', label: 'Sudah Ditindaklanjuti' }
+            { id: 'Semua', label: `Semua (${balitaCounts.semua})` },
+            { id: 'Perlu Tindak Lanjut', label: `Perlu Tindak Lanjut (${balitaCounts.perluTindakLanjut})` },
+            { id: 'Rujuk', label: `Rujuk (${balitaCounts.rujuk})` },
+            { id: 'Sudah Ditindaklanjuti', label: `Sudah Ditindaklanjuti (${balitaCounts.sudahDitindaklanjuti})` }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -419,14 +538,14 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700 whitespace-nowrap">
-              {filteredBalita.length === 0 ? (
+              {paginatedBalita.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-8 text-center text-slate-400">
                     Tidak ada data balita stunting pada filter ini.
                   </td>
                 </tr>
               ) : (
-                filteredBalita.map((row, idx) => {
+                paginatedBalita.map((row, idx) => {
                   let badgeClass = 'bg-blue-50 text-blue-700 border-blue-200';
                   if (row.statusTindakLanjut === 'Perlu Tindak Lanjut') {
                     badgeClass = 'bg-rose-50 text-rose-700 border-rose-200';
@@ -435,7 +554,7 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
                   }
                   return (
                     <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4 text-slate-400 font-medium">{idx + 1}.</td>
+                      <td className="py-3 px-4 text-slate-400 font-medium">{balitaStartIndex + idx + 1}.</td>
                       <td className="py-3 px-4 font-bold text-slate-900">{row.namaAnak}</td>
                       <td className="py-3 px-4">{row.usia}</td>
                       <td className="py-3 px-4 text-slate-600">{row.jenisKelamin}</td>
@@ -464,26 +583,50 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
           </table>
         </div>
 
-        {/* Footer info & pagination */}
-        <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-          <div>Menampilkan {filteredBalita.length} dari 32 pasien</div>
+        {/* Footer info & pagination dinamis */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500 pt-3 border-t border-slate-100">
+          <div>
+            {filteredBalita.length === 0
+              ? 'Menampilkan 0 pasien'
+              : totalBalitaPages === 1
+                ? `Menampilkan ${filteredBalita.length} dari ${filteredBalita.length} pasien`
+                : `Menampilkan ${balitaStartIndex + 1} - ${Math.min(balitaStartIndex + itemsPerPage, filteredBalita.length)} dari ${filteredBalita.length} pasien`
+            }
+          </div>
+
           <div className="flex items-center gap-1">
-            <button className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 cursor-pointer">
+            <button
+              type="button"
+              disabled={currentBalitaPage === 1}
+              onClick={() => setBalitaPage((p) => Math.max(1, p - 1))}
+              className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              title="Halaman Sebelumnya"
+            >
               <ChevronLeft size={16} />
             </button>
-            <button className="w-7 h-7 rounded-lg font-semibold text-xs bg-[#E11D48] text-white flex items-center justify-center">
-              1
-            </button>
-            <button className="w-7 h-7 rounded-lg font-semibold text-xs hover:bg-slate-100 text-slate-600 flex items-center justify-center">
-              2
-            </button>
-            <button className="w-7 h-7 rounded-lg font-semibold text-xs hover:bg-slate-100 text-slate-600 flex items-center justify-center">
-              3
-            </button>
-            <button className="w-7 h-7 rounded-lg font-semibold text-xs hover:bg-slate-100 text-slate-600 flex items-center justify-center">
-              4
-            </button>
-            <button className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 cursor-pointer">
+            {Array.from({ length: totalBalitaPages }).map((_, i) => {
+              const pageNum = i + 1;
+              const isAct = pageNum === currentBalitaPage;
+              return (
+                <button
+                  key={pageNum}
+                  type="button"
+                  onClick={() => setBalitaPage(pageNum)}
+                  className={`w-7 h-7 rounded-lg font-semibold text-xs flex items-center justify-center transition-colors cursor-pointer ${
+                    isAct ? 'bg-[#E11D48] text-white' : 'hover:bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              disabled={currentBalitaPage === totalBalitaPages}
+              onClick={() => setBalitaPage((p) => Math.min(totalBalitaPages, p + 1))}
+              className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              title="Halaman Selanjutnya"
+            >
               <ChevronRight size={16} />
             </button>
           </div>
