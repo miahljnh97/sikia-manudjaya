@@ -217,7 +217,13 @@ export default function CatatPemeriksaanBidanModal({
         : `Pemeriksaan ${pasien.nama} berhasil dicatat & jadwal kontrol tersinkronisasi!`;
 
       if (onShowToast) onShowToast(msg, 'success');
-      if (onSuccess) onSuccess();
+      if (onSuccess) {
+        try {
+          onSuccess();
+        } catch (onSuccessErr) {
+          console.warn('Error saat menjalankan callback onSuccess:', onSuccessErr);
+        }
+      }
       onClose();
     } catch (err) {
       console.error('Gagal simpan pemeriksaan bidan:', err);
