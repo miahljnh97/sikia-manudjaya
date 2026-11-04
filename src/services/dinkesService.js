@@ -19,7 +19,9 @@ const FALLBACK_STATS = {
   ibuHamilTrend: '+6%',
   ibuNifas: 72,
   ibuNifasPersenSasaran: 77,
-  ibuNifasTrend: '+7%'
+  ibuNifasTrend: '+7%',
+  imunisasiLengkap: 638,
+  imunisasiBelumLengkap: 254
 };
 
 const FALLBACK_TREN = [
@@ -72,6 +74,60 @@ export const dinkesService = {
     };
   },
 
+  /**
+   * Mengambil daftar seluruh posyandu secara dinamis dari database Supabase
+   * Menggabungkan master tabel posyandu dan dinkes_rekapitulasi_posyandu
+   */
+  async getDaftarPosyandu() {
+    const list = new Set();
+    if (isSupabaseConfigured && supabase) {
+      try {
+        // 1. Ambil dari master tabel posyandu
+        const { data: posData } = await supabase
+          .from('posyandu')
+          .select('nama')
+          .eq('is_suspended', false)
+          .order('nama', { ascending: true });
+        if (posData && posData.length > 0) {
+          posData.forEach(p => p.nama && list.add(p.nama.trim()));
+        }
+
+        // 2. Ambil dari dinkes_rekapitulasi_posyandu
+        const { data: dinkesPos } = await supabase
+          .from('dinkes_rekapitulasi_posyandu')
+          .select('nama')
+          .order('no', { ascending: true });
+        if (dinkesPos && dinkesPos.length > 0) {
+          dinkesPos.forEach(p => p.nama && list.add(p.nama.trim()));
+        }
+
+        // 3. Ambil juga posyandu dari dinkes_balita_stunting
+        const { data: stuntingPos } = await supabase
+          .from('dinkes_balita_stunting')
+          .select('posyandu')
+          .limit(100);
+        if (stuntingPos && stuntingPos.length > 0) {
+          stuntingPos.forEach(p => p.posyandu && list.add(p.posyandu.trim()));
+        }
+      } catch (e) {
+        console.warn('Gagal fetch daftar posyandu dari database:', e);
+      }
+    }
+
+    // Baseline fallback jika belum terhubung database
+    if (list.size === 0) {
+      const fallback = [
+        'Manud Jaya', 'Mawar 2', 'Anggrek 4', 'Dahlia 3', 'Cempaka 2',
+        'Melati 1', 'Kenanga 5', 'Flamboyan 3', 'Kamboja 2', 'Teratai 4',
+        'Tanjung Sari', 'Sungai Raya', 'Mandiri Jaya', 'Harapan', 'Mulia',
+        'Soreang Baru', 'Purnama', 'Melati', 'Sumber Makmur'
+      ];
+      fallback.forEach(p => list.add(p));
+    }
+
+    return Array.from(list);
+  },
+
   // 1. Dashboard 6 Stat Cards
   async getDashboardStats() {
     if (isSupabaseConfigured && supabase) {
@@ -100,7 +156,9 @@ export const dinkesService = {
             ibuHamilTrend: data.ibu_hamil_trend ?? '+6%',
             ibuNifas: data.ibu_nifas ?? 72,
             ibuNifasPersenSasaran: data.ibu_nifas_persen_sasaran ?? 77,
-            ibuNifasTrend: data.ibu_nifas_trend ?? '+7%'
+            ibuNifasTrend: data.ibu_nifas_trend ?? '+7%',
+            imunisasiLengkap: data.imunisasi_lengkap_balita ?? 638,
+            imunisasiBelumLengkap: data.imunisasi_belum_lengkap_balita ?? 254
           };
         }
       } catch (e) {
