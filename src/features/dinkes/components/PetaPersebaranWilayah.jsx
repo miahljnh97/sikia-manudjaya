@@ -1,27 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, Minus } from 'lucide-react';
+
+// Fungsi penentuan warna dan kontras teks berdasarkan jumlah kasus & legenda
+function getColorForKasus(kasus) {
+  if (kasus > 30) return { fill: '#BE123C', textColor: '#FFFFFF' };
+  if (kasus >= 21) return { fill: '#FB7185', textColor: '#FFFFFF' };
+  if (kasus >= 11) return { fill: '#FDA4AF', textColor: '#881337' };
+  if (kasus >= 6) return { fill: '#FECDD3', textColor: '#881337' };
+  if (kasus >= 1) return { fill: '#FFF1F2', textColor: '#9F1239' };
+  return { fill: '#FFFFFF', textColor: '#475569' };
+}
 
 export default function PetaPersebaranWilayah({
   height = '440px',
   isCompact = false,
   selectedIndikator = 'Kasus Stunting (Balita)',
-  onIndikatorChange = null
+  onIndikatorChange = null,
+  showDropdownInside = false
 }) {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [hoveredRegion, setHoveredRegion] = useState(null);
 
-  // Data Wilayah & Kasus Sesuai Desain Figma (Gambar 1)
-  const regions = [
+  // Data Wilayah & Kasus per Indikator Kesehatan
+  const rawRegions = useMemo(() => [
     {
       id: 'manud-jaya',
       nama: 'Desa Manud Jaya',
       shortName: 'Manud Jaya',
-      kasus: 32,
-      fill: '#BE123C', // > 30 (deep crimson)
-      textColor: '#FFFFFF',
       d: 'M 220,150 L 360,140 L 400,205 L 375,270 L 260,265 L 195,205 Z',
       labelX: 285,
       labelY: 195,
+      kasusMap: {
+        'Kasus Stunting (Balita)': 32,
+        'Ibu Hamil Berisiko': 16,
+        'Cakupan Imunisasi Rendah': 25
+      },
       posyandus: [
         { x: 235, y: 185 },
         { x: 300, y: 175 },
@@ -33,12 +46,14 @@ export default function PetaPersebaranWilayah({
       id: 'sungai-rejo',
       nama: 'Desa Sungai Rejo',
       shortName: 'Sungai Rejo',
-      kasus: 24,
-      fill: '#FB7185', // 21 - 30 (rose-400)
-      textColor: '#FFFFFF',
       d: 'M 275,55 L 405,45 L 430,110 L 360,140 L 245,130 L 225,85 Z',
       labelX: 335,
       labelY: 95,
+      kasusMap: {
+        'Kasus Stunting (Balita)': 24,
+        'Ibu Hamil Berisiko': 26,
+        'Cakupan Imunisasi Rendah': 14
+      },
       posyandus: [
         { x: 300, y: 75 },
         { x: 360, y: 90 },
@@ -49,12 +64,14 @@ export default function PetaPersebaranWilayah({
       id: 'soreang-baru',
       nama: 'Desa Soreang Baru',
       shortName: 'Desa Soreang Baru',
-      kasus: 18,
-      fill: '#FDA4AF', // 11 - 20 (rose-300)
-      textColor: '#881337',
       d: 'M 140,80 L 225,85 L 245,130 L 220,150 L 165,155 L 120,120 Z',
       labelX: 180,
       labelY: 120,
+      kasusMap: {
+        'Kasus Stunting (Balita)': 18,
+        'Ibu Hamil Berisiko': 9,
+        'Cakupan Imunisasi Rendah': 34
+      },
       posyandus: [
         { x: 155, y: 110 },
         { x: 195, y: 135 }
@@ -64,12 +81,14 @@ export default function PetaPersebaranWilayah({
       id: 'tanjung-sari',
       nama: 'Desa Tanjung Sari',
       shortName: 'Tanjung Sari',
-      kasus: 14,
-      fill: '#FDA4AF', // 11 - 20 (rose-300)
-      textColor: '#881337',
       d: 'M 360,140 L 450,130 L 485,210 L 435,270 L 375,270 L 400,205 Z',
       labelX: 425,
       labelY: 200,
+      kasusMap: {
+        'Kasus Stunting (Balita)': 14,
+        'Ibu Hamil Berisiko': 22,
+        'Cakupan Imunisasi Rendah': 8
+      },
       posyandus: [
         { x: 395, y: 170 },
         { x: 445, y: 185 },
@@ -80,12 +99,14 @@ export default function PetaPersebaranWilayah({
       id: 'mandiri-jaya',
       nama: 'Desa Mandiri Jaya',
       shortName: 'Desa Mandiri Jaya',
-      kasus: 8,
-      fill: '#FECDD3', // 6 - 10 (rose-200)
-      textColor: '#881337',
       d: 'M 165,155 L 220,150 L 195,205 L 260,265 L 195,295 L 140,240 L 125,180 Z',
       labelX: 175,
       labelY: 215,
+      kasusMap: {
+        'Kasus Stunting (Balita)': 8,
+        'Ibu Hamil Berisiko': 12,
+        'Cakupan Imunisasi Rendah': 17
+      },
       posyandus: [
         { x: 165, y: 190 },
         { x: 175, y: 250 }
@@ -95,12 +116,14 @@ export default function PetaPersebaranWilayah({
       id: 'melati',
       nama: 'Desa Melati',
       shortName: 'Desa Melati',
-      kasus: 6,
-      fill: '#FECDD3', // 6 - 10 (rose-200)
-      textColor: '#881337',
       d: 'M 375,270 L 435,270 L 415,340 L 335,350 L 320,290 L 365,280 Z',
       labelX: 380,
       labelY: 310,
+      kasusMap: {
+        'Kasus Stunting (Balita)': 6,
+        'Ibu Hamil Berisiko': 4,
+        'Cakupan Imunisasi Rendah': 3
+      },
       posyandus: [
         { x: 365, y: 315 },
         { x: 400, y: 325 }
@@ -110,18 +133,34 @@ export default function PetaPersebaranWilayah({
       id: 'purnama',
       nama: 'Desa Purnama',
       shortName: 'Desa Purnama',
-      kasus: 5,
-      fill: '#FFF1F2', // 1 - 5 (rose-50)
-      textColor: '#9F1239',
       d: 'M 195,295 L 260,265 L 320,290 L 335,350 L 240,360 L 190,325 Z',
       labelX: 255,
       labelY: 315,
+      kasusMap: {
+        'Kasus Stunting (Balita)': 5,
+        'Ibu Hamil Berisiko': 2,
+        'Cakupan Imunisasi Rendah': 5
+      },
       posyandus: [
         { x: 235, y: 325 },
         { x: 285, y: 335 }
       ]
     }
-  ];
+  ], []);
+
+  // Hitung kasus, warna, dan styling secara reaktif berdasarkan selectedIndikator
+  const regions = useMemo(() => {
+    return rawRegions.map((reg) => {
+      const kasus = reg.kasusMap[selectedIndikator] ?? reg.kasusMap['Kasus Stunting (Balita)'];
+      const { fill, textColor } = getColorForKasus(kasus);
+      return {
+        ...reg,
+        kasus,
+        fill,
+        textColor
+      };
+    });
+  }, [rawRegions, selectedIndikator]);
 
   const legendItems = [
     { label: '> 30', color: '#BE123C' },
@@ -133,9 +172,9 @@ export default function PetaPersebaranWilayah({
   ];
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden bg-[#F8FAFC] border border-slate-200/80 shadow-2xs">
-      {/* Top Header / Indikator Filter Sesuai Gambar 1 */}
-      {!isCompact && (
+    <div className="relative w-full rounded-2xl overflow-hidden bg-[#F1F5F9] border border-slate-200/90 shadow-2xs">
+      {/* Optional dropdown inside map canvas if requested */}
+      {showDropdownInside && !isCompact && (
         <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-2">
           <div className="bg-white/95 backdrop-blur-xs border border-slate-200 rounded-xl px-3 py-1.5 shadow-xs flex items-center gap-2 text-xs">
             <span className="text-[11px] text-slate-400 font-medium">Tampilkan:</span>
@@ -173,7 +212,7 @@ export default function PetaPersebaranWilayah({
       </div>
 
       {/* Legenda Jumlah Kasus Sesuai Gambar 1 */}
-      <div className={`absolute ${isCompact ? 'top-3 left-3' : 'top-4 right-4 sm:top-14'} z-10 bg-white/95 backdrop-blur-xs border border-slate-200 rounded-xl p-3 shadow-xs text-[11px] space-y-1.5 min-w-[110px]`}>
+      <div className={`absolute ${isCompact ? 'top-3 left-3' : 'top-4 right-4'} z-10 bg-white/95 backdrop-blur-xs border border-slate-200 rounded-xl p-3 shadow-xs text-[11px] space-y-1.5 min-w-[110px]`}>
         <span className="block font-bold text-slate-800 text-[10px] uppercase tracking-wider">
           Jumlah Kasus
         </span>
@@ -190,29 +229,16 @@ export default function PetaPersebaranWilayah({
         </div>
       </div>
 
-      {/* SVG Canvas Map */}
+      {/* SVG Canvas Map Sesuai Gambar 1 */}
       <div className="w-full flex items-center justify-center overflow-hidden" style={{ height }}>
         <svg
           viewBox="100 30 430 350"
           className="w-full h-full transition-transform duration-200 ease-out"
           style={{ transform: `scale(${zoomLevel})` }}
         >
-          {/* Subtle River / Waterway Curve Sesuai Gambar 1 */}
-          <path
-            d="M 500,80 Q 430,120 460,190 T 520,300"
-            fill="none"
-            stroke="#BAE6FD"
-            strokeWidth="5"
-            strokeLinecap="round"
-            opacity="0.75"
-          />
-
           {/* Background Map Context Labels (Kecamatan Tetangga) */}
           <text x="120" y="270" fill="#94A3B8" fontSize="10" fontWeight="600" opacity="0.6">
-            Kecamatan Sumberrejo
-          </text>
-          <text x="135" y="380" fill="#94A3B8" fontSize="10" fontWeight="600" opacity="0.6">
-            Kecamatan Karangrejo
+            Kecamatan...
           </text>
           <text x="390" y="65" fill="#94A3B8" fontSize="10" fontWeight="600" opacity="0.6">
             Kecamatan Melati Jaya
@@ -232,9 +258,9 @@ export default function PetaPersebaranWilayah({
                   d={reg.d}
                   fill={reg.fill}
                   stroke={isHovered ? '#9F1239' : '#FFFFFF'}
-                  strokeWidth={isHovered ? 3 : 1.5}
+                  strokeWidth={isHovered ? 2.5 : 1.5}
                   strokeLinejoin="round"
-                  className="transition-all hover:filter hover:brightness-95"
+                  className="transition-colors duration-300 hover:filter hover:brightness-95"
                 />
 
                 {/* Label Nama Desa & Kasus Sesuai Gambar 1 */}
@@ -245,7 +271,7 @@ export default function PetaPersebaranWilayah({
                   fill={reg.textColor}
                   fontSize={isCompact ? '9' : '10'}
                   fontWeight="bold"
-                  className="pointer-events-none select-none drop-shadow-2xs"
+                  className="pointer-events-none select-none drop-shadow-2xs transition-colors duration-200"
                 >
                   {reg.shortName}
                 </text>
@@ -257,7 +283,7 @@ export default function PetaPersebaranWilayah({
                   fontSize={isCompact ? '8' : '9'}
                   fontWeight="600"
                   opacity="0.95"
-                  className="pointer-events-none select-none"
+                  className="pointer-events-none select-none transition-colors duration-200"
                 >
                   {reg.kasus} kasus
                 </text>
