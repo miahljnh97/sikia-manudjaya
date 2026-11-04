@@ -18,13 +18,28 @@ import {
   AlertCircle,
   Upload,
   Paperclip,
-  Trash2
+  Trash2,
+  ExternalLink
 } from 'lucide-react';
 import { bukuKiaService } from '../../services/bukuKiaService';
 import { pesertaService } from '../../services/pesertaService';
+import { storageService } from '../../services/storageService';
 import { maskNik } from '../../utils/nikUtils';
 import CatatPemeriksaanBidanModal from './CatatPemeriksaanBidanModal';
 import { formatTanggalIndo } from '../../utils/dateUtils';
+import { supabase } from '../../config/supabaseClient';
+
+const resolveDocUrl = (doc) => {
+  if (doc?.url && !doc.url.includes('Buku_KIA_2024.pdf') && doc.url.startsWith('http')) {
+    return doc.url;
+  }
+  if (supabase && doc?.name) {
+    const cleanName = doc.name.trim();
+    const { data } = supabase.storage.from('dokumen-kia').getPublicUrl(cleanName);
+    if (data?.publicUrl) return data.publicUrl;
+  }
+  return doc?.url || 'https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf';
+};
 
 export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate, onShowToast }) {
   const userRole = (user?.role || '').toLowerCase().trim();
@@ -147,18 +162,43 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
                 jenis: item.kunjungan_ke,
                 hasil: item.status_hasil || 'Normal',
                 catatan: item.catatan_tindak_lanjut || item.catatan || 'Kondisi normal',
-                tekananDarah: item.tekanan_darah ? `${item.tekanan_darah} mmHg` : '110/70 mmHg',
-                beratBadan: item.berat_badan ? `${item.berat_badan} kg` : '60 kg',
-                tinggiFundus: item.tinggi_fundus ? `${item.tinggi_fundus} cm` : '24 cm',
-                djj: item.djj ? `${item.djj} x/menit` : '140 x/menit',
-                petugas: item.pemeriksa || 'Bidan Siti, S.Tr.Keb'
+                tekananDarah: item.tekanan_darah ? `${item.tekanan_darah} mmHg` : '-',
+                beratBadan: item.berat_badan ? `${item.berat_badan} kg` : '-',
+                tinggiFundus: item.tinggi_fundus ? `${item.tinggi_fundus} cm` : '-',
+                djj: item.djj ? `${item.djj} x/menit` : '-',
+                petugas: item.pemeriksa || '-'
               })));
+
+              // Ekstrak dokumen pendukung dari riwayat pemeriksaan ANC secara real-time
+              const allDocs = [];
+              ancRows.forEach((item) => {
+                if (Array.isArray(item.lampiran_dokumen)) {
+                  item.lampiran_dokumen.forEach((doc, dIdx) => {
+                    allDocs.push({
+                      id: doc.id || `${item.id}-${dIdx}`,
+                      pemeriksaanId: item.id,
+                      kunjunganKe: item.kunjungan_ke,
+                      name: doc.name || 'Dokumen Pemeriksaan.pdf',
+                      type: doc.type || 'Dokumen Tambahan',
+                      tanggal: doc.tanggal || formatTanggalIndo(item.tanggal_pemeriksaan),
+                      size: doc.size || '1.0 MB',
+                      url: resolveDocUrl(doc),
+                      keterangan: doc.keterangan || item.catatan_tindak_lanjut || 'Lampiran dokumen pemeriksaan rekam medis'
+                    });
+                  });
+                }
+              });
+              setDokumenList(allDocs);
             } else {
               setRiwayatList([]);
+              setDokumenList([]);
             }
           }
         } else {
-          if (isMounted) setRiwayatList([]);
+          if (isMounted) {
+            setRiwayatList([]);
+            setDokumenList([]);
+          }
         }
       } catch (err) {
         console.error('Error fetching ANC data for mother:', err);
@@ -207,7 +247,8 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
       validFiles.push({
         id: Date.now() + Math.random().toString(36).substring(2, 7),
         name: f.name,
-        size: (f.size / (1024 * 1024)).toFixed(2) + ' MB'
+        size: (f.size / (1024 * 1024)).toFixed(2) + ' MB',
+        file: f
       });
     }
 
@@ -239,6 +280,34 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
         return;
       }
 
+      // Upload berkas fisik ke Supabase Storage
+      const formattedDocs = [];
+      for (let i = 0; i < (uploadedFiles || []).length; i++) {
+        const f = uploadedFiles[i];
+        let finalUrl = f.url;
+
+        if (f.file) {
+          try {
+            const uploaded = await storageService.uploadDokumen(f.file, 'anc');
+            if (uploaded?.url) {
+              finalUrl = uploaded.url;
+            }
+          } catch (uploadErr) {
+            console.warn('Supabase storage upload fallback:', uploadErr);
+          }
+        }
+
+        formattedDocs.push({
+          id: `doc-${Date.now()}-${i}`,
+          name: f.name,
+          type: f.type || 'Dokumen Tambahan',
+          size: f.size || '1.0 MB',
+          url: finalUrl || 'https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf',
+          tanggal: formatTanggalIndo(formAnc.tanggal_pemeriksaan),
+          keterangan: formAnc.catatan_tindak_lanjut || 'Lampiran pemeriksaan rekam medis'
+        });
+      }
+
       const payload = {
         kehamilan_id: activeKehamilan.id,
         kunjungan_ke: formAnc.kunjungan_ke,
@@ -253,7 +322,8 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
         pemeriksa: formAnc.pemeriksa,
         faskes: formAnc.faskes,
         status_hasil: formAnc.status_hasil,
-        catatan_tindak_lanjut: formAnc.catatan_tindak_lanjut
+        catatan_tindak_lanjut: formAnc.catatan_tindak_lanjut,
+        lampiran_dokumen: formattedDocs
       };
 
       const saved = await bukuKiaService.tambahPemeriksaanAnc(payload);
@@ -275,16 +345,8 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
       };
 
       setRiwayatList(prev => [...prev, newItem]);
-      if (uploadedFiles && uploadedFiles.length > 0) {
-        const newDocs = uploadedFiles.map(f => ({
-          id: f.id,
-          name: f.name,
-          type: 'Dokumen Tambahan',
-          tanggal: formatTanggalIndo(formAnc.tanggal_pemeriksaan),
-          size: f.size,
-          keterangan: formAnc.catatan_tindak_lanjut || 'Lampiran pemeriksaan rekam medis'
-        }));
-        setDokumenList(prev => [...newDocs, ...prev]);
+      if (formattedDocs.length > 0) {
+        setDokumenList(prev => [...formattedDocs, ...prev]);
       }
       setIsModalTambahOpen(false);
       setUploadedFiles([]);
@@ -297,23 +359,44 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
     }
   };
 
-  const handleDownloadDoc = (doc) => {
+  const handleDownloadDoc = async (doc) => {
     try {
-      const dummyContent = `%PDF-1.4\n% Dokumen Rekam Medis: ${doc.name}\nPasien: ${namaPasien}\nTanggal: ${doc.tanggal}\nKeterangan: ${doc.keterangan || ''}`;
-      const blob = new Blob([dummyContent], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = doc.name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      if (doc.url && doc.url.startsWith('http')) {
+        try {
+          // Unduh langsung sebagai blob agar nama file lokal sesuai nama dokumen
+          await storageService.downloadFileAsBlob(doc.url, doc.name);
+          if (onShowToast) onShowToast(`Dokumen "${doc.name}" berhasil diunduh.`, 'success');
+          return;
+        } catch (blobErr) {
+          console.warn('Direct blob download fallback:', blobErr);
+        }
+
+        const a = document.createElement('a');
+        a.href = doc.url;
+        a.target = '_blank';
+        a.download = doc.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        if (onShowToast) onShowToast(`Membuka dokumen "${doc.name}" di tab baru...`, 'info');
+      } else {
+        const dummyContent = `%PDF-1.4\n% Dokumen Rekam Medis: ${doc.name}\nPasien: ${namaPasien}\nTanggal: ${doc.tanggal}\nKeterangan: ${doc.keterangan || ''}`;
+        const blob = new Blob([dummyContent], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = doc.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        if (onShowToast) onShowToast(`Dokumen "${doc.name}" siap diunduh.`, 'success');
+      }
     } catch (e) {
       console.error(e);
-    }
-    if (onShowToast) {
-      onShowToast(`Dokumen "${doc.name}" berhasil diunduh.`, 'success');
+      if (onShowToast) {
+        onShowToast(`Gagal mengunduh dokumen "${doc.name}"`, 'error');
+      }
     }
   };
 
@@ -583,38 +666,78 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
             <h3 className="text-sm sm:text-base font-bold text-slate-900">
               Dokumen Pendukung
             </h3>
+            {dokumenList && dokumenList.length > 0 && (
+              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-pink-50 text-[#E11D48]">
+                {dokumenList.length} Berkas
+              </span>
+            )}
           </div>
           <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-xs">
-            <div className="space-y-3.5">
-              {dokumenList.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between group py-1">
-                  <div className="flex items-center gap-3 min-w-0 pr-3">
-                    <FileText size={18} className="text-[#FF168B] shrink-0" />
-                    <span className="text-xs font-medium text-slate-700 truncate group-hover:text-slate-900 transition-colors">
-                      {doc.name}
-                    </span>
+            {dokumenList && dokumenList.length > 0 ? (
+              <div className="space-y-3">
+                {dokumenList.map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between group py-2 px-3 -mx-2 hover:bg-slate-50/80 rounded-2xl transition-colors">
+                    <div className="flex items-center gap-3 min-w-0 pr-2">
+                      <div className="w-8 h-8 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center shrink-0">
+                        <FileText size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-xs font-semibold text-slate-800 truncate block group-hover:text-[#E11D48] transition-colors">
+                          {doc.name}
+                        </span>
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mt-0.5">
+                          <span className="font-medium text-slate-500">{doc.type || 'Dokumen Tambahan'}</span>
+                          <span>•</span>
+                          <span>{doc.size || 'PDF'}</span>
+                          {doc.tanggal && (
+                            <>
+                              <span>•</span>
+                              <span>{doc.tanggal}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {doc.url && (
+                        <a
+                          href={doc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-[#E11D48] bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors cursor-pointer"
+                          title={`Buka Dokumen PDF (${doc.name})`}
+                        >
+                          <ExternalLink size={12} />
+                          <span className="hidden sm:inline">Buka PDF</span>
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadDoc(doc)}
+                        className="p-1.5 text-slate-500 hover:text-[#E11D48] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                        title={`Unduh ${doc.name}`}
+                      >
+                        <Download size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDokumen(doc)}
+                        className="p-1.5 text-slate-500 hover:text-[#E11D48] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                        title={`Lihat Detail ${doc.name}`}
+                      >
+                        <Eye size={15} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => handleDownloadDoc(doc)}
-                      className="p-1 text-slate-700 hover:text-[#E11D48] transition-colors cursor-pointer"
-                      title={`Unduh ${doc.name}`}
-                    >
-                      <Download size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedDokumen(doc)}
-                      className="p-1 text-slate-700 hover:text-[#E11D48] transition-colors cursor-pointer"
-                      title={`Lihat ${doc.name}`}
-                    >
-                      <Eye size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-8 text-center text-slate-400">
+                <FileText size={32} className="mx-auto mb-2 text-slate-300" />
+                <p className="text-xs font-semibold text-slate-600">Belum ada dokumen pendukung</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Dokumen hasil USG, laboratorium, atau surat rujukan akan tampil di sini</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1069,14 +1192,27 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
             </div>
 
             <div className="pt-2 flex items-center justify-between gap-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => handleDownloadDoc(selectedDokumen)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
-              >
-                <Download size={14} />
-                <span>Unduh File</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {selectedDokumen.url && (
+                  <a
+                    href={selectedDokumen.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+                  >
+                    <ExternalLink size={14} />
+                    <span>Buka PDF</span>
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleDownloadDoc(selectedDokumen)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95"
+                >
+                  <Download size={14} />
+                  <span>Unduh File</span>
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={() => setSelectedDokumen(null)}

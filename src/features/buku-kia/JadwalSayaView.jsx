@@ -27,6 +27,31 @@ const resolveJadwalStatus = (item) => {
   return item.status || 'Akan Datang';
 };
 
+const parseDateSafe = (dateVal) => {
+  if (!dateVal) return null;
+  if (typeof dateVal === 'string' && dateVal.includes('-')) {
+    const parts = dateVal.split('T')[0].split('-');
+    if (parts.length === 3) {
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10) - 1;
+      const d = parseInt(parts[2], 10);
+      if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+        return { year: y, month: m, day: d };
+      }
+    }
+  }
+  const dt = new Date(dateVal);
+  if (!isNaN(dt.getTime())) {
+    return { year: dt.getFullYear(), month: dt.getMonth(), day: dt.getDate() };
+  }
+  return null;
+};
+
+
+const monthNames = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
 
 export default function JadwalSayaView({ user, currentPath = '', onNavigate, onShowToast }) {
 
@@ -55,10 +80,18 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
 
   const userRole = (user?.role || '').toLowerCase().trim();
   const userEmail = (user?.user?.email || user?.email || '').toLowerCase().trim();
-  const isIbuRole = userRole.includes('ibu') || userEmail.includes('ibu') || userEmail.includes('hamil') || userEmail.includes('balita');
+  const isStaff = userRole.includes('kader') || 
+                  userRole.includes('bidan') || 
+                  userRole.includes('admin') || 
+                  userRole.includes('dinkes') ||
+                  userEmail.includes('kader') || 
+                  userEmail.includes('bidan') || 
+                  userEmail.includes('admin') || 
+                  userEmail.includes('dinkes');
+  const isIbuRole = !isStaff && (userRole.includes('ibu') || userEmail.includes('ibu') || userEmail.includes('hamil') || userEmail.includes('balita'));
 
   // Tombol Kirim WA hanya untuk Bidan, Kader, dan Super Admin. Akun Ibu di-hide.
-  const canSendWa = !isIbuRole;
+  const canSendWa = isStaff;
   const [currentDate, setCurrentDate] = useState(() => initialUrlDate ? new Date(initialUrlDate.getFullYear(), initialUrlDate.getMonth(), 1) : new Date(2026, 9, 1)); // Default Oktober 2026
   const [selectedDay, setSelectedDay] = useState(() => initialUrlDate ? initialUrlDate.getDate() : null);
   const [selectedJadwal, setSelectedJadwal] = useState(null);
@@ -68,10 +101,7 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
   const [blastJenisPengingat, setBlastJenisPengingat] = useState('H-3');
   const [blastMetode, setBlastMetode] = useState('gateway');
 
-  const monthNames = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-  ];
+
 
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
@@ -107,145 +137,153 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
   }, [currentPath]);
 
   useEffect(() => {
-    const targetIbuId = user?.peserta_id || (user && getPesertaIdFromUser(user)) || user?.id || null;
-    if (targetIbuId) {
-      bukuKiaService.getJadwalPesertaList(targetIbuId).then((res) => {
-        if (!res || res.length === 0) {
-          setJadwalList([]);
-          return;
-        }
+    // Role Ibu: Ambil jadwal terisolasi milik ibu tersebut.
+    // Role Staff (Kader, Bidan, Admin, Dinkes): Ambil SEMUA agenda jadwal kegiatan posyandu.
+    const targetIbuId = isIbuRole
+      ? (user?.peserta_id || (user && getPesertaIdFromUser(user)) || null)
+      : null;
 
-        const userSpecific = res.filter(j => !j.peserta_id || String(j.peserta_id) === String(targetIbuId));
-        const candidateList = userSpecific.length > 0 ? userSpecific : res;
-
-        if (candidateList && candidateList.length > 0) {
-          const mapped = candidateList.map((j, idx) => ({
-            no: idx + 1,
-            id: j.id,
-            tanggal: j.tanggal,
-            displayTanggal: formatTanggalIndo(j.tanggal) || j.tanggal,
-            waktu: j.waktu || '09.00 - 10.00',
-            jenis: j.jenis_kegiatan || 'Pemeriksaan Kesehatan',
-            lokasi: j.lokasi || 'Puskesmas Manud Jaya',
-            status: resolveJadwalStatus(j),
-            petugas: j.petugas || 'Bidan Siti, S.Tr.Keb',
-            keterangan: j.catatan || 'Pemeriksaan rutin posyandu.'
-          }));
-          setJadwalList(mapped);
-
-          // Jika ada jadwal tapi belum ada tanggal spesifik di URL, sesuaikan bulan ke jadwal pertama
-          const urlD = extractDateFromUrl();
-          if (!urlD && mapped.length > 0) {
-            try {
-              const firstD = new Date(mapped[0].tanggal);
-              if (!isNaN(firstD.getTime())) {
-                setCurrentDate(new Date(firstD.getFullYear(), firstD.getMonth(), 1));
-              }
-            } catch {}
-          }
-        } else {
-          setJadwalList([]);
-        }
-      }).catch(err => {
-        console.warn('Gagal fetch jadwal dari Supabase:', err);
+    bukuKiaService.getJadwalPesertaList(targetIbuId).then((res) => {
+      if (!res || res.length === 0) {
         setJadwalList([]);
-      });
-    }
-  }, [user, isIbuRole]);
+        return;
+      }
 
-  // Metrik terhitung dinamis dari jadwal aktif (PBI 01A AC 1)
+      const candidateList = targetIbuId
+        ? res.filter(j => !j.peserta_id || String(j.peserta_id) === String(targetIbuId))
+        : res;
+
+      if (candidateList && candidateList.length > 0) {
+        const mapped = candidateList.map((j, idx) => ({
+          no: idx + 1,
+          id: j.id,
+          tanggal: j.tanggal,
+          displayTanggal: formatTanggalIndo(j.tanggal) || j.tanggal,
+          waktu: j.waktu || '09.00 - 10.00',
+          jenis: j.jenis_kegiatan || 'Pemeriksaan Kesehatan',
+          lokasi: j.lokasi || 'Puskesmas Manud Jaya',
+          status: resolveJadwalStatus(j),
+          petugas: j.petugas || 'Bidan Siti, S.Tr.Keb',
+          keterangan: j.catatan || 'Pemeriksaan rutin posyandu.',
+          peserta_id: j.peserta_id
+        }));
+        setJadwalList(mapped);
+
+        // Jika ada jadwal tapi belum ada tanggal spesifik di URL, sesuaikan bulan ke jadwal pertama
+        const urlD = extractDateFromUrl();
+        if (!urlD && mapped.length > 0) {
+          try {
+            const firstD = new Date(mapped[0].tanggal);
+            if (!isNaN(firstD.getTime())) {
+              setCurrentDate(new Date(firstD.getFullYear(), firstD.getMonth(), 1));
+            }
+          } catch {}
+        }
+      } else {
+        setJadwalList([]);
+      }
+    }).catch(err => {
+      console.warn('Gagal fetch jadwal dari Supabase:', err);
+      setJadwalList([]);
+    });
+  }, [user, isIbuRole, isStaff]);
+
+  // Daftar jadwal yang ada pada bulan & tahun yang sedang aktif di kalender
+  const monthlyJadwalList = useMemo(() => {
+    return jadwalList.filter(item => {
+      const p = parseDateSafe(item.tanggal);
+      return p && p.month === currentMonth && p.year === currentYear;
+    });
+  }, [jadwalList, currentMonth, currentYear]);
+
+  // Metrik terhitung dinamis dari jadwal aktif pada bulan & tahun yang sedang dipilih (PBI 01A AC 1)
   const countPemeriksaan = useMemo(() => {
-    return jadwalList.filter(j => {
+    return monthlyJadwalList.filter(j => {
       const s = (j.jenis || '').toLowerCase();
       return s.includes('pemeriksaan') || s.includes('anc') || s.includes('usg');
     }).length;
-  }, [jadwalList]);
+  }, [monthlyJadwalList]);
 
   const countImunisasi = useMemo(() => {
-    return jadwalList.filter(j => {
+    return monthlyJadwalList.filter(j => {
       const s = (j.jenis || '').toLowerCase();
       return s.includes('imunisasi') || s.includes('vaksin');
     }).length;
-  }, [jadwalList]);
+  }, [monthlyJadwalList]);
 
   const countKonseling = useMemo(() => {
-    return jadwalList.filter(j => {
+    return monthlyJadwalList.filter(j => {
       const s = (j.jenis || '').toLowerCase();
       return s.includes('konseling') || s.includes('gizi');
     }).length;
-  }, [jadwalList]);
+  }, [monthlyJadwalList]);
 
   const countKelasIbu = useMemo(() => {
-    return jadwalList.filter(j => {
+    return monthlyJadwalList.filter(j => {
       const s = (j.jenis || '').toLowerCase();
       return s.includes('kelas') || s.includes('senam') || s.includes('edukasi');
     }).length;
-  }, [jadwalList]);
+  }, [monthlyJadwalList]);
 
   // Ekstrak hari-hari yang memiliki jadwal di bulan & tahun aktif
   const eventDays = useMemo(() => {
     const days = new Set();
-    jadwalList.forEach(item => {
-      try {
-        const d = new Date(item.tanggal);
-        if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
-          days.add(d.getDate());
-        }
-      } catch {
-        // ignore
-      }
+    monthlyJadwalList.forEach(item => {
+      const p = parseDateSafe(item.tanggal);
+      if (p) days.add(p.day);
     });
     return days;
-  }, [jadwalList, currentYear, currentMonth]);
+  }, [monthlyJadwalList]);
 
-  // Filter daftar jadwal jika ada tanggal kalender yang diklik
+  // Filter daftar jadwal jika ada tanggal kalender yang diklik atau bulan aktif
   const filteredJadwalList = useMemo(() => {
     if (selectedDay) {
-      return jadwalList.filter(item => {
-        try {
-          const d = new Date(item.tanggal);
-          return d.getDate() === selectedDay && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-        } catch {
-          return false;
-        }
+      return monthlyJadwalList.filter(item => {
+        const p = parseDateSafe(item.tanggal);
+        return p && p.day === selectedDay;
       });
     }
-    const monthFiltered = jadwalList.filter(item => {
-      try {
-        const d = new Date(item.tanggal);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-      } catch {
-        return false;
-      }
-    });
-    return monthFiltered.length > 0 ? monthFiltered : jadwalList;
-  }, [jadwalList, selectedDay, currentMonth, currentYear]);
+    return monthlyJadwalList;
+  }, [monthlyJadwalList, selectedDay]);
+
+  // Cek apakah tanggal/bulan yang sedang dilihat adalah tanggal lampau (backdate) atau masa depan (future)
+  const isBackdate = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDay) {
+      const selectedDate = new Date(currentYear, currentMonth, selectedDay);
+      selectedDate.setHours(0, 0, 0, 0);
+      return selectedDate.getTime() < today.getTime();
+    }
+
+    // Jika tidak ada hari spesifik, periksa apakah bulan yang dipilih sudah berakhir
+    const endOfMonth = new Date(currentYear, currentMonth + 1, 0);
+    endOfMonth.setHours(23, 59, 59, 999);
+    return endOfMonth.getTime() < today.getTime();
+  }, [currentYear, currentMonth, selectedDay]);
+
+  // Keterangan empty state sesuai kondisi: 'Tidak ada jadwal...' jika backdate, 'Belum ada jadwal...' untuk future
+  const emptyScheduleText = useMemo(() => {
+    const prefix = isBackdate ? 'Tidak ada jadwal' : 'Belum ada jadwal';
+    if (selectedDay) {
+      return `${prefix} kegiatan pada tanggal ${selectedDay} ${monthNames[currentMonth]} ${currentYear}.`;
+    }
+    return `${prefix} kegiatan pada bulan ${monthNames[currentMonth]} ${currentYear}.`;
+  }, [isBackdate, selectedDay, currentMonth, currentYear]);
 
   // Jadwal terdekat yang selaras dengan kalender (bulan/tanggal aktif)
   const displayJadwalTerdekat = useMemo(() => {
-    let list = jadwalList.filter(item => {
-      try {
-        const d = new Date(item.tanggal);
-        if (selectedDay) {
-          return d.getDate() === selectedDay && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-        }
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-      } catch {
-        return false;
-      }
-    });
+    const list = selectedDay
+      ? monthlyJadwalList.filter(item => {
+          const p = parseDateSafe(item.tanggal);
+          return p && p.day === selectedDay;
+        })
+      : [...monthlyJadwalList];
 
     list.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
-
-    if (list.length === 0 && !selectedDay) {
-      const upcoming = jadwalList
-        .filter(item => resolveJadwalStatus(item) === 'Akan Datang')
-        .sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
-      return upcoming.slice(0, 3);
-    }
-
     return list.slice(0, 4);
-  }, [jadwalList, selectedDay, currentMonth, currentYear]);
+  }, [monthlyJadwalList, selectedDay]);
 
   const handleKirimWhatsApp = async (item) => {
     setIsSendingWa(true);
@@ -513,20 +551,14 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
           <div className="space-y-3">
             {displayJadwalTerdekat.length === 0 ? (
               <div className="py-6 text-center text-xs text-slate-400">
-                Belum ada agenda jadwal kegiatan pada {selectedDay ? `tanggal ${selectedDay} ` : 'bulan '}{monthNames[currentMonth]} {currentYear}.
+                {emptyScheduleText}
               </div>
             ) : displayJadwalTerdekat.map((item, idx) => {
               const reminder = getReminderStatus(item.tanggal);
-              let dayStr = '12';
-              let monthStr = 'Sep';
-              try {
-                const d = new Date(item.tanggal);
-                dayStr = String(d.getDate()).padStart(2, '0');
-                const mNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-                monthStr = mNames[d.getMonth()] || 'Sep';
-              } catch {
-                // fallback
-              }
+              const p = parseDateSafe(item.tanggal);
+              const dayStr = p ? String(p.day).padStart(2, '0') : '12';
+              const mNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+              const monthStr = p ? (mNames[p.month] || 'Sep') : 'Sep';
 
               return (
                 <div 
@@ -565,7 +597,7 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
             <p className="text-[11px] text-slate-400 mt-0.5">
               {selectedDay 
                 ? `Menampilkan ${filteredJadwalList.length} kegiatan pada tanggal ${selectedDay} ${monthNames[currentMonth]} ${currentYear}`
-                : `Menampilkan semua ${filteredJadwalList.length} jadwal kegiatan aktif`
+                : `Menampilkan ${filteredJadwalList.length} jadwal kegiatan pada bulan ${monthNames[currentMonth]} ${currentYear}`
               }
             </p>
           </div>
@@ -588,7 +620,7 @@ export default function JadwalSayaView({ user, currentPath = '', onNavigate, onS
               {filteredJadwalList.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-slate-400">
-                    Tidak ada jadwal kegiatan pada tanggal yang dipilih.
+                    {emptyScheduleText}
                   </td>
                 </tr>
               ) : (
