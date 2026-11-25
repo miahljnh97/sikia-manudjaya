@@ -63,14 +63,40 @@ export default function PetaPersebaranWilayah({
     return { filter: 'none' };
   }, [selectedIndikator]);
 
-  const legendItems = [
-    { label: '> 30', color: '#F43F5E' },
-    { label: '21 - 30', color: '#FB7185' },
-    { label: '11 - 20', color: '#FDA4AF' },
-    { label: '6 - 10', color: '#FECDD3' },
-    { label: '1 - 5', color: '#FFE4E6' },
-    { label: '0', color: '#FFFFFF' }
-  ];
+  // Warna legenda yang dinamis dan cocok dengan tema indikator (Stunting: Pink/Rose, Hamil Berisiko: Orange/Amber, Imunisasi: Purple/Indigo)
+  const legendItems = useMemo(() => {
+    if (selectedIndikator === 'Ibu Hamil Berisiko') {
+      // Skala Oranye / Coral hangat (sesuai hue-rotate 25deg)
+      return [
+        { label: '> 30', color: '#EA580C' },
+        { label: '21 - 30', color: '#FB923C' },
+        { label: '11 - 20', color: '#FDBA74' },
+        { label: '6 - 10', color: '#FED7AA' },
+        { label: '1 - 5', color: '#FFEDD5' },
+        { label: '0', color: '#FFFFFF' }
+      ];
+    }
+    if (selectedIndikator === 'Cakupan Imunisasi Rendah') {
+      // Skala Magenta / Rose-Ungu (sesuai hue-rotate -20deg)
+      return [
+        { label: '> 30', color: '#E11D48' },
+        { label: '21 - 30', color: '#F43F5E' },
+        { label: '11 - 20', color: '#FB7185' },
+        { label: '6 - 10', color: '#FDA4AF' },
+        { label: '1 - 5', color: '#FFE4E6' },
+        { label: '0', color: '#FFFFFF' }
+      ];
+    }
+    // Default: Kasus Stunting (Balita) - Pink / Rose khas Figma
+    return [
+      { label: '> 30', color: '#BE123C' },
+      { label: '21 - 30', color: '#FB7185' },
+      { label: '11 - 20', color: '#FDA4AF' },
+      { label: '6 - 10', color: '#FECDD3' },
+      { label: '1 - 5', color: '#FFF1F2' },
+      { label: '0', color: '#FFFFFF' }
+    ];
+  }, [selectedIndikator]);
 
   return (
     <div className="relative w-full rounded-2xl overflow-hidden bg-[#EDF3F5] border border-slate-200/90 shadow-2xs select-none">
