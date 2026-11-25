@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, Minus } from 'lucide-react';
 
-// Fungsi penentuan warna dan kontras teks berdasarkan jumlah kasus & legenda
+// Fungsi penentuan warna dan kontras teks berdasarkan jumlah kasus & legenda Figma
 function getColorForKasus(kasus) {
-  if (kasus > 30) return { fill: '#BE123C', textColor: '#FFFFFF' };
-  if (kasus >= 21) return { fill: '#FB7185', textColor: '#FFFFFF' };
-  if (kasus >= 11) return { fill: '#FDA4AF', textColor: '#881337' };
-  if (kasus >= 6) return { fill: '#FECDD3', textColor: '#881337' };
-  if (kasus >= 1) return { fill: '#FFF1F2', textColor: '#9F1239' };
-  return { fill: '#FFFFFF', textColor: '#475569' };
+  if (kasus > 30) return { fill: '#F43F5E', textColor: '#FFFFFF', stroke: '#BE123C' }; // > 30
+  if (kasus >= 21) return { fill: '#FB7185', textColor: '#FFFFFF', stroke: '#E11D48' }; // 21 - 30
+  if (kasus >= 11) return { fill: '#FDA4AF', textColor: '#881337', stroke: '#F43F5E' }; // 11 - 20
+  if (kasus >= 6) return { fill: '#FECDD3', textColor: '#881337', stroke: '#FB7185' }; // 6 - 10
+  if (kasus >= 1) return { fill: '#FFE4E6', textColor: '#9F1239', stroke: '#FDA4AF' }; // 1 - 5
+  return { fill: '#FFFFFF', textColor: '#475569', stroke: '#E2E8F0' }; // 0
 }
 
 export default function PetaPersebaranWilayah({
@@ -21,129 +21,72 @@ export default function PetaPersebaranWilayah({
   const [zoomLevel, setZoomLevel] = useState(1);
   const [hoveredRegion, setHoveredRegion] = useState(null);
 
-  // Data Wilayah & Kasus per Indikator Kesehatan
+  // Data Wilayah & Kasus per Indikator Kesehatan sesuai geografi Figma (skala 1550 x 652)
   const rawRegions = useMemo(() => [
-    {
-      id: 'manud-jaya',
-      nama: 'Desa Manud Jaya',
-      shortName: 'Manud Jaya',
-      d: 'M 220,150 L 360,140 L 400,205 L 375,270 L 260,265 L 195,205 Z',
-      labelX: 285,
-      labelY: 195,
-      kasusMap: {
-        'Kasus Stunting (Balita)': 32,
-        'Ibu Hamil Berisiko': 16,
-        'Cakupan Imunisasi Rendah': 25
-      },
-      posyandus: [
-        { x: 235, y: 185 },
-        { x: 300, y: 175 },
-        { x: 325, y: 245 },
-        { x: 250, y: 240 }
-      ]
-    },
     {
       id: 'sungai-rejo',
       nama: 'Desa Sungai Rejo',
       shortName: 'Sungai Rejo',
-      d: 'M 275,55 L 405,45 L 430,110 L 360,140 L 245,130 L 225,85 Z',
-      labelX: 335,
-      labelY: 95,
+      // Poligon zona atas (merah tua di figma)
+      d: 'M 646,105 L 690,75 L 755,90 L 800,75 L 850,95 L 900,80 L 970,110 L 1020,125 L 1085,190 L 1045,215 L 1000,205 L 960,250 L 980,310 L 870,315 L 850,220 L 730,195 L 675,215 L 646,170 Z',
+      labelX: 590,
+      labelY: 300,
       kasusMap: {
         'Kasus Stunting (Balita)': 24,
         'Ibu Hamil Berisiko': 26,
         'Cakupan Imunisasi Rendah': 14
       },
       posyandus: [
-        { x: 300, y: 75 },
-        { x: 360, y: 90 },
-        { x: 380, y: 125 }
+        { x: 508, y: 245, type: 'ring' },
+        { x: 570, y: 252, type: 'ring' },
+        { x: 610, y: 242, type: 'yellow' },
+        { x: 635, y: 325, type: 'yellow' }
       ]
     },
     {
-      id: 'soreang-baru',
-      nama: 'Desa Soreang Baru',
-      shortName: 'Desa Soreang Baru',
-      d: 'M 140,80 L 225,85 L 245,130 L 220,150 L 165,155 L 120,120 Z',
-      labelX: 180,
-      labelY: 120,
+      id: 'manud-jaya',
+      nama: 'Desa Manud Jaya',
+      shortName: 'Manud Jaya',
+      // Poligon zona tengah-kiri (pink lembut di figma)
+      d: 'M 440,310 L 565,305 L 610,240 L 730,195 L 850,220 L 870,315 L 755,315 L 870,410 L 865,550 L 760,595 L 660,570 L 550,650 L 450,570 L 330,460 L 330,370 Z',
+      labelX: 405,
+      labelY: 415,
       kasusMap: {
-        'Kasus Stunting (Balita)': 18,
-        'Ibu Hamil Berisiko': 9,
-        'Cakupan Imunisasi Rendah': 34
+        'Kasus Stunting (Balita)': 32,
+        'Ibu Hamil Berisiko': 16,
+        'Cakupan Imunisasi Rendah': 25
       },
       posyandus: [
-        { x: 155, y: 110 },
-        { x: 195, y: 135 }
+        { x: 350, y: 450, type: 'green' },
+        { x: 320, y: 480, type: 'yellow' },
+        { x: 428, y: 458, type: 'green' },
+        { x: 426, y: 492, type: 'yellow' },
+        { x: 462, y: 465, type: 'green' },
+        { x: 490, y: 488, type: 'yellow' },
+        { x: 550, y: 492, type: 'green' },
+        { x: 382, y: 635, type: 'green' }
       ]
     },
     {
       id: 'tanjung-sari',
       nama: 'Desa Tanjung Sari',
       shortName: 'Tanjung Sari',
-      d: 'M 360,140 L 450,130 L 485,210 L 435,270 L 375,270 L 400,205 Z',
-      labelX: 425,
-      labelY: 200,
+      // Poligon zona tengah-kanan (pink sedang di figma)
+      d: 'M 870,315 L 980,310 L 1050,335 L 1100,345 L 1180,410 L 1140,445 L 1060,430 L 1170,510 L 1230,580 L 1120,645 L 945,615 L 865,550 L 870,410 L 755,315 Z',
+      labelX: 720,
+      labelY: 500,
       kasusMap: {
         'Kasus Stunting (Balita)': 14,
         'Ibu Hamil Berisiko': 22,
         'Cakupan Imunisasi Rendah': 8
       },
       posyandus: [
-        { x: 395, y: 170 },
-        { x: 445, y: 185 },
-        { x: 430, y: 240 }
-      ]
-    },
-    {
-      id: 'mandiri-jaya',
-      nama: 'Desa Mandiri Jaya',
-      shortName: 'Desa Mandiri Jaya',
-      d: 'M 165,155 L 220,150 L 195,205 L 260,265 L 195,295 L 140,240 L 125,180 Z',
-      labelX: 175,
-      labelY: 215,
-      kasusMap: {
-        'Kasus Stunting (Balita)': 8,
-        'Ibu Hamil Berisiko': 12,
-        'Cakupan Imunisasi Rendah': 17
-      },
-      posyandus: [
-        { x: 165, y: 190 },
-        { x: 175, y: 250 }
-      ]
-    },
-    {
-      id: 'melati',
-      nama: 'Desa Melati',
-      shortName: 'Desa Melati',
-      d: 'M 375,270 L 435,270 L 415,340 L 335,350 L 320,290 L 365,280 Z',
-      labelX: 380,
-      labelY: 310,
-      kasusMap: {
-        'Kasus Stunting (Balita)': 6,
-        'Ibu Hamil Berisiko': 4,
-        'Cakupan Imunisasi Rendah': 3
-      },
-      posyandus: [
-        { x: 365, y: 315 },
-        { x: 400, y: 325 }
-      ]
-    },
-    {
-      id: 'purnama',
-      nama: 'Desa Purnama',
-      shortName: 'Desa Purnama',
-      d: 'M 195,295 L 260,265 L 320,290 L 335,350 L 240,360 L 190,325 Z',
-      labelX: 255,
-      labelY: 315,
-      kasusMap: {
-        'Kasus Stunting (Balita)': 5,
-        'Ibu Hamil Berisiko': 2,
-        'Cakupan Imunisasi Rendah': 5
-      },
-      posyandus: [
-        { x: 235, y: 325 },
-        { x: 285, y: 335 }
+        { x: 552, y: 358, type: 'yellow' },
+        { x: 685, y: 345, type: 'yellow' },
+        { x: 742, y: 520, type: 'yellow' },
+        { x: 765, y: 535, type: 'yellow' },
+        { x: 735, y: 562, type: 'yellow' },
+        { x: 705, y: 590, type: 'yellow' }
       ]
     }
   ], []);
@@ -152,27 +95,28 @@ export default function PetaPersebaranWilayah({
   const regions = useMemo(() => {
     return rawRegions.map((reg) => {
       const kasus = reg.kasusMap[selectedIndikator] ?? reg.kasusMap['Kasus Stunting (Balita)'];
-      const { fill, textColor } = getColorForKasus(kasus);
+      const { fill, textColor, stroke } = getColorForKasus(kasus);
       return {
         ...reg,
         kasus,
         fill,
-        textColor
+        textColor,
+        stroke
       };
     });
   }, [rawRegions, selectedIndikator]);
 
   const legendItems = [
-    { label: '> 30', color: '#BE123C' },
+    { label: '> 30', color: '#F43F5E' },
     { label: '21 - 30', color: '#FB7185' },
     { label: '11 - 20', color: '#FDA4AF' },
     { label: '6 - 10', color: '#FECDD3' },
-    { label: '1 - 5', color: '#FFF1F2' },
+    { label: '1 - 5', color: '#FFE4E6' },
     { label: '0', color: '#FFFFFF' }
   ];
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden bg-[#F1F5F9] border border-slate-200/90 shadow-2xs">
+    <div className="relative w-full rounded-2xl overflow-hidden bg-[#EBF2F4] border border-slate-200/90 shadow-2xs select-none">
       {/* Optional dropdown inside map canvas if requested */}
       {showDropdownInside && !isCompact && (
         <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-2">
@@ -191,11 +135,11 @@ export default function PetaPersebaranWilayah({
         </div>
       )}
 
-      {/* Kontrol Zoom (+ / -) Sesuai Gambar 1 */}
-      <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-1">
+      {/* Kontrol Zoom (+ / -) Sesuai Desain Figma */}
+      <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-1.5 shadow-xs">
         <button
           type="button"
-          onClick={() => setZoomLevel((z) => Math.min(1.4, z + 0.1))}
+          onClick={() => setZoomLevel((z) => Math.min(1.5, z + 0.1))}
           className="w-8 h-8 rounded-lg bg-white/95 hover:bg-white text-slate-600 flex items-center justify-center shadow-xs border border-slate-200 cursor-pointer active:scale-95 transition-all font-bold text-sm"
           title="Zoom In"
         >
@@ -203,7 +147,7 @@ export default function PetaPersebaranWilayah({
         </button>
         <button
           type="button"
-          onClick={() => setZoomLevel((z) => Math.max(0.8, z - 0.1))}
+          onClick={() => setZoomLevel((z) => Math.max(0.7, z - 0.1))}
           className="w-8 h-8 rounded-lg bg-white/95 hover:bg-white text-slate-600 flex items-center justify-center shadow-xs border border-slate-200 cursor-pointer active:scale-95 transition-all font-bold text-sm"
           title="Zoom Out"
         >
@@ -211,12 +155,12 @@ export default function PetaPersebaranWilayah({
         </button>
       </div>
 
-      {/* Legenda Jumlah Kasus Sesuai Gambar 1 */}
-      <div className={`absolute ${isCompact ? 'top-3 left-3' : 'top-4 right-4'} z-10 bg-white/95 backdrop-blur-xs border border-slate-200 rounded-xl p-3 shadow-xs text-[11px] space-y-1.5 min-w-[110px]`}>
+      {/* Legenda Jumlah Kasus Sesuai Desain Figma (Sudut Kanan Atas) */}
+      <div className={`absolute ${isCompact ? 'top-2 right-2' : 'top-4 right-4'} z-10 bg-white/95 backdrop-blur-xs border border-slate-200 rounded-xl p-3 shadow-xs text-[11px] space-y-1.5 min-w-[110px]`}>
         <span className="block font-bold text-slate-800 text-[10px] uppercase tracking-wider">
           Jumlah Kasus
         </span>
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           {legendItems.map((item) => (
             <div key={item.label} className="flex items-center gap-2">
               <span
@@ -229,82 +173,141 @@ export default function PetaPersebaranWilayah({
         </div>
       </div>
 
-      {/* SVG Canvas Map Sesuai Gambar 1 */}
+      {/* Canvas Map Wrapper */}
       <div className="w-full flex items-center justify-center overflow-hidden" style={{ height }}>
-        <svg
-          viewBox="100 30 430 350"
-          className="w-full h-full transition-transform duration-200 ease-out"
+        <div 
+          className="relative w-full h-full transition-transform duration-200 ease-out origin-center"
           style={{ transform: `scale(${zoomLevel})` }}
         >
-          {/* Background Map Context Labels (Kecamatan Tetangga) */}
-          <text x="120" y="270" fill="#94A3B8" fontSize="10" fontWeight="600" opacity="0.6">
-            Kecamatan...
-          </text>
-          <text x="390" y="65" fill="#94A3B8" fontSize="10" fontWeight="600" opacity="0.6">
-            Kecamatan Melati Jaya
-          </text>
+          {/* 1. Latar Belakang Peta (Jalan, Sungai, Kecamatan Tetangga) */}
+          <img
+            src="/images/picture/pesebaran-wilayah/LatarPeta.png"
+            alt="Latar Peta Persebaran Wilayah"
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          />
 
-          {/* Poligon Wilayah Desa Sesuai Gambar 1 */}
-          {regions.map((reg) => {
-            const isHovered = hoveredRegion?.id === reg.id;
-            return (
-              <g
-                key={reg.id}
-                onMouseEnter={() => setHoveredRegion(reg)}
-                onMouseLeave={() => setHoveredRegion(null)}
-                className="cursor-pointer transition-all duration-150"
-              >
-                <path
-                  d={reg.d}
-                  fill={reg.fill}
-                  stroke={isHovered ? '#9F1239' : '#FFFFFF'}
-                  strokeWidth={isHovered ? 2.5 : 1.5}
-                  strokeLinejoin="round"
-                  className="transition-colors duration-300 hover:filter hover:brightness-95"
-                />
+          {/* 2. Layer Zona Kesehatan (Gambar Asli Figma Bertekstur Organik) */}
+          <img
+            src="/images/picture/pesebaran-wilayah/ZonaKesehatan.png"
+            alt="Zona Kesehatan"
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-90 mix-blend-multiply"
+          />
 
-                {/* Label Nama Desa & Kasus Sesuai Gambar 1 */}
-                <text
-                  x={reg.labelX}
-                  y={reg.labelY - 5}
-                  textAnchor="middle"
-                  fill={reg.textColor}
-                  fontSize={isCompact ? '9' : '10'}
-                  fontWeight="bold"
-                  className="pointer-events-none select-none drop-shadow-2xs transition-colors duration-200"
+          {/* 3. SVG Overlay Interaktif untuk Reaktivitas Filter, Hover, Label, & Titik Posyandu */}
+          <svg
+            viewBox="0 0 1550 652"
+            className="absolute inset-0 w-full h-full"
+            preserveAspectRatio="xMidYMid slice"
+          >
+            {/* Label Wilayah Tetangga dari Figma */}
+            <text x="140" y="70" fill="#64748B" fontSize="13" fontWeight="600" opacity="0.75">
+              Kecamatan Sumberrejo
+            </text>
+            <text x="750" y="110" fill="#64748B" fontSize="13" fontWeight="600" opacity="0.75">
+              Kecamatan Melati Jaya
+            </text>
+            <text x="100" y="440" fill="#64748B" fontSize="13" fontWeight="600" opacity="0.75">
+              Kecamatan Karangrejo
+            </text>
+
+            {/* Poligon Interaktif (Translucent Overlay untuk menangkap interaksi hover & reaktivitas warna saat filter berubah) */}
+            {regions.map((reg) => {
+              const isHovered = hoveredRegion?.id === reg.id;
+              return (
+                <g
+                  key={reg.id}
+                  onMouseEnter={() => setHoveredRegion(reg)}
+                  onMouseLeave={() => setHoveredRegion(null)}
+                  className="cursor-pointer"
                 >
-                  {reg.shortName}
-                </text>
-                <text
-                  x={reg.labelX}
-                  y={reg.labelY + 9}
-                  textAnchor="middle"
-                  fill={reg.textColor}
-                  fontSize={isCompact ? '8' : '9'}
-                  fontWeight="600"
-                  opacity="0.95"
-                  className="pointer-events-none select-none transition-colors duration-200"
-                >
-                  {reg.kasus} kasus
-                </text>
-
-                {/* Titik Lokasi Posyandu (Yellow Dots dengan Outline Putih) */}
-                {reg.posyandus.map((p, pIdx) => (
-                  <circle
-                    key={`${reg.id}-p-${pIdx}`}
-                    cx={p.x}
-                    cy={p.y}
-                    r={3.8}
-                    fill="#FACC15"
-                    stroke="#FFFFFF"
-                    strokeWidth={1.5}
-                    className="drop-shadow-xs"
+                  {/* Highlight overlay saat difilter atau dihover */}
+                  <path
+                    d={reg.d}
+                    fill={reg.fill}
+                    fillOpacity={isHovered ? 0.45 : 0.22}
+                    stroke={isHovered ? '#BE123C' : reg.stroke}
+                    strokeWidth={isHovered ? 3 : 1.5}
+                    strokeLinejoin="round"
+                    className="transition-all duration-300"
                   />
-                ))}
+
+                  {/* Label Nama Desa Sesuai Desain Figma */}
+                  <text
+                    x={reg.labelX}
+                    y={reg.labelY}
+                    textAnchor="middle"
+                    fill="#1E293B"
+                    fontSize={isCompact ? '13' : '15'}
+                    fontWeight="800"
+                    className="pointer-events-none select-none drop-shadow-xs"
+                  >
+                    {reg.shortName}
+                  </text>
+                  <text
+                    x={reg.labelX}
+                    y={reg.labelY + 16}
+                    textAnchor="middle"
+                    fill="#475569"
+                    fontSize={isCompact ? '11' : '12'}
+                    fontWeight="700"
+                    className="pointer-events-none select-none"
+                  >
+                    ({reg.kasus} kasus)
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Titik Posyandu dari Desain Figma: Kuning, Hijau, dan Ring Putih */}
+            {regions.map((reg) => (
+              <g key={`pos-${reg.id}`} className="pointer-events-none">
+                {reg.posyandus.map((p, idx) => {
+                  if (p.type === 'ring') {
+                    return (
+                      <circle
+                        key={`pt-${reg.id}-${idx}`}
+                        cx={p.x}
+                        cy={p.y}
+                        r={8}
+                        fill="none"
+                        stroke="#FFFFFF"
+                        strokeWidth={2.5}
+                        className="drop-shadow-xs"
+                      />
+                    );
+                  }
+                  if (p.type === 'green') {
+                    return (
+                      <circle
+                        key={`pt-${reg.id}-${idx}`}
+                        cx={p.x}
+                        cy={p.y}
+                        r={5.5}
+                        fill="#10B981"
+                        stroke="#FFFFFF"
+                        strokeWidth={2}
+                        className="drop-shadow-xs"
+                      />
+                    );
+                  }
+                  // default yellow
+                  return (
+                    <circle
+                      key={`pt-${reg.id}-${idx}`}
+                      cx={p.x}
+                      cy={p.y}
+                      r={5.5}
+                      fill="#FACC15"
+                      stroke="#FFFFFF"
+                      strokeWidth={2}
+                      className="drop-shadow-xs"
+                    />
+                  );
+                })}
               </g>
-            );
-          })}
-        </svg>
+            ))}
+          </svg>
+        </div>
       </div>
 
       {/* Tooltip Hover Wilayah */}
@@ -319,3 +322,4 @@ export default function PetaPersebaranWilayah({
     </div>
   );
 }
+
