@@ -77,13 +77,13 @@ export default function PetaPersebaranWilayah({
       ];
     }
     if (selectedIndikator === 'Cakupan Imunisasi Rendah') {
-      // Skala Magenta / Rose-Ungu (sesuai hue-rotate -20deg)
+      // Skala Magenta / Pink Terang (sesuai persis warna render hue-rotate -20deg di peta)
       return [
-        { label: '> 30', color: '#E11D48' },
-        { label: '21 - 30', color: '#F43F5E' },
-        { label: '11 - 20', color: '#FB7185' },
-        { label: '6 - 10', color: '#FDA4AF' },
-        { label: '1 - 5', color: '#FFE4E6' },
+        { label: '> 30', color: '#E6007A' },
+        { label: '21 - 30', color: '#FF52AB' },
+        { label: '11 - 20', color: '#FF80C2' },
+        { label: '6 - 10', color: '#FFA8D5' },
+        { label: '1 - 5', color: '#FFDFF1' },
         { label: '0', color: '#FFFFFF' }
       ];
     }
