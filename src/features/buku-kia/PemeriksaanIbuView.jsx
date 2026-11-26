@@ -170,7 +170,9 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
                 beratBadan: item.berat_badan ? `${item.berat_badan} kg` : '-',
                 tinggiFundus: item.tinggi_fundus ? `${item.tinggi_fundus} cm` : '-',
                 djj: item.djj ? `${item.djj} x/menit` : '-',
-                petugas: item.pemeriksa || '-'
+                petugas: item.pemeriksa || '-',
+                tanggalKontrolBerikutnya: item.tanggal_kontrol_berikutnya || null,
+                statusRisiko: item.status_risiko || item.status_hasil || 'Normal'
               })));
 
               // Ekstrak dokumen pendukung dari riwayat pemeriksaan ANC secara real-time
@@ -561,7 +563,11 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
           </div>
           <div>
             <span className="text-[11px] text-slate-400 font-medium block">Kunjungan Berikutnya</span>
-            <span className="text-sm font-bold text-slate-900 mt-0.5 block">10 Okt 2026</span>
+            <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+              {riwayatList.length > 0 && riwayatList[riwayatList.length - 1].tanggalKontrolBerikutnya 
+                ? formatTanggalIndo(riwayatList[riwayatList.length - 1].tanggalKontrolBerikutnya) 
+                : '10 Okt 2026'}
+            </span>
           </div>
         </div>
 
@@ -571,7 +577,11 @@ export default function PemeriksaanIbuView({ user, currentPath = '', onNavigate,
           </div>
           <div>
             <span className="text-[11px] text-slate-400 font-medium block">Status Pemeriksaan</span>
-            <span className="text-sm font-bold text-slate-900 mt-0.5 block">Rutin</span>
+            <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+              {riwayatList.length > 0 && riwayatList[riwayatList.length - 1].hasil
+                ? riwayatList[riwayatList.length - 1].hasil
+                : 'Rutin'}
+            </span>
           </div>
         </div>
       </div>

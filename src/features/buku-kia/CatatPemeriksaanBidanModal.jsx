@@ -30,13 +30,16 @@ export default function CatatPemeriksaanBidanModal({
   const [loadingKehamilan, setLoadingKehamilan] = useState(false);
   const [kehamilan, setKehamilan] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [existingPemeriksaanId, setExistingPemeriksaanId] = useState(null);
+  const [loadingData, setLoadingData] = useState(false);
 
   // Form State
   const [form, setForm] = useState({
+    id: null,
     // Section 1: Data Kunjungan
     tanggal_kunjungan: new Date().toISOString().split('T')[0],
     jenis_pelayanan: pasien.jenis_peserta === 'Ibu Hamil' ? 'Pemeriksaan kehamilan (ANC)' : 'Pemeriksaan Kesehatan Balita',
-    kunjungan_ke: 'ANC 4',
+    kunjungan_ke: 'ANC 1',
     tempat_pelayanan: 'Puskesmas Manud Jaya',
     keluhan_utama: 'Kontrol rutin, sering merasa pegal di punggung',
 
@@ -71,7 +74,7 @@ export default function CatatPemeriksaanBidanModal({
       d.setDate(d.getDate() + 28);
       return d.toISOString().split('T')[0];
     })(),
-    kunjungan_berikutnya: 'ANC 5',
+    kunjungan_berikutnya: 'ANC 2',
 
     // Section 4: Catatan Tambahan & Lampiran
     catatan_nakes: '',
@@ -81,28 +84,186 @@ export default function CatatPemeriksaanBidanModal({
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [tagInput, setTagInput] = useState('');
 
-  // Fetch data kehamilan jika pasien adalah Ibu Hamil
+  // Load data kehamilan & data pemeriksaan terakhir pasien agar formulir menampilkan data paling update
   useEffect(() => {
     let isMounted = true;
-    if (pasien.jenis_peserta === 'Ibu Hamil' || pasien.status_ibu === 'hamil') {
-      setLoadingKehamilan(true);
-      bukuKiaService.getKehamilanIbu(pasien.id).then((kh) => {
-        if (isMounted && kh) {
-          setKehamilan(kh);
-          if (kh.usia_kehamilan_minggu) {
-            setForm((prev) => ({
-              ...prev,
-              usia_kehamilan: `${kh.usia_kehamilan_minggu} minggu 3 hari`
-            }));
+    if (!pasien || !isOpen) return;
+
+    setLoadingData(true);
+
+    const loadData = async () => {
+      try {
+        const isIbu = pasien.jenis_peserta === 'Ibu Hamil' || pasien.status_ibu === 'hamil';
+
+        if (isIbu) {
+          setLoadingKehamilan(true);
+          let kh = await bukuKiaService.getKehamilanIbu(pasien.id);
+          if (!kh?.id) {
+            kh = await bukuKiaService.getOrCreateKehamilanIbu(pasien.id);
+          }
+          if (isMounted && kh) {
+            setKehamilan(kh);
+          }
+
+          if (kh?.id) {
+            const ancList = await bukuKiaService.getPemeriksaanAncList(kh.id);
+            if (isMounted && ancList && ancList.length > 0) {
+              // Ambil data pemeriksaan paling baru (berdasarkan created_at atau tanggal_pemeriksaan)
+              const latest = [...ancList].sort((a, b) => {
+                const dateA = new Date(a.created_at || a.tanggal_pemeriksaan || 0);
+                const dateB = new Date(b.created_at || b.tanggal_pemeriksaan || 0);
+                return dateB - dateA;
+              })[0];
+
+              if (latest && isMounted) {
+                setExistingPemeriksaanId(latest.id);
+                setForm({
+                  id: latest.id,
+                  tanggal_kunjungan: latest.tanggal_pemeriksaan || new Date().toISOString().split('T')[0],
+                  jenis_pelayanan: latest.jenis_pelayanan || 'Pemeriksaan kehamilan (ANC)',
+                  kunjungan_ke: latest.kunjungan_ke || 'ANC 1',
+                  tempat_pelayanan: latest.faskes || latest.tempat_pelayanan || 'Puskesmas Manud Jaya',
+                  keluhan_utama: latest.keluhan_utama || '',
+                  status_kehamilan: latest.status_kehamilan || 'Kehamilan tunggal',
+                  usia_kehamilan: latest.usia_kehamilan || (kh?.usia_kehamilan_minggu ? `${kh.usia_kehamilan_minggu} minggu 3 hari` : '28 minggu 3 hari'),
+                  tinggi_fundus: latest.tinggi_fundus != null ? String(latest.tinggi_fundus) : '26',
+                  djj: latest.djj != null ? String(latest.djj) : '140',
+                  berat_badan: latest.berat_badan != null ? String(latest.berat_badan) : '',
+                  tekanan_darah: latest.tekanan_darah || '',
+                  lila: latest.lila != null ? String(latest.lila) : '',
+                  hemoglobin: latest.hemoglobin != null ? String(latest.hemoglobin) : '',
+                  letak_janin: latest.letak_janin || 'Kepala',
+                  presentasi_janin: latest.presentasi_janin || 'Kepala',
+                  gerakan_janin: latest.gerakan_janin || 'Aktif',
+                  kontraksi: latest.kontraksi || 'Tidak ada',
+                  kontraksi_ket: latest.kontraksi_ket || '',
+                  edema: latest.edema || 'Tidak ada',
+                  varises: latest.varises || 'Tidak ada',
+                  tanda_bahaya: latest.tanda_bahaya || 'Tidak ada',
+                  hasil_usg: latest.hasil_usg || '',
+                  status_risiko: latest.status_risiko || latest.status_hasil || 'Tidak berisiko',
+                  diagnosa: latest.diagnosa || latest.catatan_tindak_lanjut || 'Kehamilan normal, janin dalam kondisi baik.',
+                  tindakan_diberikan: Array.isArray(latest.tindakan_diberikan) && latest.tindakan_diberikan.length > 0 
+                    ? latest.tindakan_diberikan 
+                    : ['Pemeriksaan ANC rutin', 'Konseling'],
+                  tindakan_lainnya: '',
+                  edukasi_diberikan: Array.isArray(latest.edukasi_diberikan) && latest.edukasi_diberikan.length > 0
+                    ? latest.edukasi_diberikan
+                    : ['Nutrisi kehamilan', 'Tanda bahaya kehamilan', 'Aktivitas fisik yang aman', 'Persiapan persalinan'],
+                  tanggal_kontrol_berikutnya: latest.tanggal_kontrol_berikutnya || (() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + 28);
+                    return d.toISOString().split('T')[0];
+                  })(),
+                  kunjungan_berikutnya: latest.kunjungan_berikutnya || 'ANC 2',
+                  catatan_nakes: latest.catatan_nakes || '',
+                  lampiran_dokumen: Array.isArray(latest.lampiran_dokumen) ? latest.lampiran_dokumen : []
+                });
+
+                if (Array.isArray(latest.lampiran_dokumen) && latest.lampiran_dokumen.length > 0) {
+                  setUploadedFiles(latest.lampiran_dokumen);
+                }
+                setLoadingKehamilan(false);
+                setLoadingData(false);
+                return;
+              }
+            }
+          }
+          setLoadingKehamilan(false);
+        } else {
+          // Jika Balita / Bayi
+          const kmsList = await bukuKiaService.getPertumbuhanAnakList(pasien.id);
+          if (isMounted && kmsList && kmsList.length > 0) {
+            const latestKms = [...kmsList].sort((a, b) => {
+              const dateA = new Date(a.created_at || a.tanggal_ukur || a.tanggal_pengukuran || 0);
+              const dateB = new Date(b.created_at || b.tanggal_ukur || b.tanggal_pengukuran || 0);
+              return dateB - dateA;
+            })[0];
+
+            if (latestKms) {
+              setExistingPemeriksaanId(latestKms.id);
+              setForm(prev => ({
+                ...prev,
+                id: latestKms.id,
+                tanggal_kunjungan: latestKms.tanggal_ukur || latestKms.tanggal_pengukuran || new Date().toISOString().split('T')[0],
+                jenis_pelayanan: 'Pemeriksaan Kesehatan Balita',
+                berat_badan: latestKms.berat_badan != null ? String(latestKms.berat_badan) : '',
+                tinggi_fundus: latestKms.tinggi_badan != null ? String(latestKms.tinggi_badan) : '',
+                lila: latestKms.lingkar_lengan_atas != null ? String(latestKms.lingkar_lengan_atas) : '',
+                status_risiko: latestKms.status_gizi === 'Stunting' || latestKms.status_gizi === 'Gizi Buruk' ? 'Berisiko tinggi' : 'Tidak berisiko',
+                diagnosa: latestKms.catatan || 'Kondisi pertumbuhan anak terpantau baik',
+                keluhan_utama: latestKms.catatan || 'Pemeriksaan rutin tumbuh kembang balita'
+              }));
+              setLoadingData(false);
+              return;
+            }
           }
         }
-        if (isMounted) setLoadingKehamilan(false);
-      });
-    }
+
+        // Default jika belum ada pemeriksaan sebelumnya
+        if (isMounted) {
+          setExistingPemeriksaanId(null);
+          setForm({
+            id: null,
+            tanggal_kunjungan: new Date().toISOString().split('T')[0],
+            jenis_pelayanan: isIbu ? 'Pemeriksaan kehamilan (ANC)' : 'Pemeriksaan Kesehatan Balita',
+            kunjungan_ke: 'ANC 1',
+            tempat_pelayanan: 'Puskesmas Manud Jaya',
+            keluhan_utama: 'Kontrol rutin, sering merasa pegal di punggung',
+            status_kehamilan: 'Kehamilan tunggal',
+            usia_kehamilan: '28 minggu 3 hari',
+            tinggi_fundus: '26',
+            djj: '140',
+            berat_badan: '',
+            tekanan_darah: '120/80',
+            lila: '25',
+            hemoglobin: '12',
+            letak_janin: 'Kepala',
+            presentasi_janin: 'Kepala',
+            gerakan_janin: 'Aktif',
+            kontraksi: 'Tidak ada',
+            kontraksi_ket: '',
+            edema: 'Tidak ada',
+            varises: 'Tidak ada',
+            tanda_bahaya: 'Tidak ada',
+            hasil_usg: '',
+            status_risiko: 'Tidak berisiko',
+            diagnosa: 'Kehamilan normal, janin dalam kondisi baik.',
+            tindakan_diberikan: ['Pemeriksaan ANC rutin', 'Konseling'],
+            tindakan_lainnya: '',
+            edukasi_diberikan: [
+              'Nutrisi kehamilan',
+              'Tanda bahaya kehamilan',
+              'Aktivitas fisik yang aman',
+              'Persiapan persalinan'
+            ],
+            tanggal_kontrol_berikutnya: (() => {
+              const d = new Date();
+              d.setDate(d.getDate() + 28);
+              return d.toISOString().split('T')[0];
+            })(),
+            kunjungan_berikutnya: 'ANC 2',
+            catatan_nakes: '',
+            lampiran_dokumen: []
+          });
+          setUploadedFiles([]);
+        }
+      } catch (err) {
+        console.warn('Gagal memuat data pemeriksaan pasien:', err);
+      } finally {
+        if (isMounted) {
+          setLoadingKehamilan(false);
+          setLoadingData(false);
+        }
+      }
+    };
+
+    loadData();
+
     return () => {
       isMounted = false;
     };
-  }, [pasien]);
+  }, [pasien, isOpen]);
 
   // Handler toggle checkbox tindakan
   const handleToggleTindakan = (tindakan) => {
@@ -192,29 +353,54 @@ export default function CatatPemeriksaanBidanModal({
           size: f.size,
           type: f.type || 'Dokumen Tambahan',
           url: finalUrl || 'https://kesprimkom.kemkes.go.id/assets/uploads/contents/others/Buku_KIA_2024.pdf',
-          tanggal: formatTanggalIndo(form.tanggal_pemeriksaan),
+          tanggal: formatTanggalIndo(form.tanggal_kunjungan || form.tanggal_pemeriksaan),
           keterangan: form.catatan_tindak_lanjut || form.catatan_nakes || 'Lampiran pemeriksaan bidan'
         });
       }
 
       const payload = {
         ...form,
+        tanggal_pemeriksaan: form.tanggal_kunjungan || form.tanggal_pemeriksaan || new Date().toISOString().split('T')[0],
         tindakan_diberikan: tindakanFinal,
         lampiran_dokumen: formattedDocs,
         pemeriksa: currentUser?.nama || 'Bidan Khansa Fatin, S.Tr.Keb'
       };
 
-      await bukuKiaService.simpanPemeriksaanAncBidan({
-        kehamilanId: kehamilan?.id || null,
-        pesertaId: pasien.id,
-        isDraft,
-        formData: payload,
-        petugasId: currentUser?.petugas_id || currentUser?.id || null
-      });
+      const isIbu = pasien.jenis_peserta === 'Ibu Hamil' || pasien.status_ibu === 'hamil';
+
+      let savedRecord = null;
+      if (isIbu) {
+        savedRecord = await bukuKiaService.simpanPemeriksaanAncBidan({
+          pemeriksaanId: existingPemeriksaanId || form.id || null,
+          kehamilanId: kehamilan?.id || null,
+          pesertaId: pasien.id,
+          isDraft,
+          formData: payload,
+          petugasId: currentUser?.petugas_id || currentUser?.id || null
+        });
+      } else {
+        savedRecord = await bukuKiaService.simpanPertumbuhanAnak({
+          id: existingPemeriksaanId || form.id || null,
+          anak_id: pasien.id,
+          tanggal_ukur: payload.tanggal_pemeriksaan,
+          tanggal_pengukuran: payload.tanggal_pemeriksaan,
+          berat_badan: payload.berat_badan ? parseFloat(payload.berat_badan) : (payload.tinggi_fundus ? parseFloat(payload.tinggi_fundus) : 8.5),
+          tinggi_badan: payload.tinggi_fundus ? parseFloat(payload.tinggi_fundus) : 75,
+          lingkar_lengan_atas: payload.lila ? parseFloat(payload.lila) : 14,
+          status_gizi: payload.status_risiko === 'Berisiko tinggi' ? 'Gizi Kurang' : 'Normal',
+          catatan: payload.diagnosa || payload.keluhan_utama || 'Pemeriksaan rutin balita',
+          dicatat_oleh: currentUser?.petugas_id || currentUser?.id || null,
+          faskes_posyandu: payload.faskes || payload.tempat_pelayanan || 'Puskesmas Manud Jaya'
+        });
+      }
+
+      if (savedRecord?.id) {
+        setExistingPemeriksaanId(savedRecord.id);
+      }
 
       const msg = isDraft
         ? `Draft pemeriksaan ${pasien.nama} berhasil disimpan!`
-        : `Pemeriksaan ${pasien.nama} berhasil dicatat & jadwal kontrol tersinkronisasi!`;
+        : `Data pemeriksaan ${pasien.nama} berhasil disimpan & tersinkronisasi!`;
 
       if (onShowToast) onShowToast(msg, 'success');
       if (onSuccess) {

@@ -569,7 +569,12 @@ export default function DataPesertaPage({
         pasien={selectedPasienForBidan}
         currentUser={currentUser}
         onSuccess={() => {
-          notify('Pemeriksaan berhasil dicatat!', 'success');
+          notify('Data pemeriksaan berhasil disimpan!', 'success');
+          pesertaService.getDaftarPeserta().then((data) => {
+            if (data && data.length > 0) {
+              setListPeserta(data);
+            }
+          });
         }}
         onShowToast={notify}
       />
