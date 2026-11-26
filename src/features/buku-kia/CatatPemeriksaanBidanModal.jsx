@@ -237,7 +237,7 @@ export default function CatatPemeriksaanBidanModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/50 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-4xl my-auto max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-5xl lg:max-w-6xl my-auto max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header Modal */}
         <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
@@ -303,21 +303,32 @@ export default function CatatPemeriksaanBidanModal({
               <span>1. Data Kunjungan</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5">
+              <div className="sm:col-span-1 lg:col-span-3">
                 <label className="block text-[11px] text-slate-600 font-semibold mb-1">Tanggal Kunjungan *</label>
-                <div className="relative">
+                <div className="relative cursor-pointer group">
+                  <div className="w-full px-3 py-2 bg-white border border-slate-200 group-hover:border-rose-300 rounded-xl text-xs font-medium text-slate-800 flex items-center gap-2 transition-colors shadow-2xs">
+                    <Calendar size={15} className="text-slate-500 shrink-0 pointer-events-none" />
+                    <span className="font-semibold text-slate-800">
+                      {form.tanggal_kunjungan ? formatTanggalIndo(form.tanggal_kunjungan) : 'Pilih Tanggal'}
+                    </span>
+                  </div>
                   <input
                     type="date"
                     required
                     value={form.tanggal_kunjungan}
+                    onClick={(e) => {
+                      try {
+                        e.target.showPicker();
+                      } catch (err) {}
+                    }}
                     onChange={(e) => setForm({ ...form, tanggal_kunjungan: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                 </div>
               </div>
 
-              <div>
+              <div className="sm:col-span-1 lg:col-span-4">
                 <label className="block text-[11px] text-slate-600 font-semibold mb-1">Jenis Pelayanan *</label>
                 <select
                   value={form.jenis_pelayanan}
@@ -332,7 +343,7 @@ export default function CatatPemeriksaanBidanModal({
                 </select>
               </div>
 
-              <div>
+              <div className="sm:col-span-1 lg:col-span-2">
                 <label className="block text-[11px] text-slate-600 font-semibold mb-1">Kunjungan ke *</label>
                 <select
                   value={form.kunjungan_ke}
@@ -348,7 +359,7 @@ export default function CatatPemeriksaanBidanModal({
                 </select>
               </div>
 
-              <div>
+              <div className="sm:col-span-1 lg:col-span-3">
                 <label className="block text-[11px] text-slate-600 font-semibold mb-1">Tempat Pelayanan *</label>
                 <select
                   value={form.tempat_pelayanan}

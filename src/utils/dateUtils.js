@@ -24,8 +24,42 @@ export function getTanggalFormatStandar(date = new Date()) {
 }
 
 export function getTanggalFormatSingkat(date = new Date()) {
-  const bulanSingkat = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  const bulanSingkat = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
   return `${date.getDate()} ${bulanSingkat[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+/**
+ * Format tanggal singkat ramah pengguna (contoh: '2025-08-18' -> '18 Ags 2025')
+ */
+export function formatTanggalSingkat(input) {
+  if (!input) return '-';
+  const bulanSingkat = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+  if (typeof input === 'string') {
+    const trimmed = input.trim();
+    if (!trimmed) return '-';
+    if (/[a-zA-Z]/.test(trimmed) && trimmed.includes(' ')) {
+      return trimmed;
+    }
+    const cleanStr = trimmed.split('T')[0];
+    const parts = cleanStr.split('-');
+    if (parts.length === 3) {
+      const year = parts[0];
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      if (month >= 0 && month < 12 && !isNaN(day)) {
+        return `${day} ${bulanSingkat[month]} ${year}`;
+      }
+    }
+    const d = new Date(trimmed);
+    if (!isNaN(d.getTime())) {
+      return `${d.getDate()} ${bulanSingkat[d.getMonth()]} ${d.getFullYear()}`;
+    }
+    return trimmed;
+  }
+  if (input instanceof Date && !isNaN(input.getTime())) {
+    return `${input.getDate()} ${bulanSingkat[input.getMonth()]} ${input.getFullYear()}`;
+  }
+  return String(input);
 }
 
 export function getJadwalBulanDepan() {
