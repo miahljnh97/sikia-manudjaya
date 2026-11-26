@@ -15,45 +15,14 @@ import DinkesFilterBar from './components/DinkesFilterBar';
 import PetaPersebaranWilayah from './components/PetaPersebaranWilayah';
 import { dinkesService } from '../../services/dinkesService';
 
-// Helper pengecekan filter global (Kecamatan, Desa, Posyandu)
+// Helper pengecekan filter global (Kecamatan, Desa, Posyandu, Periode)
 function matchesAreaFilter(item, filters) {
-  if (!item) return false;
-
-  // 1. Filter Posyandu
-  if (filters.posyandu && filters.posyandu !== 'Semua Posyandu') {
-    const targetPos = filters.posyandu.toLowerCase().trim();
-    const itemPos = (item.nama || item.posyandu || '').toLowerCase().trim();
-    if (!itemPos.includes(targetPos) && !targetPos.includes(itemPos)) {
-      return false;
-    }
-  }
-
-  // 2. Filter Desa / Kelurahan
-  if (filters.desa && filters.desa !== 'Semua Desa') {
-    const cleanFilterDesa = filters.desa.replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
-    const cleanItemDesa = (item.desa || '').replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
-    if (!cleanItemDesa.includes(cleanFilterDesa) && !cleanFilterDesa.includes(cleanItemDesa)) {
-      return false;
-    }
-  }
-
-  // 3. Filter Kecamatan
-  if (filters.kecamatan && filters.kecamatan !== 'Semua Kecamatan') {
-    const cleanKec = filters.kecamatan.replace(/^Kecamatan\s+/i, '').toLowerCase().trim();
-    if (item.kecamatan) {
-      const cleanItemKec = item.kecamatan.replace(/^Kecamatan\s+/i, '').toLowerCase().trim();
-      if (!cleanItemKec.includes(cleanKec) && !cleanItemKec.includes(cleanItemKec)) {
-        return false;
-      }
-    }
-  }
-
-  return true;
+  return dinkesService.matchesDinkesFilter(item, filters);
 }
 
 export default function DinkesPersebaranWilayahView({ onShowToast }) {
   const [filters, setFilters] = useState({
-    periode: 'Oktober 2024',
+    periode: 'Semua Periode',
     kecamatan: 'Semua Kecamatan',
     desa: 'Semua Desa',
     posyandu: 'Semua Posyandu'
@@ -83,8 +52,12 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
     return () => { isMounted = false; };
   }, [filters.periode]);
 
-  const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+  const handleFilterChange = (keyOrObject, value) => {
+    if (typeof keyOrObject === 'object' && keyOrObject !== null) {
+      setFilters((prev) => ({ ...prev, ...keyOrObject }));
+    } else {
+      setFilters((prev) => ({ ...prev, [keyOrObject]: value }));
+    }
     setPosyanduPage(1);
   };
 
@@ -102,7 +75,7 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
 
   // Hitung Summary Stat Cards Dinamis
   const summaryStats = useMemo(() => {
-    const isFiltered = (filters.desa && filters.desa !== 'Semua Desa') || (filters.posyandu && filters.posyandu !== 'Semua Posyandu');
+    const isFiltered = (filters.kecamatan && filters.kecamatan !== 'Semua Kecamatan') || (filters.desa && filters.desa !== 'Semua Desa') || (filters.posyandu && filters.posyandu !== 'Semua Posyandu');
     if (!isFiltered) {
       return {
         totalPosyandu: 28,
