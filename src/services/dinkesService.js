@@ -131,49 +131,190 @@ const FALLBACK_REKAP_DESA = [
   { no: 10, desa: 'Sumber Makmur', jumlahPosyandu: 30, totalPasien: 108, totalBayi: 108, totalBalita: 108, totalIbuHamil: 108, totalIbuNifas: 108, trend: '↑ 7%', terakhirDiperbarui: '30/10/2026 21:50', kasusStunting: 9, ibuRisiko: 1, imunisasiRendah: 4 }
 ];
 
+export const WILAYAH_HIERARCHY = {
+  'Kecamatan Manud Jaya': {
+    'Desa Manud Jaya': ['Manud Jaya', 'Bougenville 1'],
+    'Desa Sungai Raya': ['Mawar 2', 'Mawar 3', 'Terang Sari', 'Sungai Raya'],
+    'Desa Tanjung Sari': ['Dahlia 3', 'Dahlia 1'],
+    'Desa Harapan': ['Anggrek 4', 'Anggrek 2']
+  },
+  'Kecamatan Sumberrejo': {
+    'Desa Mulia': ['Cempaka 2', 'Cempaka 1'],
+    'Desa Mandiri Jaya': ['Melati 1', 'Melati 3'],
+    'Desa Soreang Baru': ['Kenanga 5', 'Kenanga 2']
+  },
+  'Kecamatan Melati Jaya': {
+    'Desa Purnama': ['Flamboyan 3', 'Flamboyan 1'],
+    'Desa Melati': ['Kamboja 2', 'Kamboja 1'],
+    'Desa Sumber Makmur': ['Teratai 4', 'Teratai 1']
+  }
+};
+
 export const dinkesService = {
-  // Master Filter Options
-  getFilterOptions() {
+  // Master Hierarchy & Cascading Filter Helper
+  getWilayahHierarchy() {
+    return WILAYAH_HIERARCHY;
+  },
+
+  getKecamatanList() {
+    return ['Semua Kecamatan', ...Object.keys(WILAYAH_HIERARCHY)];
+  },
+
+  getDesaList(selectedKecamatan) {
+    if (selectedKecamatan && selectedKecamatan !== 'Semua Kecamatan' && WILAYAH_HIERARCHY[selectedKecamatan]) {
+      return ['Semua Desa', ...Object.keys(WILAYAH_HIERARCHY[selectedKecamatan])];
+    }
+    const allDesa = [];
+    Object.values(WILAYAH_HIERARCHY).forEach((desas) => {
+      allDesa.push(...Object.keys(desas));
+    });
+    return ['Semua Desa', ...Array.from(new Set(allDesa))];
+  },
+
+  getPosyanduList(selectedKecamatan, selectedDesa) {
+    if (selectedDesa && selectedDesa !== 'Semua Desa') {
+      const cleanTarget = selectedDesa.replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
+      for (const kec of Object.keys(WILAYAH_HIERARCHY)) {
+        for (const [dName, posList] of Object.entries(WILAYAH_HIERARCHY[kec])) {
+          const cleanD = dName.replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
+          if (cleanD === cleanTarget || cleanTarget.includes(cleanD) || cleanD.includes(cleanTarget)) {
+            return ['Semua Posyandu', ...posList];
+          }
+        }
+      }
+    }
+    if (selectedKecamatan && selectedKecamatan !== 'Semua Kecamatan' && WILAYAH_HIERARCHY[selectedKecamatan]) {
+      const posList = [];
+      Object.values(WILAYAH_HIERARCHY[selectedKecamatan]).forEach((list) => {
+        posList.push(...list);
+      });
+      return ['Semua Posyandu', ...Array.from(new Set(posList))];
+    }
+    const allPos = [];
+    Object.values(WILAYAH_HIERARCHY).forEach((desas) => {
+      Object.values(desas).forEach((list) => {
+        allPos.push(...list);
+      });
+    });
+    return ['Semua Posyandu', ...Array.from(new Set(allPos))];
+  },
+
+  getParentKecamatanByDesa(desaName) {
+    if (!desaName || desaName === 'Semua Desa') return 'Semua Kecamatan';
+    const cleanTarget = desaName.replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
+    for (const [kec, desas] of Object.entries(WILAYAH_HIERARCHY)) {
+      for (const dName of Object.keys(desas)) {
+        const cleanD = dName.replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
+        if (cleanD === cleanTarget || cleanTarget.includes(cleanD) || cleanD.includes(cleanTarget)) {
+          return kec;
+        }
+      }
+    }
+    return 'Semua Kecamatan';
+  },
+
+  getParentLocationByPosyandu(posyanduName) {
+    if (!posyanduName || posyanduName === 'Semua Posyandu') return null;
+    const cleanTarget = posyanduName.replace(/^Posyandu\s+/i, '').toLowerCase().trim();
+    for (const [kec, desas] of Object.entries(WILAYAH_HIERARCHY)) {
+      for (const [desa, posList] of Object.entries(desas)) {
+        const found = posList.some((p) => {
+          const cleanP = p.replace(/^Posyandu\s+/i, '').toLowerCase().trim();
+          return cleanP === cleanTarget || cleanTarget.includes(cleanP) || cleanP.includes(cleanTarget);
+        });
+        if (found) {
+          return { kecamatan: kec, desa };
+        }
+      }
+    }
+    return null;
+  },
+
+  getPeriodeOptions() {
+    return ['Semua Periode', 'Oktober 2026', 'September 2026', 'Agustus 2026'];
+  },
+
+  getFilterOptions(currentFilters = {}) {
     return {
-      periode: ['Oktober 2024', 'September 2024', 'Agustus 2024', 'Juli 2024'],
-      kecamatan: ['Semua Kecamatan', 'Kecamatan Manud Jaya', 'Kecamatan Sumberrejo', 'Kecamatan Melati Jaya'],
-      desa: [
-        'Semua Desa',
-        'Desa Manud Jaya',
-        'Desa Sungai Raya',
-        'Desa Tanjung Sari',
-        'Desa Harapan',
-        'Desa Mulia',
-        'Desa Mandiri Jaya',
-        'Desa Soreang Baru',
-        'Desa Purnama',
-        'Desa Melati',
-        'Desa Sumber Makmur'
-      ],
-      posyandu: [
-        'Semua Posyandu',
-        'Manud Jaya',
-        'Mawar 2',
-        'Anggrek 4',
-        'Dahlia 3',
-        'Cempaka 2',
-        'Melati 1',
-        'Kenanga 5',
-        'Flamboyan 3',
-        'Kamboja 2',
-        'Teratai 4',
-        'Bougenville 1',
-        'Mawar 3',
-        'Anggrek 2',
-        'Dahlia 1',
-        'Cempaka 1',
-        'Melati 3',
-        'Kenanga 2',
-        'Flamboyan 1',
-        'Kamboja 1',
-        'Teratai 1'
-      ]
+      periode: this.getPeriodeOptions(),
+      kecamatan: this.getKecamatanList(),
+      desa: this.getDesaList(currentFilters.kecamatan),
+      posyandu: this.getPosyanduList(currentFilters.kecamatan, currentFilters.desa)
     };
+  },
+
+  matchesDinkesFilter(item, filters = {}) {
+    if (!item) return false;
+
+    // 1. Filter Periode
+    if (filters.periode && filters.periode !== 'Semua Periode') {
+      const itemDate = (item.tanggalPeriksa || item.tanggalUkur || item.terakhirDiperbarui || item.tanggal || '').toLowerCase();
+      if (itemDate) {
+        if (filters.periode === 'Oktober 2026') {
+          const matchesOkt2026 = itemDate.includes('2026') && (itemDate.includes('okt') || itemDate.includes('10/') || itemDate.includes('-10-') || itemDate.includes('oktober'));
+          if (!matchesOkt2026) return false;
+        } else if (filters.periode === 'September 2026') {
+          const matchesSep2026 = itemDate.includes('2026') && (itemDate.includes('sep') || itemDate.includes('09/') || itemDate.includes('-09-') || itemDate.includes('september'));
+          if (!matchesSep2026) return false;
+        } else if (filters.periode === 'Agustus 2026') {
+          const matchesAgu2026 = itemDate.includes('2026') && (itemDate.includes('agu') || itemDate.includes('aug') || itemDate.includes('08/') || itemDate.includes('-08-') || itemDate.includes('agustus'));
+          if (!matchesAgu2026) return false;
+        }
+      }
+    }
+
+    // 2. Filter Posyandu
+    if (filters.posyandu && filters.posyandu !== 'Semua Posyandu') {
+      const cleanFilterPos = filters.posyandu.replace(/^Posyandu\s+/i, '').toLowerCase().trim();
+      const cleanItemPos = (item.posyandu || item.nama || '').replace(/^Posyandu\s+/i, '').toLowerCase().trim();
+      if (!cleanItemPos.includes(cleanFilterPos) && !cleanFilterPos.includes(cleanItemPos)) {
+        return false;
+      }
+    }
+
+    // 3. Filter Desa
+    if (filters.desa && filters.desa !== 'Semua Desa') {
+      const cleanFilterDesa = filters.desa.replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
+      let cleanItemDesa = (item.desa || '').replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
+
+      if (!cleanItemDesa) {
+        const parentLoc = this.getParentLocationByPosyandu(item.posyandu || item.nama);
+        if (parentLoc && parentLoc.desa) {
+          cleanItemDesa = parentLoc.desa.replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
+        }
+      }
+
+      if (!cleanItemDesa.includes(cleanFilterDesa) && !cleanFilterDesa.includes(cleanItemDesa)) {
+        return false;
+      }
+    }
+
+    // 4. Filter Kecamatan
+    if (filters.kecamatan && filters.kecamatan !== 'Semua Kecamatan') {
+      const cleanFilterKec = filters.kecamatan.replace(/^Kecamatan\s+/i, '').toLowerCase().trim();
+      let cleanItemKec = (item.kecamatan || '').replace(/^Kecamatan\s+/i, '').toLowerCase().trim();
+
+      if (!cleanItemKec) {
+        if (item.desa) {
+          const parentKec = this.getParentKecamatanByDesa(item.desa);
+          if (parentKec) {
+            cleanItemKec = parentKec.replace(/^Kecamatan\s+/i, '').toLowerCase().trim();
+          }
+        }
+        if (!cleanItemKec) {
+          const parentLoc = this.getParentLocationByPosyandu(item.posyandu || item.nama);
+          if (parentLoc && parentLoc.kecamatan) {
+            cleanItemKec = parentLoc.kecamatan.replace(/^Kecamatan\s+/i, '').toLowerCase().trim();
+          }
+        }
+      }
+
+      if (!cleanItemKec.includes(cleanFilterKec) && !cleanFilterKec.includes(cleanItemKec)) {
+        return false;
+      }
+    }
+
+    return true;
   },
 
   /**

@@ -11,18 +11,10 @@ import {
   TrendingUp,
   MapPin
 } from 'lucide-react';
-import DinkesFilterBar from './components/DinkesFilterBar';
 import PetaPersebaranWilayah from './components/PetaPersebaranWilayah';
 import { dinkesService } from '../../services/dinkesService';
 
 export default function DinkesDashboardView({ onNavigate }) {
-  const [filters, setFilters] = useState({
-    periode: 'Oktober 2024',
-    kecamatan: 'Semua Kecamatan',
-    desa: 'Semua Desa',
-    posyandu: 'Semua Posyandu'
-  });
-
   const [stats, setStats] = useState({
     totalPosyandu: 26,
     totalPosyanduTarget: 28,
@@ -87,7 +79,7 @@ export default function DinkesDashboardView({ onNavigate }) {
     };
     loadAll();
     return () => { isMounted = false; };
-  }, [filters]);
+  }, []);
 
   // Kalkulasi data Donut Chart Imunisasi dinamis terfilter per posyandu
   const imunisasiData = useMemo(() => {
@@ -189,10 +181,6 @@ export default function DinkesDashboardView({ onNavigate }) {
     };
   }, [selectedPosyanduPertumbuhan, allBalitaStunting]);
 
-  const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
-
   const chartTrenList = useMemo(() => {
     if (trenData && trenData.length > 0) return trenData;
     return [
@@ -241,19 +229,15 @@ export default function DinkesDashboardView({ onNavigate }) {
   return (
     <div className="space-y-6">
       {/* ==================================================================== */}
-      {/* 1. Header & Filter Bar                                              */}
+      {/* 1. Header Ringkasan                                                 */}
       {/* ==================================================================== */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-            Rekapitulasi Posyandu
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Ringkasan data kesehatan ibu dan anak di wilayah kerja
-          </p>
-        </div>
-
-        <DinkesFilterBar filters={filters} onFilterChange={handleFilterChange} />
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          Rekapitulasi Posyandu
+        </h1>
+        <p className="text-xs text-slate-500 mt-1">
+          Ringkasan data kesehatan ibu dan anak di wilayah kerja
+        </p>
       </div>
 
       {/* ==================================================================== */}

@@ -14,45 +14,14 @@ import {
 import DinkesFilterBar from './components/DinkesFilterBar';
 import { dinkesService } from '../../services/dinkesService';
 
-// Helper pengecekan filter global (Kecamatan, Desa, Posyandu)
+// Helper pengecekan filter global (Kecamatan, Desa, Posyandu, Periode)
 function matchesAreaFilter(item, filters) {
-  if (!item) return false;
-
-  // 1. Filter Posyandu
-  if (filters.posyandu && filters.posyandu !== 'Semua Posyandu') {
-    const targetPos = filters.posyandu.toLowerCase().trim();
-    const itemPos = (item.posyandu || item.nama || '').toLowerCase().trim();
-    if (!itemPos.includes(targetPos) && !targetPos.includes(itemPos)) {
-      return false;
-    }
-  }
-
-  // 2. Filter Desa / Kelurahan
-  if (filters.desa && filters.desa !== 'Semua Desa') {
-    const cleanFilterDesa = filters.desa.replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
-    const cleanItemDesa = (item.desa || '').replace(/^(Desa|Kelurahan)\s+/i, '').toLowerCase().trim();
-    if (!cleanItemDesa.includes(cleanFilterDesa) && !cleanFilterDesa.includes(cleanItemDesa)) {
-      return false;
-    }
-  }
-
-  // 3. Filter Kecamatan
-  if (filters.kecamatan && filters.kecamatan !== 'Semua Kecamatan') {
-    const cleanKec = filters.kecamatan.replace(/^Kecamatan\s+/i, '').toLowerCase().trim();
-    if (item.kecamatan) {
-      const cleanItemKec = item.kecamatan.replace(/^Kecamatan\s+/i, '').toLowerCase().trim();
-      if (!cleanItemKec.includes(cleanKec) && !cleanItemKec.includes(cleanItemKec)) {
-        return false;
-      }
-    }
-  }
-
-  return true;
+  return dinkesService.matchesDinkesFilter(item, filters);
 }
 
 export default function DinkesPemantauanRisikoView({ onShowToast }) {
   const [filters, setFilters] = useState({
-    periode: 'Oktober 2024',
+    periode: 'Semua Periode',
     kecamatan: 'Semua Kecamatan',
     desa: 'Semua Desa',
     posyandu: 'Semua Posyandu'
@@ -93,8 +62,12 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
     return () => { isMounted = false; };
   }, [filters.periode]);
 
-  const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+  const handleFilterChange = (keyOrObject, value) => {
+    if (typeof keyOrObject === 'object' && keyOrObject !== null) {
+      setFilters((prev) => ({ ...prev, ...keyOrObject }));
+    } else {
+      setFilters((prev) => ({ ...prev, [keyOrObject]: value }));
+    }
     setIbuPage(1);
     setBalitaPage(1);
   };
@@ -243,7 +216,7 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
             </span>
             <div className="flex items-baseline gap-1 mt-1">
               <span className="text-2xl font-bold text-slate-900 leading-tight">
-                {ibuCounts.semua || 18}
+                {ibuCounts.semua ?? 0}
               </span>
               <span className="text-sm text-slate-400 font-medium">/148</span>
             </div>
@@ -260,7 +233,7 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
               Ibu Hamil Perlu Tindak Lanjut
             </span>
             <span className="block text-2xl font-bold text-slate-900 leading-tight mt-1">
-              {ibuCounts.perluTindakLanjut || 12}
+              {ibuCounts.perluTindakLanjut ?? 0}
             </span>
           </div>
         </div>
@@ -276,7 +249,7 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
             </span>
             <div className="flex items-baseline gap-1 mt-1">
               <span className="text-2xl font-bold text-slate-900 leading-tight">
-                {balitaCounts.semua || 32}
+                {balitaCounts.semua ?? 0}
               </span>
               <span className="text-sm text-slate-400 font-medium">/1.023</span>
             </div>
@@ -293,7 +266,7 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
               Balita Perlu Tindak Lanjut
             </span>
             <span className="block text-2xl font-bold text-slate-900 leading-tight mt-1">
-              {balitaCounts.perluTindakLanjut || 12}
+              {balitaCounts.perluTindakLanjut ?? 0}
             </span>
           </div>
         </div>
