@@ -644,10 +644,20 @@ export default function DinkesDashboardView({ onNavigate }) {
         {/* Kolom Kanan: Peta Persebaran Kesehatan Ibu dan Anak Mini (5 Cols) Sesuai Figma */}
         <div className="lg:col-span-5 bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900">Peta Persebaran Kesehatan Ibu dan Anak</h3>
-            <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium px-2.5 py-1 rounded-md border border-slate-200 bg-white">
-              Indikator: Kasus Stunting (Balita)
-            </span>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">Peta Persebaran Kesehatan Ibu dan Anak</h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Indikator: Kasus Stunting (Balita)</p>
+            </div>
+            {onNavigate && (
+              <button
+                type="button"
+                onClick={() => onNavigate('/persebaran-wilayah')}
+                className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-0.5 cursor-pointer transition-colors"
+              >
+                <span>Perbesar</span>
+                <ChevronRight size={14} />
+              </button>
+            )}
           </div>
 
           <div className="flex-1 w-full flex items-center">
