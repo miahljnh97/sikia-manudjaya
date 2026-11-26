@@ -21,6 +21,7 @@ export default function CatatPemeriksaanBidanModal({
   isOpen,
   onClose,
   pasien,
+  kehamilan: kehamilanProp,
   currentUser,
   onSuccess,
   onShowToast
@@ -28,7 +29,7 @@ export default function CatatPemeriksaanBidanModal({
   if (!isOpen || !pasien) return null;
 
   const [loadingKehamilan, setLoadingKehamilan] = useState(false);
-  const [kehamilan, setKehamilan] = useState(null);
+  const [kehamilan, setKehamilan] = useState(kehamilanProp || null);
   const [submitting, setSubmitting] = useState(false);
   const [existingPemeriksaanId, setExistingPemeriksaanId] = useState(null);
   const [loadingData, setLoadingData] = useState(false);
@@ -39,7 +40,7 @@ export default function CatatPemeriksaanBidanModal({
     // Section 1: Data Kunjungan
     tanggal_kunjungan: new Date().toISOString().split('T')[0],
     jenis_pelayanan: pasien.jenis_peserta === 'Ibu Hamil' ? 'Pemeriksaan kehamilan (ANC)' : 'Pemeriksaan Kesehatan Balita',
-    kunjungan_ke: 'ANC 1',
+    kunjungan_ke: 'ANC 4',
     tempat_pelayanan: 'Puskesmas Manud Jaya',
     keluhan_utama: 'Kontrol rutin, sering merasa pegal di punggung',
 
@@ -74,7 +75,7 @@ export default function CatatPemeriksaanBidanModal({
       d.setDate(d.getDate() + 28);
       return d.toISOString().split('T')[0];
     })(),
-    kunjungan_berikutnya: 'ANC 2',
+    kunjungan_berikutnya: 'ANC 5',
 
     // Section 4: Catatan Tambahan & Lampiran
     catatan_nakes: '',
@@ -97,9 +98,12 @@ export default function CatatPemeriksaanBidanModal({
 
         if (isIbu) {
           setLoadingKehamilan(true);
-          let kh = await bukuKiaService.getKehamilanIbu(pasien.id);
+          let kh = kehamilanProp;
           if (!kh?.id) {
-            kh = await bukuKiaService.getOrCreateKehamilanIbu(pasien.id);
+            kh = await bukuKiaService.getKehamilanIbu(pasien.id);
+            if (!kh?.id) {
+              kh = await bukuKiaService.getOrCreateKehamilanIbu(pasien.id);
+            }
           }
           if (isMounted && kh) {
             setKehamilan(kh);
@@ -121,9 +125,9 @@ export default function CatatPemeriksaanBidanModal({
                   id: latest.id,
                   tanggal_kunjungan: latest.tanggal_pemeriksaan || new Date().toISOString().split('T')[0],
                   jenis_pelayanan: latest.jenis_pelayanan || 'Pemeriksaan kehamilan (ANC)',
-                  kunjungan_ke: latest.kunjungan_ke || 'ANC 1',
+                  kunjungan_ke: latest.kunjungan_ke || 'ANC 4',
                   tempat_pelayanan: latest.faskes || latest.tempat_pelayanan || 'Puskesmas Manud Jaya',
-                  keluhan_utama: latest.keluhan_utama || '',
+                  keluhan_utama: latest.keluhan_utama || 'Kontrol rutin, sering merasa pegal di punggung',
                   status_kehamilan: latest.status_kehamilan || 'Kehamilan tunggal',
                   usia_kehamilan: latest.usia_kehamilan || (kh?.usia_kehamilan_minggu ? `${kh.usia_kehamilan_minggu} minggu 3 hari` : '28 minggu 3 hari'),
                   tinggi_fundus: latest.tinggi_fundus != null ? String(latest.tinggi_fundus) : '26',
@@ -155,7 +159,7 @@ export default function CatatPemeriksaanBidanModal({
                     d.setDate(d.getDate() + 28);
                     return d.toISOString().split('T')[0];
                   })(),
-                  kunjungan_berikutnya: latest.kunjungan_berikutnya || 'ANC 2',
+                  kunjungan_berikutnya: latest.kunjungan_berikutnya || 'ANC 5',
                   catatan_nakes: latest.catatan_nakes || '',
                   lampiran_dokumen: Array.isArray(latest.lampiran_dokumen) ? latest.lampiran_dokumen : []
                 });
@@ -207,7 +211,7 @@ export default function CatatPemeriksaanBidanModal({
             id: null,
             tanggal_kunjungan: new Date().toISOString().split('T')[0],
             jenis_pelayanan: isIbu ? 'Pemeriksaan kehamilan (ANC)' : 'Pemeriksaan Kesehatan Balita',
-            kunjungan_ke: 'ANC 1',
+            kunjungan_ke: 'ANC 4',
             tempat_pelayanan: 'Puskesmas Manud Jaya',
             keluhan_utama: 'Kontrol rutin, sering merasa pegal di punggung',
             status_kehamilan: 'Kehamilan tunggal',
@@ -242,7 +246,7 @@ export default function CatatPemeriksaanBidanModal({
               d.setDate(d.getDate() + 28);
               return d.toISOString().split('T')[0];
             })(),
-            kunjungan_berikutnya: 'ANC 2',
+            kunjungan_berikutnya: 'ANC 5',
             catatan_nakes: '',
             lampiran_dokumen: []
           });
@@ -263,7 +267,7 @@ export default function CatatPemeriksaanBidanModal({
     return () => {
       isMounted = false;
     };
-  }, [pasien, isOpen]);
+  }, [pasien, isOpen, kehamilanProp]);
 
   // Handler toggle checkbox tindakan
   const handleToggleTindakan = (tindakan) => {
@@ -423,16 +427,12 @@ export default function CatatPemeriksaanBidanModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/50 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-5xl lg:max-w-6xl my-auto max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      {/* Modal Container: Lebar maks 6xl / 7xl agar semua teks dropdown tidak terpotong (Sesuai Figma) */}
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 w-full max-w-6xl xl:max-w-7xl my-auto max-h-[94vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
-        {/* Header Modal */}
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-pink-50 text-[#E11D48] flex items-center justify-center font-bold">
-              <Stethoscope size={18} />
-            </div>
-            <h2 className="text-base font-bold text-slate-900">Catat Pemeriksaan (Bidan)</h2>
-          </div>
+        {/* Header Modal Sesuai Figma */}
+        <div className="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+          <h2 className="text-base font-bold text-slate-900">Catat Pemeriksaan (Bidan)</h2>
           <button
             type="button"
             onClick={onClose}
@@ -443,21 +443,21 @@ export default function CatatPemeriksaanBidanModal({
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-6 text-xs custom-scrollbar">
+        <div className="px-5 sm:px-6 py-4 overflow-y-auto space-y-4 text-xs custom-scrollbar">
 
-          {/* Banner Informasi Pasien (Latar Merah Muda Sesuai Gambar 3 & 4) */}
-          <div className="bg-[#FFF1F2] border border-[#FFE4E6] rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
+          {/* Banner Informasi Pasien (Latar Merah Muda Lembut Sesuai Desain Figma) */}
+          <div className="bg-[#FFF1F2] rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-0.5">
               <h3 className="text-base font-bold text-slate-900">{pasien.nama}</h3>
-              <p className="text-slate-500 font-medium">NIK {pasien.nik || '3275021213456789'}</p>
-              <p className="text-slate-500 font-medium">
+              <p className="text-slate-500 font-normal text-xs">NIK {pasien.nik || '2939201020209029'}</p>
+              <p className="text-slate-500 font-normal text-xs">
                 {pasien.usia || '27 tahun'} | <span className="font-semibold text-rose-700">{pasien.jenis_peserta || 'Ibu Hamil'}</span>
               </p>
             </div>
 
-            {/* Kolom Informasi Klinis Kehamilan (Hanya jika Ibu Hamil - Sesuai Gambar 4) */}
+            {/* Kolom Informasi Klinis Kehamilan (Hanya jika Ibu Hamil - Sesuai Gambar Figma) */}
             {isIbu && (
-              <div className="grid grid-cols-3 gap-4 sm:gap-6 pt-3 md:pt-0 border-t md:border-t-0 md:border-l border-pink-200/60 md:pl-6 text-left">
+              <div className="grid grid-cols-3 gap-6 sm:gap-10 pt-3 md:pt-0 border-t md:border-t-0 md:border-l border-pink-200/60 md:pl-8 text-left">
                 <div>
                   <span className="block text-[11px] text-slate-500 font-medium">Usia Kehamilan</span>
                   <span className="block text-xs font-bold text-slate-900 mt-0.5">
@@ -483,17 +483,24 @@ export default function CatatPemeriksaanBidanModal({
           {/* =============================================================== */}
           {/* SECTION 1: Data Kunjungan */}
           {/* =============================================================== */}
-          <div className="bg-[#FFF1F2]/40 border border-pink-100 rounded-2xl p-4 sm:p-5 space-y-4">
-            <div className="flex items-center gap-2 text-slate-800 font-bold text-xs pb-1 border-b border-pink-200/50">
-              <span className="w-5 h-5 rounded-full bg-rose-100 text-[#E11D48] flex items-center justify-center text-[10px]">1</span>
+          <div className="space-y-2.5">
+            {/* Strip Judul Berwarna Merah Muda Sesuai Desain Figma */}
+            <div className="bg-[#FFF1F2] px-3.5 py-2 rounded-xl flex items-center gap-2.5 text-slate-800 font-bold text-xs">
+              <div className="w-5 h-5 rounded-md bg-rose-100 text-[#E11D48] flex items-center justify-center shrink-0">
+                <Calendar size={13} className="text-[#E11D48]" />
+              </div>
               <span>1. Data Kunjungan</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5">
+            {/* Field Form Section 1 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 pt-0.5">
+              {/* Tanggal Kunjungan: Kalender di sisi KIRI dan format teks 15 Oktober 2026 */}
               <div className="sm:col-span-1 lg:col-span-3">
-                <label className="block text-[11px] text-slate-600 font-semibold mb-1">Tanggal Kunjungan *</label>
-                <div className="relative cursor-pointer group">
-                  <div className="w-full px-3 py-2 bg-white border border-slate-200 group-hover:border-rose-300 rounded-xl text-xs font-medium text-slate-800 flex items-center gap-2 transition-colors shadow-2xs">
+                <label className="block text-[11px] text-slate-600 font-semibold mb-1">
+                  Tanggal Kunjungan <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative group cursor-pointer">
+                  <div className="w-full px-3 py-2 bg-white border border-slate-200 group-hover:border-rose-300 rounded-xl text-xs font-medium text-slate-800 flex items-center gap-2 transition-colors">
                     <Calendar size={15} className="text-slate-500 shrink-0 pointer-events-none" />
                     <span className="font-semibold text-slate-800">
                       {form.tanggal_kunjungan ? formatTanggalIndo(form.tanggal_kunjungan) : 'Pilih Tanggal'}
@@ -514,12 +521,15 @@ export default function CatatPemeriksaanBidanModal({
                 </div>
               </div>
 
+              {/* Jenis Pelayanan: Lebar cukup agar tidak terpotong (misal: "Pemeriksaan kehamilan (ANC)") */}
               <div className="sm:col-span-1 lg:col-span-4">
-                <label className="block text-[11px] text-slate-600 font-semibold mb-1">Jenis Pelayanan *</label>
+                <label className="block text-[11px] text-slate-600 font-semibold mb-1">
+                  Jenis Pelayanan <span className="text-rose-500">*</span>
+                </label>
                 <select
                   value={form.jenis_pelayanan}
                   onChange={(e) => setForm({ ...form, jenis_pelayanan: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none"
                 >
                   <option value="Pemeriksaan kehamilan (ANC)">Pemeriksaan kehamilan (ANC)</option>
                   <option value="Pemeriksaan Nifas & Menyusui">Pemeriksaan Nifas & Menyusui</option>
@@ -530,11 +540,13 @@ export default function CatatPemeriksaanBidanModal({
               </div>
 
               <div className="sm:col-span-1 lg:col-span-2">
-                <label className="block text-[11px] text-slate-600 font-semibold mb-1">Kunjungan ke *</label>
+                <label className="block text-[11px] text-slate-600 font-semibold mb-1">
+                  Kunjungan ke <span className="text-rose-500">*</span>
+                </label>
                 <select
                   value={form.kunjungan_ke}
                   onChange={(e) => setForm({ ...form, kunjungan_ke: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none"
                 >
                   <option value="ANC 1">ANC 1</option>
                   <option value="ANC 2">ANC 2</option>
@@ -546,11 +558,13 @@ export default function CatatPemeriksaanBidanModal({
               </div>
 
               <div className="sm:col-span-1 lg:col-span-3">
-                <label className="block text-[11px] text-slate-600 font-semibold mb-1">Tempat Pelayanan *</label>
+                <label className="block text-[11px] text-slate-600 font-semibold mb-1">
+                  Tempat Pelayanan <span className="text-rose-500">*</span>
+                </label>
                 <select
                   value={form.tempat_pelayanan}
                   onChange={(e) => setForm({ ...form, tempat_pelayanan: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none"
                 >
                   <option value="Puskesmas Manud Jaya">Puskesmas Manud Jaya</option>
                   <option value="Posyandu Dusun 1">Posyandu Dusun 1</option>
@@ -561,7 +575,8 @@ export default function CatatPemeriksaanBidanModal({
               </div>
             </div>
 
-            <div>
+            {/* Keluhan Utama */}
+            <div className="pt-1">
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-[11px] text-slate-600 font-semibold">Keluhan Utama / Alasan Kunjungan</label>
                 <span className="text-[10px] text-slate-400">{form.keluhan_utama.length}/200</span>
@@ -571,8 +586,8 @@ export default function CatatPemeriksaanBidanModal({
                 rows={2}
                 value={form.keluhan_utama}
                 onChange={(e) => setForm({ ...form, keluhan_utama: e.target.value })}
-                placeholder="Kontrol rutin, sering merasa pegal di punggung..."
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                placeholder="Kontrol rutin, sering merasa pegal di punggung"
+                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none resize-none"
               />
             </div>
           </div>
@@ -580,16 +595,19 @@ export default function CatatPemeriksaanBidanModal({
           {/* =============================================================== */}
           {/* SECTION 2: Pemeriksaan Kehamilan (oleh Bidan) */}
           {/* =============================================================== */}
-          <div className="bg-[#FFF1F2]/40 border border-pink-100 rounded-2xl p-4 sm:p-5 space-y-4">
-            <div className="flex items-center gap-2 text-slate-800 font-bold text-xs pb-1 border-b border-pink-200/50">
-              <span className="w-5 h-5 rounded-full bg-rose-100 text-[#E11D48] flex items-center justify-center text-[10px]">2</span>
+          <div className="space-y-2.5">
+            {/* Strip Judul Berwarna Merah Muda */}
+            <div className="bg-[#FFF1F2] px-3.5 py-2 rounded-xl flex items-center gap-2.5 text-slate-800 font-bold text-xs">
+              <div className="w-5 h-5 rounded-md bg-rose-100 text-[#E11D48] flex items-center justify-center shrink-0">
+                <Stethoscope size={13} className="text-[#E11D48]" />
+              </div>
               <span>2. Pemeriksaan Kehamilan (oleh Bidan)</span>
             </div>
 
-            {/* Status Kehamilan Radio */}
-            <div>
-              <span className="block text-[11px] text-slate-700 font-semibold mb-2">Status Kehamilan</span>
-              <div className="flex items-center gap-5 text-xs">
+            {/* Status Kehamilan Radio Buttons */}
+            <div className="pt-0.5">
+              <span className="block text-[11px] text-slate-700 font-semibold mb-1.5">Status Kehamilan</span>
+              <div className="flex items-center gap-6 text-xs">
                 <label className="inline-flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
@@ -597,9 +615,9 @@ export default function CatatPemeriksaanBidanModal({
                     value="Kehamilan tunggal"
                     checked={form.status_kehamilan === 'Kehamilan tunggal'}
                     onChange={(e) => setForm({ ...form, status_kehamilan: e.target.value })}
-                    className="text-[#E11D48] focus:ring-rose-500 cursor-pointer"
+                    className="accent-[#E11D48] text-[#E11D48] cursor-pointer"
                   />
-                  <span>Kehamilan tunggal</span>
+                  <span className="text-slate-800 font-medium">Kehamilan tunggal</span>
                 </label>
                 <label className="inline-flex items-center gap-2 cursor-pointer">
                   <input
@@ -608,18 +626,18 @@ export default function CatatPemeriksaanBidanModal({
                     value="Kehamilan ganda"
                     checked={form.status_kehamilan === 'Kehamilan ganda'}
                     onChange={(e) => setForm({ ...form, status_kehamilan: e.target.value })}
-                    className="text-[#E11D48] focus:ring-rose-500 cursor-pointer"
+                    className="accent-[#E11D48] text-[#E11D48] cursor-pointer"
                   />
-                  <span>Kehamilan ganda</span>
+                  <span className="text-slate-800 font-medium">Kehamilan ganda</span>
                 </label>
               </div>
             </div>
 
             {/* Grid 3 Kolom Sesuai Figma */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-1">
               
               {/* Kolom 1: Usia Hamil, TFU, DJJ */}
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <div>
                   <label className="block text-[11px] text-slate-600 font-semibold mb-1">Usia Kehamilan (minggu)</label>
                   <input
@@ -627,7 +645,7 @@ export default function CatatPemeriksaanBidanModal({
                     value={form.usia_kehamilan}
                     onChange={(e) => setForm({ ...form, usia_kehamilan: e.target.value })}
                     placeholder="28 minggu 3 hari"
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none"
                   />
                 </div>
 
@@ -638,7 +656,7 @@ export default function CatatPemeriksaanBidanModal({
                     value={form.tinggi_fundus}
                     onChange={(e) => setForm({ ...form, tinggi_fundus: e.target.value })}
                     placeholder="26"
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none"
                   />
                 </div>
 
@@ -649,19 +667,19 @@ export default function CatatPemeriksaanBidanModal({
                     value={form.djj}
                     onChange={(e) => setForm({ ...form, djj: e.target.value })}
                     placeholder="140"
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none"
                   />
                 </div>
               </div>
 
               {/* Kolom 2: Letak Janin, Presentasi, Gerakan, Kontraksi */}
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <div>
                   <label className="block text-[11px] text-slate-600 font-semibold mb-1">Letak Janin</label>
                   <select
                     value={form.letak_janin}
                     onChange={(e) => setForm({ ...form, letak_janin: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none"
                   >
                     <option value="Kepala">Kepala</option>
                     <option value="Sungsang">Sungsang</option>
@@ -675,7 +693,7 @@ export default function CatatPemeriksaanBidanModal({
                   <select
                     value={form.presentasi_janin}
                     onChange={(e) => setForm({ ...form, presentasi_janin: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none"
                   >
                     <option value="Kepala">Kepala</option>
                     <option value="Bokong">Bokong</option>
@@ -686,7 +704,7 @@ export default function CatatPemeriksaanBidanModal({
 
                 <div>
                   <label className="block text-[11px] text-slate-600 font-semibold mb-1">Gerakan Janin</label>
-                  <div className="flex items-center gap-3 pt-1">
+                  <div className="flex items-center gap-4 pt-0.5">
                     {['Aktif', 'Kurang', 'Tidak terasa'].map((g) => (
                       <label key={g} className="inline-flex items-center gap-1.5 cursor-pointer">
                         <input
@@ -695,9 +713,9 @@ export default function CatatPemeriksaanBidanModal({
                           value={g}
                           checked={form.gerakan_janin === g}
                           onChange={(e) => setForm({ ...form, gerakan_janin: e.target.value })}
-                          className="text-[#E11D48] focus:ring-rose-500 cursor-pointer"
+                          className="accent-[#E11D48] text-[#E11D48] cursor-pointer"
                         />
-                        <span className="text-[11px]">{g}</span>
+                        <span className="text-slate-700 text-xs font-medium">{g}</span>
                       </label>
                     ))}
                   </div>
@@ -705,7 +723,7 @@ export default function CatatPemeriksaanBidanModal({
 
                 <div>
                   <label className="block text-[11px] text-slate-600 font-semibold mb-1">Kontraksi</label>
-                  <div className="flex items-center gap-3 pt-1">
+                  <div className="flex items-center gap-4 pt-0.5 mb-1.5">
                     {['Tidak ada', 'Ada', 'Lainnya'].map((k) => (
                       <label key={k} className="inline-flex items-center gap-1.5 cursor-pointer">
                         <input
@@ -714,36 +732,33 @@ export default function CatatPemeriksaanBidanModal({
                           value={k}
                           checked={form.kontraksi === k}
                           onChange={(e) => setForm({ ...form, kontraksi: e.target.value })}
-                          className="text-[#E11D48] focus:ring-rose-500 cursor-pointer"
+                          className="accent-[#E11D48] text-[#E11D48] cursor-pointer"
                         />
-                        <span className="text-[11px]">{k}</span>
+                        <span className="text-slate-700 text-xs font-medium">{k}</span>
                       </label>
                     ))}
                   </div>
-                  {form.kontraksi !== 'Tidak ada' && (
-                    <input
-                      type="text"
-                      value={form.kontraksi_ket}
-                      onChange={(e) => setForm({ ...form, kontraksi_ket: e.target.value })}
-                      placeholder="Frekuensi / keterangan"
-                      className="w-full mt-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                    />
-                  )}
+                  <input
+                    type="text"
+                    value={form.kontraksi_ket}
+                    onChange={(e) => setForm({ ...form, kontraksi_ket: e.target.value })}
+                    placeholder="Frekuensi / keterangan"
+                    className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none"
+                  />
                 </div>
               </div>
 
               {/* Kolom 3: Edema, Varises, Tanda Bahaya, USG */}
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <div>
-                  <span className="block text-[11px] text-slate-700 font-semibold mb-1">Pemeriksaan Lainnya</span>
-                  
+                  <span className="block text-[11px] text-slate-700 font-semibold mb-1.5">Pemeriksaan Lainnya</span>
                   <div className="space-y-2">
                     <div>
-                      <span className="block text-[10px] text-slate-500">Edema</span>
+                      <span className="block text-[10px] text-slate-500 mb-0.5">Edema</span>
                       <select
                         value={form.edema}
                         onChange={(e) => setForm({ ...form, edema: e.target.value })}
-                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none"
                       >
                         <option value="Tidak ada">Tidak ada</option>
                         <option value="Tungkai">Tungkai</option>
@@ -753,11 +768,11 @@ export default function CatatPemeriksaanBidanModal({
                     </div>
 
                     <div>
-                      <span className="block text-[10px] text-slate-500">Varises</span>
+                      <span className="block text-[10px] text-slate-500 mb-0.5">Varises</span>
                       <select
                         value={form.varises}
                         onChange={(e) => setForm({ ...form, varises: e.target.value })}
-                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none"
                       >
                         <option value="Tidak ada">Tidak ada</option>
                         <option value="Ada">Ada</option>
@@ -765,11 +780,11 @@ export default function CatatPemeriksaanBidanModal({
                     </div>
 
                     <div>
-                      <span className="block text-[10px] text-slate-500">Tanda Bahaya</span>
+                      <span className="block text-[10px] text-slate-500 mb-0.5">Tanda Bahaya</span>
                       <select
                         value={form.tanda_bahaya}
                         onChange={(e) => setForm({ ...form, tanda_bahaya: e.target.value })}
-                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none"
                       >
                         <option value="Tidak ada">Tidak ada</option>
                         <option value="Perdarahan">Perdarahan</option>
@@ -782,7 +797,7 @@ export default function CatatPemeriksaanBidanModal({
                   </div>
                 </div>
 
-                <div>
+                <div className="pt-0.5">
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-[11px] text-slate-600 font-semibold">Hasil Pemeriksaan USG (jika ada)</label>
                     <span className="text-[10px] text-slate-400">{form.hasil_usg.length}/200</span>
@@ -793,7 +808,7 @@ export default function CatatPemeriksaanBidanModal({
                     value={form.hasil_usg}
                     onChange={(e) => setForm({ ...form, hasil_usg: e.target.value })}
                     placeholder="Contoh: pertumbuhan janin sesuai usia kehamilan, plasenta normal, air ketuban cukup."
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none resize-none"
                   />
                 </div>
               </div>
@@ -804,43 +819,47 @@ export default function CatatPemeriksaanBidanModal({
           {/* =============================================================== */}
           {/* SECTION 3: Penilaian & Tindakan */}
           {/* =============================================================== */}
-          <div className="bg-[#FFF1F2]/40 border border-pink-100 rounded-2xl p-4 sm:p-5 space-y-4">
-            <div className="flex items-center gap-2 text-slate-800 font-bold text-xs pb-1 border-b border-pink-200/50">
-              <span className="w-5 h-5 rounded-full bg-rose-100 text-[#E11D48] flex items-center justify-center text-[10px]">3</span>
+          <div className="space-y-2.5">
+            {/* Strip Judul Berwarna Merah Muda */}
+            <div className="bg-[#FFF1F2] px-3.5 py-2 rounded-xl flex items-center gap-2.5 text-slate-800 font-bold text-xs">
+              <div className="w-5 h-5 rounded-md bg-rose-100 text-[#E11D48] flex items-center justify-center shrink-0">
+                <ClipboardCheck size={13} className="text-[#E11D48]" />
+              </div>
               <span>3. Penilaian & Tindakan</span>
             </div>
 
-            {/* Status Risiko Kehamilan */}
-            <div className="max-w-xs">
-              <label className="block text-[11px] text-slate-600 font-semibold mb-1">Status Risiko Kehamilan</label>
-              <select
-                value={form.status_risiko}
-                onChange={(e) => setForm({ ...form, status_risiko: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-              >
-                <option value="Tidak berisiko">Tidak berisiko</option>
-                <option value="Risiko Tinggi (KSPR)">Risiko Tinggi (KSPR)</option>
-                <option value="Risiko Sangat Tinggi">Risiko Sangat Tinggi</option>
-              </select>
-            </div>
-
             {/* Grid 3 Kolom: Diagnosa, Tindakan, Edukasi + Kontrol */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-0.5">
               
-              {/* Kolom 1: Diagnosa / Kesimpulan */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[11px] text-slate-600 font-semibold">Diagnosa / Kesimpulan</label>
-                  <span className="text-[10px] text-slate-400">{form.diagnosa.length}/200</span>
+              {/* Kolom 1: Status Risiko Kehamilan & Diagnosa */}
+              <div className="space-y-2.5">
+                <div>
+                  <label className="block text-[11px] text-slate-600 font-semibold mb-1">Status Risiko Kehamilan</label>
+                  <select
+                    value={form.status_risiko}
+                    onChange={(e) => setForm({ ...form, status_risiko: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none"
+                  >
+                    <option value="Tidak berisiko">Tidak berisiko</option>
+                    <option value="Risiko Tinggi (KSPR)">Risiko Tinggi (KSPR)</option>
+                    <option value="Risiko Sangat Tinggi">Risiko Sangat Tinggi</option>
+                  </select>
                 </div>
-                <textarea
-                  maxLength={200}
-                  rows={4}
-                  value={form.diagnosa}
-                  onChange={(e) => setForm({ ...form, diagnosa: e.target.value })}
-                  placeholder="Kehamilan normal, janin dalam kondisi baik."
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
-                />
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] text-slate-600 font-semibold">Diagnosa / Kesimpulan</label>
+                    <span className="text-[10px] text-slate-400">{form.diagnosa.length}/200</span>
+                  </div>
+                  <textarea
+                    maxLength={200}
+                    rows={4}
+                    value={form.diagnosa}
+                    onChange={(e) => setForm({ ...form, diagnosa: e.target.value })}
+                    placeholder="Kehamilan normal, janin dalam kondisi baik."
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none resize-none"
+                  />
+                </div>
               </div>
 
               {/* Kolom 2: Tindakan yang Diberikan */}
@@ -858,40 +877,41 @@ export default function CatatPemeriksaanBidanModal({
                         type="checkbox"
                         checked={form.tindakan_diberikan.includes(tindakan)}
                         onChange={() => handleToggleTindakan(tindakan)}
-                        className="rounded border-slate-300 text-[#E11D48] focus:ring-rose-500 cursor-pointer"
+                        className="rounded border-slate-300 accent-[#E11D48] text-[#E11D48] cursor-pointer"
                       />
-                      <span className="text-slate-700">{tindakan}</span>
+                      <span className="text-slate-700 text-xs font-medium">{tindakan}</span>
                     </label>
                   ))}
 
-                  <div className="pt-1">
-                    <label className="flex items-center gap-2 cursor-pointer mb-1">
+                  {/* Tindakan Lainnya: Checkbox + input teks bersebelahan sesuai Figma */}
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <label className="flex items-center gap-2 cursor-pointer shrink-0">
                       <input
                         type="checkbox"
                         checked={Boolean(form.tindakan_lainnya)}
                         onChange={(e) => setForm({ ...form, tindakan_lainnya: e.target.checked ? 'Pemeriksaan Lab' : '' })}
-                        className="rounded border-slate-300 text-[#E11D48] focus:ring-rose-500 cursor-pointer"
+                        className="rounded border-slate-300 accent-[#E11D48] text-[#E11D48] cursor-pointer"
                       />
-                      <span className="text-slate-700">Lainnya</span>
+                      <span className="text-slate-700 text-xs font-medium">Lainnya</span>
                     </label>
                     <input
                       type="text"
                       value={form.tindakan_lainnya}
                       onChange={(e) => setForm({ ...form, tindakan_lainnya: e.target.value })}
                       placeholder="Contoh: pemeriksaan lab"
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-rose-500"
+                      className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-rose-500"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Kolom 3: Edukasi yang Diberikan & Rencana Kontrol */}
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <div>
                   <label className="block text-[11px] text-slate-600 font-semibold mb-1.5">Edukasi yang Diberikan</label>
                   
                   {/* Pills Edukasi Sesuai Figma */}
-                  <div className="flex flex-wrap gap-1.5 p-2 bg-white border border-slate-200 rounded-xl min-h-[50px]">
+                  <div className="flex flex-wrap gap-1.5 p-2 bg-white border border-slate-200 rounded-xl min-h-[56px] items-center">
                     {form.edukasi_diberikan.map((tag) => (
                       <span
                         key={tag}
@@ -933,15 +953,30 @@ export default function CatatPemeriksaanBidanModal({
                 <div className="pt-1">
                   <span className="block text-[11px] text-slate-700 font-semibold mb-1">Rencana Kunjungan Berikutnya</span>
                   <div className="grid grid-cols-2 gap-2">
+                    {/* Tanggal Kontrol: Ikon kalender di kiri */}
                     <div>
                       <span className="block text-[10px] text-slate-500 mb-0.5">Tanggal Kontrol</span>
-                      <input
-                        type="date"
-                        value={form.tanggal_kontrol_berikutnya}
-                        onChange={(e) => setForm({ ...form, tanggal_kontrol_berikutnya: e.target.value })}
-                        className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-medium outline-none focus:border-rose-500"
-                      />
+                      <div className="relative group cursor-pointer">
+                        <div className="w-full px-2 py-1.5 bg-white border border-slate-200 group-hover:border-rose-300 rounded-lg text-[11px] font-medium text-slate-800 flex items-center gap-1.5 transition-colors">
+                          <Calendar size={13} className="text-slate-500 shrink-0 pointer-events-none" />
+                          <span className="font-semibold text-slate-800 truncate">
+                            {form.tanggal_kontrol_berikutnya ? formatTanggalIndo(form.tanggal_kontrol_berikutnya) : 'Pilih Tanggal'}
+                          </span>
+                        </div>
+                        <input
+                          type="date"
+                          value={form.tanggal_kontrol_berikutnya}
+                          onClick={(e) => {
+                            try {
+                              e.target.showPicker();
+                            } catch (err) {}
+                          }}
+                          onChange={(e) => setForm({ ...form, tanggal_kontrol_berikutnya: e.target.value })}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                      </div>
                     </div>
+
                     <div>
                       <span className="block text-[10px] text-slate-500 mb-0.5">Jenis Kunjungan</span>
                       <select
@@ -967,14 +1002,17 @@ export default function CatatPemeriksaanBidanModal({
           {/* =============================================================== */}
           {/* SECTION 4: Catatan Tambahan (Opsional) */}
           {/* =============================================================== */}
-          <div className="bg-[#FFF1F2]/40 border border-pink-100 rounded-2xl p-4 sm:p-5 space-y-4">
-            <div className="flex items-center gap-2 text-slate-800 font-bold text-xs pb-1 border-b border-pink-200/50">
-              <span className="w-5 h-5 rounded-full bg-rose-100 text-[#E11D48] flex items-center justify-center text-[10px]">4</span>
+          <div className="space-y-2.5">
+            {/* Strip Judul Berwarna Merah Muda */}
+            <div className="bg-[#FFF1F2] px-3.5 py-2 rounded-xl flex items-center gap-2.5 text-slate-800 font-bold text-xs">
+              <div className="w-5 h-5 rounded-md bg-rose-100 text-[#E11D48] flex items-center justify-center shrink-0">
+                <FileText size={13} className="text-[#E11D48]" />
+              </div>
               <span>4. Catatan Tambahan (Opsional)</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-5 pt-0.5">
+              <div className="md:col-span-7">
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-[11px] text-slate-600 font-semibold">Catatan untuk Tenaga Kesehatan Lain</label>
                   <span className="text-[10px] text-slate-400">{form.catatan_nakes.length}/200</span>
@@ -985,15 +1023,15 @@ export default function CatatPemeriksaanBidanModal({
                   value={form.catatan_nakes}
                   onChange={(e) => setForm({ ...form, catatan_nakes: e.target.value })}
                   placeholder="Contoh: rencana pemeriksaan lab, rujukan, atau hal yang perlu dipantau."
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:border-rose-500 outline-none resize-none"
                 />
               </div>
 
-              <div>
-                <label className="block text-[11px] text-slate-600 font-semibold mb-1">Lampiran (Opsional)</label>
+              <div className="md:col-span-5">
+                <label className="block text-[11px] text-slate-600 font-semibold mb-2">Lampiran (Opsional)</label>
                 
-                <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-[#FDA4AF] hover:bg-rose-50 text-[#E11D48] rounded-xl text-xs font-semibold cursor-pointer transition-colors shadow-xs">
-                  <Plus size={14} />
+                <label className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-[#E11D48] hover:bg-rose-50 text-[#E11D48] rounded-xl text-xs font-semibold cursor-pointer transition-colors shadow-2xs">
+                  <Plus size={14} className="text-[#E11D48]" />
                   <span>+ Unggah Dokumen</span>
                   <input
                     type="file"
@@ -1031,12 +1069,12 @@ export default function CatatPemeriksaanBidanModal({
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="p-4 sm:p-5 border-t border-slate-100 flex items-center justify-end gap-2.5 bg-slate-50/50 shrink-0">
+        <div className="px-5 sm:px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-2.5 bg-white shrink-0">
           <button
             type="button"
             disabled={submitting}
             onClick={onClose}
-            className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+            className="px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition-all cursor-pointer"
           >
             Batal
           </button>
@@ -1045,7 +1083,7 @@ export default function CatatPemeriksaanBidanModal({
             type="button"
             disabled={submitting}
             onClick={() => handleSubmit(true)}
-            className="px-4 py-2 border border-[#E11D48] text-[#E11D48] hover:bg-rose-50 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-xs"
+            className="px-5 py-2.5 bg-white border border-[#E11D48] text-[#E11D48] hover:bg-rose-50 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-2xs"
           >
             {submitting ? 'Menyimpan...' : 'Simpan Draft'}
           </button>
@@ -1054,7 +1092,7 @@ export default function CatatPemeriksaanBidanModal({
             type="button"
             disabled={submitting}
             onClick={() => handleSubmit(false)}
-            className="px-5 py-2 bg-[#E11D48] hover:bg-[#BE185D] active:scale-95 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+            className="px-6 py-2.5 bg-[#E11D48] hover:bg-[#BE185D] active:scale-95 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
           >
             {submitting ? 'Menyimpan...' : 'Simpan Pemeriksaan'}
           </button>
