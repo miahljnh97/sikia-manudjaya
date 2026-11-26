@@ -213,7 +213,7 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
       {/* ==================================================================== */}
       {/* 1. Header & Global Filters                                          */}
       {/* ==================================================================== */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Pemantauan Risiko

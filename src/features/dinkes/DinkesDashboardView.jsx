@@ -44,6 +44,7 @@ export default function DinkesDashboardView({ onNavigate }) {
   });
 
   const [trenKategori, setTrenKategori] = useState('Semua');
+  const [hoveredBulan, setHoveredBulan] = useState('Okt');
   const [topPosyanduList, setTopPosyanduList] = useState([]);
   const [ibuRisikoList, setIbuRisikoList] = useState([]);
   const [balitaStuntingList, setBalitaStuntingList] = useState([]);
@@ -148,12 +149,57 @@ export default function DinkesDashboardView({ onNavigate }) {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  const chartTrenList = useMemo(() => {
+    if (trenData && trenData.length > 0) return trenData;
+    return [
+      { bulan: 'Jan', total: 280, balita: 180, ibuHamil: 60, ibuNifas: 40 },
+      { bulan: 'Feb', total: 295, balita: 190, ibuHamil: 65, ibuNifas: 40 },
+      { bulan: 'Mar', total: 310, balita: 200, ibuHamil: 70, ibuNifas: 40 },
+      { bulan: 'Apr', total: 315, balita: 205, ibuHamil: 70, ibuNifas: 40 },
+      { bulan: 'Mei', total: 325, balita: 210, ibuHamil: 72, ibuNifas: 43 },
+      { bulan: 'Jun', total: 330, balita: 212, ibuHamil: 75, ibuNifas: 43 },
+      { bulan: 'Jul', total: 335, balita: 215, ibuHamil: 75, ibuNifas: 45 },
+      { bulan: 'Agu', total: 340, balita: 218, ibuHamil: 74, ibuNifas: 48 },
+      { bulan: 'Sep', total: 345, balita: 215, ibuHamil: 73, ibuNifas: 45 },
+      { bulan: 'Okt', total: 350, balita: 220, ibuHamil: 72, ibuNifas: 42 },
+      { bulan: 'Nov', total: 355, balita: 222, ibuHamil: 75, ibuNifas: 43 },
+      { bulan: 'Des', total: 360, balita: 225, ibuHamil: 76, ibuNifas: 45 }
+    ];
+  }, [trenData]);
+
+  const chartPoints = useMemo(() => {
+    return chartTrenList.map((d, idx) => {
+      const x = 50 + idx * 40;
+      const yTotal = 175 - (d.total / 400) * 155;
+      const yBalita = 175 - (d.balita / 400) * 155;
+      const yIbuHamil = 175 - (d.ibuHamil / 400) * 155;
+      const yIbuNifas = 175 - (d.ibuNifas / 400) * 155;
+      return {
+        ...d,
+        x,
+        yTotal,
+        yBalita,
+        yIbuHamil,
+        yIbuNifas
+      };
+    });
+  }, [chartTrenList]);
+
+  const pathTotal = useMemo(() => chartPoints.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x},${p.yTotal}`).join(' '), [chartPoints]);
+  const pathBalita = useMemo(() => chartPoints.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x},${p.yBalita}`).join(' '), [chartPoints]);
+  const pathIbuHamil = useMemo(() => chartPoints.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x},${p.yIbuHamil}`).join(' '), [chartPoints]);
+  const pathIbuNifas = useMemo(() => chartPoints.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x},${p.yIbuNifas}`).join(' '), [chartPoints]);
+
+  const activePoint = useMemo(() => {
+    return chartPoints.find((p) => p.bulan === hoveredBulan) || chartPoints[9] || chartPoints[0];
+  }, [chartPoints, hoveredBulan]);
+
   return (
     <div className="space-y-6">
       {/* ==================================================================== */}
       {/* 1. Header & Filter Bar                                              */}
       {/* ==================================================================== */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Rekapitulasi Posyandu
@@ -312,6 +358,60 @@ export default function DinkesDashboardView({ onNavigate }) {
 
           {/* SVG Line Chart */}
           <div className="h-64 w-full relative pt-2">
+            {/* Floating Tooltip Card */}
+            {activePoint && (
+              <div
+                className="absolute bg-white/95 backdrop-blur-xs border border-slate-200/90 rounded-2xl p-3 shadow-xl text-xs space-y-1.5 pointer-events-none transition-all duration-150 z-20 min-w-[130px]"
+                style={{
+                  left: `${(activePoint.x / 540) * 100}%`,
+                  top: '10px',
+                  transform: activePoint.x > 360 ? 'translateX(-105%)' : 'translateX(10%)'
+                }}
+              >
+                <div className="font-bold text-slate-800 border-b border-slate-100 pb-1 text-[11px]">
+                  {activePoint.bulan === 'Okt' ? 'Oktober 2024' : `${activePoint.bulan} 2024`}
+                </div>
+                <div className="space-y-1 text-[11px]">
+                  {trenKategori === 'Semua' && (
+                    <div className="flex items-center justify-between gap-4 font-semibold text-slate-700">
+                      <span className="flex items-center gap-1.5 text-slate-600">
+                        <span className="w-2 h-2 rounded-full bg-[#F43F5E]" />
+                        Total
+                      </span>
+                      <span className="font-bold text-slate-900">{activePoint.total}</span>
+                    </div>
+                  )}
+                  {(trenKategori === 'Semua' || trenKategori === 'Balita') && (
+                    <div className="flex items-center justify-between gap-4 font-semibold text-slate-700">
+                      <span className="flex items-center gap-1.5 text-slate-600">
+                        <span className="w-2 h-2 rounded-full bg-[#3B82F6]" />
+                        Balita
+                      </span>
+                      <span className="font-bold text-slate-900">{activePoint.balita}</span>
+                    </div>
+                  )}
+                  {(trenKategori === 'Semua' || trenKategori === 'Ibu Hamil') && (
+                    <div className="flex items-center justify-between gap-4 font-semibold text-slate-700">
+                      <span className="flex items-center gap-1.5 text-slate-600">
+                        <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
+                        Ibu Hamil
+                      </span>
+                      <span className="font-bold text-slate-900">{activePoint.ibuHamil}</span>
+                    </div>
+                  )}
+                  {(trenKategori === 'Semua' || trenKategori === 'Ibu Nifas') && (
+                    <div className="flex items-center justify-between gap-4 font-semibold text-slate-700">
+                      <span className="flex items-center gap-1.5 text-slate-600">
+                        <span className="w-2 h-2 rounded-full bg-[#8B5CF6]" />
+                        Ibu Nifas
+                      </span>
+                      <span className="font-bold text-slate-900">{activePoint.ibuNifas}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <svg viewBox="0 0 540 200" className="w-full h-full overflow-visible">
               {/* Horizontal Grid lines */}
               <line x1="30" y1="20" x2="520" y2="20" stroke="#F1F5F9" strokeDasharray="3 3" />
@@ -327,10 +427,24 @@ export default function DinkesDashboardView({ onNavigate }) {
               <text x="5" y="144" fontSize="9" fill="#94A3B8" fontWeight="500">100</text>
               <text x="15" y="179" fontSize="9" fill="#94A3B8" fontWeight="500">0</text>
 
+              {/* Vertical guideline on active/hovered point */}
+              {activePoint && (
+                <line
+                  x1={activePoint.x}
+                  y1={20}
+                  x2={activePoint.x}
+                  y2={175}
+                  stroke="#CBD5E1"
+                  strokeWidth="1.5"
+                  strokeDasharray="3 3"
+                  className="pointer-events-none"
+                />
+              )}
+
               {/* Line 1: Total Kunjungan (Pink/Rose) */}
-              {(trenKategori === 'Semua') && (
+              {trenKategori === 'Semua' && (
                 <path
-                  d="M 50,75 L 90,68 L 130,62 L 170,60 L 210,55 L 250,52 L 290,50 L 330,48 L 370,45 L 410,40 L 450,38 L 490,35"
+                  d={pathTotal}
                   fill="none"
                   stroke="#F43F5E"
                   strokeWidth="2.5"
@@ -340,7 +454,7 @@ export default function DinkesDashboardView({ onNavigate }) {
               {/* Line 2: Balita (Blue) */}
               {(trenKategori === 'Semua' || trenKategori === 'Balita') && (
                 <path
-                  d="M 50,110 L 90,105 L 130,98 L 170,95 L 210,92 L 250,90 L 290,88 L 330,86 L 370,85 L 410,80 L 450,78 L 490,75"
+                  d={pathBalita}
                   fill="none"
                   stroke="#3B82F6"
                   strokeWidth="2"
@@ -350,7 +464,7 @@ export default function DinkesDashboardView({ onNavigate }) {
               {/* Line 3: Ibu Hamil (Amber) */}
               {(trenKategori === 'Semua' || trenKategori === 'Ibu Hamil') && (
                 <path
-                  d="M 50,148 L 90,145 L 130,140 L 170,140 L 210,138 L 250,137 L 290,137 L 330,138 L 370,139 L 410,140 L 450,138 L 490,137"
+                  d={pathIbuHamil}
                   fill="none"
                   stroke="#F59E0B"
                   strokeWidth="2"
@@ -360,7 +474,7 @@ export default function DinkesDashboardView({ onNavigate }) {
               {/* Line 4: Ibu Nifas (Purple) */}
               {(trenKategori === 'Semua' || trenKategori === 'Ibu Nifas') && (
                 <path
-                  d="M 50,160 L 90,160 L 130,160 L 170,160 L 210,158 L 250,158 L 290,157 L 330,155 L 370,150 L 410,149 L 450,148 L 490,147"
+                  d={pathIbuNifas}
                   fill="none"
                   stroke="#8B5CF6"
                   strokeWidth="1.5"
@@ -368,24 +482,87 @@ export default function DinkesDashboardView({ onNavigate }) {
                 />
               )}
 
-              {/* Data point dot & Tooltip preview on Oktober */}
-              <circle cx="410" cy="40" r="4.5" fill="#F43F5E" stroke="#FFFFFF" strokeWidth="2" />
-              <circle cx="410" cy="80" r="4" fill="#3B82F6" stroke="#FFFFFF" strokeWidth="2" />
-              <circle cx="410" cy="140" r="4" fill="#F59E0B" stroke="#FFFFFF" strokeWidth="2" />
-              <circle cx="410" cy="149" r="3.5" fill="#8B5CF6" stroke="#FFFFFF" strokeWidth="2" />
+              {/* Dots on points - strictly show active category dots! */}
+              {trenKategori === 'Semua' && chartPoints.map((p) => (
+                <circle
+                  key={`dot-total-${p.bulan}`}
+                  cx={p.x}
+                  cy={p.yTotal}
+                  r={p.bulan === activePoint?.bulan ? 5.5 : 3.5}
+                  fill="#F43F5E"
+                  stroke="#FFFFFF"
+                  strokeWidth={p.bulan === activePoint?.bulan ? 2.5 : 1.5}
+                  className="transition-all duration-150 pointer-events-none"
+                />
+              ))}
+
+              {(trenKategori === 'Semua' || trenKategori === 'Balita') && chartPoints.map((p) => (
+                <circle
+                  key={`dot-balita-${p.bulan}`}
+                  cx={p.x}
+                  cy={p.yBalita}
+                  r={p.bulan === activePoint?.bulan ? 5.5 : 3.5}
+                  fill="#3B82F6"
+                  stroke="#FFFFFF"
+                  strokeWidth={p.bulan === activePoint?.bulan ? 2.5 : 1.5}
+                  className="transition-all duration-150 pointer-events-none"
+                />
+              ))}
+
+              {(trenKategori === 'Semua' || trenKategori === 'Ibu Hamil') && chartPoints.map((p) => (
+                <circle
+                  key={`dot-ih-${p.bulan}`}
+                  cx={p.x}
+                  cy={p.yIbuHamil}
+                  r={p.bulan === activePoint?.bulan ? 5.5 : 3.5}
+                  fill="#F59E0B"
+                  stroke="#FFFFFF"
+                  strokeWidth={p.bulan === activePoint?.bulan ? 2.5 : 1.5}
+                  className="transition-all duration-150 pointer-events-none"
+                />
+              ))}
+
+              {(trenKategori === 'Semua' || trenKategori === 'Ibu Nifas') && chartPoints.map((p) => (
+                <circle
+                  key={`dot-in-${p.bulan}`}
+                  cx={p.x}
+                  cy={p.yIbuNifas}
+                  r={p.bulan === activePoint?.bulan ? 5 : 3}
+                  fill="#8B5CF6"
+                  stroke="#FFFFFF"
+                  strokeWidth={p.bulan === activePoint?.bulan ? 2.5 : 1.5}
+                  className="transition-all duration-150 pointer-events-none"
+                />
+              ))}
+
+              {/* Invisible interactive hover rects per month column */}
+              {chartPoints.map((p) => (
+                <rect
+                  key={`hover-col-${p.bulan}`}
+                  x={p.x - 20}
+                  y={10}
+                  width={40}
+                  height={175}
+                  fill="transparent"
+                  className="cursor-pointer"
+                  onMouseEnter={() => setHoveredBulan(p.bulan)}
+                />
+              ))}
 
               {/* X-axis labels */}
-              {['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'].map((m, idx) => (
+              {chartPoints.map((p) => (
                 <text
-                  key={m}
-                  x={50 + idx * 40}
+                  key={p.bulan}
+                  x={p.x}
                   y="192"
                   textAnchor="middle"
                   fontSize="9"
-                  fill="#94A3B8"
-                  fontWeight="600"
+                  fill={p.bulan === activePoint?.bulan ? '#0F172A' : '#94A3B8'}
+                  fontWeight={p.bulan === activePoint?.bulan ? '700' : '600'}
+                  className="cursor-pointer transition-colors"
+                  onMouseEnter={() => setHoveredBulan(p.bulan)}
                 >
-                  {m}
+                  {p.bulan}
                 </text>
               ))}
             </svg>
@@ -393,22 +570,30 @@ export default function DinkesDashboardView({ onNavigate }) {
 
           {/* Chart Legends */}
           <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-slate-600 pt-1 border-t border-slate-100">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#F43F5E]" />
-              <span>Total Kunjungan</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" />
-              <span>Balita</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
-              <span>Ibu Hamil</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#8B5CF6]" />
-              <span>Ibu Nifas</span>
-            </span>
+            {trenKategori === 'Semua' && (
+              <span className="flex items-center gap-1.5 font-medium">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#F43F5E]" />
+                <span>Total Kunjungan</span>
+              </span>
+            )}
+            {(trenKategori === 'Semua' || trenKategori === 'Balita') && (
+              <span className="flex items-center gap-1.5 font-medium">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" />
+                <span>Balita</span>
+              </span>
+            )}
+            {(trenKategori === 'Semua' || trenKategori === 'Ibu Hamil') && (
+              <span className="flex items-center gap-1.5 font-medium">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
+                <span>Ibu Hamil</span>
+              </span>
+            )}
+            {(trenKategori === 'Semua' || trenKategori === 'Ibu Nifas') && (
+              <span className="flex items-center gap-1.5 font-medium">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#8B5CF6]" />
+                <span>Ibu Nifas</span>
+              </span>
+            )}
           </div>
         </div>
 
