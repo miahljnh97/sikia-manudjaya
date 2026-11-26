@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Edit3, Save, X, User, Phone, Mail, MapPin, Calendar, Heart, Trash2, Eye, EyeOff, ChevronDown, Check } from 'lucide-react';
 import { maskNik } from '../../../utils/nikUtils';
+import { formatTanggalSingkat } from '../../../utils/dateUtils';
 import { masterService } from '../../../services/masterService';
 import { resolveTipeId } from '../../../utils/pesertaAdapter';
 
@@ -264,7 +265,7 @@ export default function DetailPeserta({ peserta, onBack, onSave, onDelete, onNav
               />
             ) : (
               <div className="w-full px-4 py-3 bg-slate-50/70 border border-slate-200/80 rounded-xl font-medium text-slate-800">
-                {formData.tanggal_lahir || '-'}
+                {formatTanggalSingkat(formData.tanggal_lahir)}
               </div>
             )}
           </div>

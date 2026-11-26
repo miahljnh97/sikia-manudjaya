@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Search, RotateCcw, Plus, X, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { maskNik } from '../../../utils/nikUtils';
+import { formatTanggalSingkat } from '../../../utils/dateUtils';
 
 export default function PencarianPasien({
   searchQuery,
@@ -306,7 +307,7 @@ export default function PencarianPasien({
                           {item.jenis_peserta}
                         </span>
                       </td>
-                      <td className="py-3.5 px-5 text-slate-500 whitespace-nowrap">{item.tanggal_lahir || item.tgl_lahir || '-'}</td>
+                      <td className="py-3.5 px-5 text-slate-500 whitespace-nowrap">{formatTanggalSingkat(item.tanggal_lahir || item.tgl_lahir)}</td>
                       <td className="py-3.5 px-5 text-slate-600">{item.usia || '-'}</td>
                       <td className="py-3.5 px-5 text-slate-600">{item.alamat || '-'}</td>
                       <td className="py-3.5 px-5">

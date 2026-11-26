@@ -6,7 +6,7 @@ import { pesertaService } from '../../services/pesertaService';
 import { masterService } from '../../services/masterService';
 import { maskNik } from '../../utils/nikUtils';
 import { resolveDusunId, resolveTipeId } from '../../utils/pesertaAdapter';
-import { toISODateString } from '../../utils/dateUtils';
+import { toISODateString, formatTanggalSingkat } from '../../utils/dateUtils';
 import Toast from '../../shared/components/Toast';
 import ConfirmModal from '../../views/components/ConfirmModal';
 import CatatPemeriksaanBidanModal from '../buku-kia/CatatPemeriksaanBidanModal';
@@ -451,7 +451,7 @@ export default function DataPesertaPage({
                         {item.jenis_peserta}
                       </span>
                     </td>
-                    <td className="py-3.5 px-5 text-slate-500 whitespace-nowrap">{item.tanggal_lahir}</td>
+                    <td className="py-3.5 px-5 text-slate-500 whitespace-nowrap">{formatTanggalSingkat(item.tanggal_lahir)}</td>
                     <td className="py-3.5 px-5 text-slate-600">{item.usia}</td>
                     <td className="py-3.5 px-5 text-slate-600">{item.alamat}</td>
                     {!isBidan && (
@@ -569,7 +569,12 @@ export default function DataPesertaPage({
         pasien={selectedPasienForBidan}
         currentUser={currentUser}
         onSuccess={() => {
-          notify('Pemeriksaan berhasil dicatat!', 'success');
+          notify('Data pemeriksaan berhasil disimpan!', 'success');
+          pesertaService.getDaftarPeserta().then((data) => {
+            if (data && data.length > 0) {
+              setListPeserta(data);
+            }
+          });
         }}
         onShowToast={notify}
       />
