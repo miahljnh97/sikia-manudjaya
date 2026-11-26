@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Weight,
-  ShoppingBasket,
   Scale, 
   Ruler, 
   Smile, 
@@ -782,7 +780,7 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
   const latestKms = riwayatPertumbuhan && riwayatPertumbuhan.length > 0 
     ? riwayatPertumbuhan[riwayatPertumbuhan.length - 1] 
-    : { bb: '9,8 Kg', tb: '75 Cm', lk: '46 Cm', status: 'Normal' };
+    : { bb: '9,8 Kg', tb: '50 cm', lk: '46 cm', status: 'Normal' };
 
   useEffect(() => {
     if (!activeAnakId) return;
@@ -1204,12 +1202,14 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {/* 1. BB Terakhir */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-              <div className="text-[#8B5CF6] shrink-0">
-                <Weight size={20} />
-              </div>
+              <img 
+                src="/images/picture/pertumbuhan/berat-badan.png" 
+                alt="Berat Badan Terakhir" 
+                className="w-6 h-6 object-contain shrink-0" 
+              />
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Berat Badan Terakhir</span>
-                <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight block mt-0.5">
                   {latestKms.bb || '9,8 Kg'}
                 </span>
               </div>
@@ -1217,42 +1217,48 @@ export default function KesehatanAnakView({ subFeature = 'Pertumbuhan', user, cu
 
             {/* 2. TB Terakhir */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-              <div className="text-[#8B5CF6] shrink-0">
-                <HeightMeasureIcon size={20} />
-              </div>
+              <img 
+                src="/images/picture/pertumbuhan/tinggi-badan.png" 
+                alt="Tinggi Badan Terakhir" 
+                className="w-6 h-6 object-contain shrink-0" 
+              />
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Tinggi Badan Terakhir</span>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
-                    {(latestKms.tb || '50 cm').toLowerCase()}
-                  </span>
-                  <span className="text-[10px] text-slate-400">Naik 2cm</span>
-                </div>
+                <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight block mt-0.5">
+                  {(latestKms.tb || '50 cm').toLowerCase()}
+                </span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Naik 2cm</span>
               </div>
             </div>
 
             {/* 3. LK Terakhir */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-              <div className="text-[#8B5CF6] shrink-0">
-                <Baby size={20} />
-              </div>
+              <img 
+                src="/images/picture/pertumbuhan/lingkar-kepala.png" 
+                alt="Lingkar Kepala Terakhir" 
+                className="w-6 h-6 object-contain shrink-0" 
+              />
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Lingkar Kepala Terakhir</span>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight">46 cm</span>
-                  <span className="text-[10px] text-slate-400">Naik 1 cm</span>
-                </div>
+                <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight block mt-0.5">
+                  {(latestKms.lk || '46 cm').toLowerCase()}
+                </span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Naik 1 cm</span>
               </div>
             </div>
 
             {/* 4. Status Gizi */}
             <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-              <div className="text-[#8B5CF6] shrink-0">
-                <ShoppingBasket size={20} />
-              </div>
+              <img 
+                src="/images/picture/pertumbuhan/status-gizi.png" 
+                alt="Status Gizi" 
+                className="w-6 h-6 object-contain shrink-0" 
+              />
               <div>
                 <span className="text-[10px] text-slate-400 font-medium block">Status Gizi</span>
-                <span className="text-sm sm:text-base font-bold text-emerald-600 leading-tight">Normal</span>
+                <span className="text-sm sm:text-base font-bold text-emerald-600 leading-tight block mt-0.5">
+                  {latestKms.status || 'Normal'}
+                </span>
               </div>
             </div>
           </div>
