@@ -207,7 +207,8 @@ export const bukuKiaService = {
           .from('pemeriksaan_anc')
           .select('*')
           .eq('kehamilan_id', kehamilanId)
-          .order('tanggal_pemeriksaan', { ascending: true });
+          .order('tanggal_pemeriksaan', { ascending: true })
+          .order('created_at', { ascending: true });
 
         if (!error && data) return data;
       } catch (e) {
@@ -271,6 +272,7 @@ export const bukuKiaService = {
    * Menyimpan ke pemeriksaan_anc dan otomatis sinkronisasi ke kehamilan_ibu, jadwal_peserta, dan kunjungan
    */
   async simpanPemeriksaanAncBidan({
+    pemeriksaanId = null,
     kehamilanId,
     pesertaId,
     isDraft = false,
@@ -286,10 +288,12 @@ export const bukuKiaService = {
       if (kh?.id) activeKehamilanId = kh.id;
     }
 
+    const targetPemeriksaanId = pemeriksaanId || formData?.id || null;
+
     const payload = {
       kehamilan_id: activeKehamilanId,
       kunjungan_ke: formData.kunjungan_ke || 'ANC 1',
-      tanggal_pemeriksaan: formData.tanggal_pemeriksaan || new Date().toISOString().split('T')[0],
+      tanggal_pemeriksaan: formData.tanggal_pemeriksaan || formData.tanggal_kunjungan || new Date().toISOString().split('T')[0],
       usia_kehamilan: formData.usia_kehamilan || '28 Minggu',
       berat_badan: formData.berat_badan ? parseFloat(formData.berat_badan) : null,
       tekanan_darah: formData.tekanan_darah || null,
@@ -328,39 +332,81 @@ export const bukuKiaService = {
     let saved = null;
     if (isSupabaseConfigured && supabase && activeKehamilanId) {
       try {
-        const { data, error } = await supabase
-          .from('pemeriksaan_anc')
-          .insert([payload])
-          .select()
-          .single();
-
-        if (!error && data) {
-          saved = data;
-        } else if (error) {
-          console.warn('Insert pemeriksaan_anc dengan extended column error, mencoba fallback dasar:', error.message);
-          // Fallback ke kolom standar jika skema SQL belum dijalankan di Supabase dashboard
-          const basicPayload = {
-            kehamilan_id: activeKehamilanId,
-            kunjungan_ke: payload.kunjungan_ke,
-            tanggal_pemeriksaan: payload.tanggal_pemeriksaan,
-            usia_kehamilan: payload.usia_kehamilan,
-            tinggi_fundus: payload.tinggi_fundus,
-            djj: payload.djj,
-            pemeriksa: payload.pemeriksa,
-            faskes: payload.faskes,
-            status_hasil: payload.status_risiko || 'Normal',
-            catatan_tindak_lanjut: [
-              payload.diagnosa,
-              payload.keluhan_utama ? `Keluhan: ${payload.keluhan_utama}` : null,
-              payload.catatan_nakes ? `Catatan: ${payload.catatan_nakes}` : null
-            ].filter(Boolean).join(' | ') || 'Kondisi baik'
-          };
-          const { data: bData, error: bErr } = await supabase
+        if (targetPemeriksaanId) {
+          // UPDATE record yang sudah ada
+          const { data, error } = await supabase
             .from('pemeriksaan_anc')
-            .insert([basicPayload])
+            .update(payload)
+            .eq('id', targetPemeriksaanId)
             .select()
             .single();
-          if (!bErr && bData) saved = bData;
+
+          if (!error && data) {
+            saved = data;
+          } else if (error) {
+            console.warn('Update pemeriksaan_anc dengan extended column error, mencoba fallback dasar:', error.message);
+            const basicPayload = {
+              kehamilan_id: activeKehamilanId,
+              kunjungan_ke: payload.kunjungan_ke,
+              tanggal_pemeriksaan: payload.tanggal_pemeriksaan,
+              usia_kehamilan: payload.usia_kehamilan,
+              tinggi_fundus: payload.tinggi_fundus,
+              djj: payload.djj,
+              pemeriksa: payload.pemeriksa,
+              faskes: payload.faskes,
+              status_hasil: payload.status_risiko || 'Normal',
+              catatan_tindak_lanjut: [
+                payload.diagnosa,
+                payload.keluhan_utama ? `Keluhan: ${payload.keluhan_utama}` : null,
+                payload.catatan_nakes ? `Catatan: ${payload.catatan_nakes}` : null
+              ].filter(Boolean).join(' | ') || 'Kondisi baik'
+            };
+            const { data: bData, error: bErr } = await supabase
+              .from('pemeriksaan_anc')
+              .update(basicPayload)
+              .eq('id', targetPemeriksaanId)
+              .select()
+              .single();
+            if (!bErr && bData) saved = bData;
+          }
+        }
+
+        if (!saved) {
+          // INSERT record baru jika belum ada targetPemeriksaanId atau baris tidak ditemukan
+          const { data, error } = await supabase
+            .from('pemeriksaan_anc')
+            .insert([payload])
+            .select()
+            .single();
+
+          if (!error && data) {
+            saved = data;
+          } else if (error) {
+            console.warn('Insert pemeriksaan_anc dengan extended column error, mencoba fallback dasar:', error.message);
+            // Fallback ke kolom standar jika skema SQL belum dijalankan di Supabase dashboard
+            const basicPayload = {
+              kehamilan_id: activeKehamilanId,
+              kunjungan_ke: payload.kunjungan_ke,
+              tanggal_pemeriksaan: payload.tanggal_pemeriksaan,
+              usia_kehamilan: payload.usia_kehamilan,
+              tinggi_fundus: payload.tinggi_fundus,
+              djj: payload.djj,
+              pemeriksa: payload.pemeriksa,
+              faskes: payload.faskes,
+              status_hasil: payload.status_risiko || 'Normal',
+              catatan_tindak_lanjut: [
+                payload.diagnosa,
+                payload.keluhan_utama ? `Keluhan: ${payload.keluhan_utama}` : null,
+                payload.catatan_nakes ? `Catatan: ${payload.catatan_nakes}` : null
+              ].filter(Boolean).join(' | ') || 'Kondisi baik'
+            };
+            const { data: bData, error: bErr } = await supabase
+              .from('pemeriksaan_anc')
+              .insert([basicPayload])
+              .select()
+              .single();
+            if (!bErr && bData) saved = bData;
+          }
         }
       } catch (err) {
         console.warn('Gagal simpan ke Supabase pemeriksaan_anc:', err);
@@ -369,7 +415,7 @@ export const bukuKiaService = {
 
     if (!saved) {
       saved = {
-        id: `anc-${Date.now()}`,
+        id: targetPemeriksaanId || `anc-${Date.now()}`,
         ...payload,
         created_at: new Date().toISOString()
       };
@@ -527,6 +573,39 @@ export const bukuKiaService = {
       ...kmsData,
       created_at: new Date().toISOString()
     };
+  },
+
+  /**
+   * Simpan (Update atau Insert) data pertumbuhan KMS anak
+   */
+  async simpanPertumbuhanAnak(kmsData) {
+    if (!kmsData.anak_id) return null;
+    let saved = null;
+    if (isSupabaseConfigured && supabase) {
+      try {
+        if (kmsData.id) {
+          const { data, error } = await supabase
+            .from('pertumbuhan_anak')
+            .update(kmsData)
+            .eq('id', kmsData.id)
+            .select()
+            .single();
+          if (!error && data) saved = data;
+        }
+        if (!saved) {
+          const { id, ...insertData } = kmsData;
+          const { data, error } = await supabase
+            .from('pertumbuhan_anak')
+            .insert([insertData])
+            .select()
+            .single();
+          if (!error && data) saved = data;
+        }
+      } catch (e) {
+        console.warn('Gagal simpan pertumbuhan anak:', e);
+      }
+    }
+    return saved || { id: Date.now().toString(), ...kmsData };
   },
 
   /**

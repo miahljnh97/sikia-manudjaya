@@ -33,9 +33,9 @@ const FALLBACK_TREN = [
   { bulan: 'Jun', total: 330, balita: 212, ibuHamil: 75, ibuNifas: 43 },
   { bulan: 'Jul', total: 335, balita: 215, ibuHamil: 75, ibuNifas: 45 },
   { bulan: 'Agu', total: 340, balita: 218, ibuHamil: 74, ibuNifas: 48 },
-  { bulan: 'Sep', total: 345, balita: 215, ibuHamil: 73, ibuNifas: 57 },
-  { bulan: 'Okt', total: 350, balita: 220, ibuHamil: 72, ibuNifas: 58 },
-  { bulan: 'Nov', total: 355, balita: 222, ibuHamil: 75, ibuNifas: 58 },
+  { bulan: 'Sep', total: 345, balita: 215, ibuHamil: 73, ibuNifas: 45 },
+  { bulan: 'Okt', total: 350, balita: 220, ibuHamil: 72, ibuNifas: 42 },
+  { bulan: 'Nov', total: 355, balita: 222, ibuHamil: 75, ibuNifas: 43 },
   { bulan: 'Des', total: 360, balita: 225, ibuHamil: 76, ibuNifas: 59 }
 ];
 
