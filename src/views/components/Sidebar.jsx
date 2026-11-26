@@ -91,9 +91,11 @@ export default function Sidebar({
               />
               <div>
                 <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-tight">
-                  SI KIA
+                  {isDinkes ? 'Posyandu' : 'SI KIA'}
                 </h1>
-                <p className="text-[10px] text-slate-400 font-medium">Buku KIA Digital</p>
+                <p className="text-[10px] text-slate-400 font-medium">
+                  {isDinkes ? 'Desa Manud Jaya' : 'Buku KIA Digital'}
+                </p>
               </div>
             </div>
             
@@ -146,7 +148,7 @@ export default function Sidebar({
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
-                  <MapPin size={18} className={activeMenu === 'Persebaran Wilayah' ? 'text-[#2563EB]' : 'text-slate-400'} />
+                  <Users size={18} className={activeMenu === 'Persebaran Wilayah' ? 'text-[#2563EB]' : 'text-slate-400'} />
                   <span>Persebaran Wilayah</span>
                 </button>
               </>

@@ -402,7 +402,7 @@ export default function PetaPersebaranWilayah({
             Kecamatan Karangrejo
           </span>
 
-          {/* Label Nama Desa & Kasus yang Reaktif */}
+          {/* Label Nama Desa Sesuai Gambar 3 Expect */}
           {geographicRegions.map((reg) => {
             const kasus = reg.kasusMap[selectedIndikator] ?? reg.kasusMap['Kasus Stunting (Balita)'];
             return (
@@ -415,9 +415,6 @@ export default function PetaPersebaranWilayah({
               >
                 <span className="text-xs sm:text-[13px] font-bold text-slate-900 tracking-tight drop-shadow-2xs leading-none">
                   {reg.shortName}
-                </span>
-                <span className="text-[10px] font-semibold text-slate-600 mt-0.5">
-                  ({kasus} kasus)
                 </span>
               </div>
             );

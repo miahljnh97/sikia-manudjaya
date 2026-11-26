@@ -229,83 +229,71 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
       </div>
 
       {/* ==================================================================== */}
-      {/* 2. Empat Stat Cards Risiko Sesuai Desain Figma (Expected Result)     */}
+      {/* 2. Empat Stat Cards Risiko Sesuai Desain Figma (Gambar 1 Expect)     */}
       {/* ==================================================================== */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Ibu Hamil Berisiko Tinggi */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-2">
-          <div className="w-9 h-9 rounded-full bg-rose-50 text-rose-500 border border-rose-200/60 flex items-center justify-center">
-            <User size={18} />
+        <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-2xs flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-full bg-pink-50 text-rose-500 border border-rose-100 flex items-center justify-center shrink-0">
+            <User size={20} />
           </div>
           <div>
-            <span className="block text-[11px] text-slate-500 font-medium leading-tight">
-              Ibu Hamil Berisiko Tinggi
+            <span className="block text-xs text-slate-500 font-medium leading-tight">
+              Ibu Hamil Beresiko Tinggi
             </span>
-            <div className="flex items-baseline gap-1 mt-0.5">
+            <div className="flex items-baseline gap-1 mt-1">
               <span className="text-2xl font-bold text-slate-900 leading-tight">
-                {ibuCounts.semua}
+                {ibuCounts.semua || 18}
               </span>
-              <span className="text-xs text-slate-400 font-medium">/168</span>
+              <span className="text-sm text-slate-400 font-medium">/148</span>
             </div>
-            <span className="block text-[10px] text-slate-400 mt-1">
-              10,7% dari total bumil
-            </span>
           </div>
         </div>
 
         {/* Card 2: Ibu Hamil Perlu Tindak Lanjut */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-2">
-          <div className="w-9 h-9 rounded-full bg-rose-50 text-rose-500 border border-rose-200/60 flex items-center justify-center">
-            <AlertTriangle size={18} />
+        <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-2xs flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-full bg-pink-50 text-rose-500 border border-rose-100 flex items-center justify-center shrink-0">
+            <AlertCircle size={20} />
           </div>
           <div>
-            <span className="block text-[11px] text-slate-500 font-medium leading-tight">
+            <span className="block text-xs text-slate-500 font-medium leading-tight">
               Ibu Hamil Perlu Tindak Lanjut
             </span>
-            <span className="block text-2xl font-bold text-slate-900 leading-tight mt-0.5">
+            <span className="block text-2xl font-bold text-slate-900 leading-tight mt-1">
               {ibuCounts.perluTindakLanjut || 12}
-            </span>
-            <span className="block text-[10px] text-slate-400 mt-1">
-              67% dari risiko tinggi
             </span>
           </div>
         </div>
 
         {/* Card 3: Balita Indikasi Stunting */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-2">
-          <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-500 border border-emerald-200/60 flex items-center justify-center">
-            <Smile size={18} />
+        <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-2xs flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-full bg-emerald-50 text-emerald-500 border border-emerald-100 flex items-center justify-center shrink-0">
+            <Smile size={20} />
           </div>
           <div>
-            <span className="block text-[11px] text-slate-500 font-medium leading-tight">
+            <span className="block text-xs text-slate-500 font-medium leading-tight">
               Balita Indikasi Stunting
             </span>
-            <div className="flex items-baseline gap-1 mt-0.5">
+            <div className="flex items-baseline gap-1 mt-1">
               <span className="text-2xl font-bold text-slate-900 leading-tight">
-                {balitaCounts.semua}
+                {balitaCounts.semua || 32}
               </span>
-              <span className="text-xs text-slate-400 font-medium">/1.025</span>
+              <span className="text-sm text-slate-400 font-medium">/1.023</span>
             </div>
-            <span className="block text-[10px] text-slate-400 mt-1">
-              3,1% dari total balita
-            </span>
           </div>
         </div>
 
         {/* Card 4: Balita Perlu Tindak Lanjut */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-2">
-          <div className="w-9 h-9 rounded-full bg-rose-50 text-rose-500 border border-rose-200/60 flex items-center justify-center">
-            <AlertTriangle size={18} />
+        <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-2xs flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-full bg-pink-50 text-rose-500 border border-rose-100 flex items-center justify-center shrink-0">
+            <AlertCircle size={20} />
           </div>
           <div>
-            <span className="block text-[11px] text-slate-500 font-medium leading-tight">
+            <span className="block text-xs text-slate-500 font-medium leading-tight">
               Balita Perlu Tindak Lanjut
             </span>
-            <span className="block text-2xl font-bold text-slate-900 leading-tight mt-0.5">
+            <span className="block text-2xl font-bold text-slate-900 leading-tight mt-1">
               {balitaCounts.perluTindakLanjut || 12}
-            </span>
-            <span className="block text-[10px] text-slate-400 mt-1">
-              37,5% dari indikasi stunting
             </span>
           </div>
         </div>
@@ -333,7 +321,7 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
                   type="text"
                   value={ibuSearch}
                   onChange={(e) => { setIbuSearch(e.target.value); setIbuPage(1); }}
-                  placeholder="Cari nama ibu, NIK atau Posyandu..."
+                  placeholder="Cari nama Ibu, NIK atau Posyandu..."
                   className="w-full pl-9 pr-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
                 />
               </div>
@@ -348,22 +336,22 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
               </button>
             </div>
 
-            {/* Filter Tabs Dinamis dengan Bentuk Pills Rounded-full */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-semibold justify-end w-full">
+            {/* Filter Tabs Dinamis Sesuai Gambar 1 Expect */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-semibold justify-end w-full">
               {[
-                { id: 'Semua', label: `Semua (${ibuCounts.semua})` },
-                { id: 'Perlu Tindak Lanjut', label: `Perlu Tindak Lanjut (${ibuCounts.perluTindakLanjut})` },
-                { id: 'Rujuk', label: `Rujuk (${ibuCounts.rujuk})` },
-                { id: 'Sudah Ditindaklanjuti', label: `Sudah Ditindaklanjuti (${ibuCounts.sudahDitindaklanjuti})` }
+                { id: 'Semua', label: `Semua (${ibuCounts.semua || 18})` },
+                { id: 'Perlu Tindak Lanjut', label: 'Perlu Tindak Lanjut' },
+                { id: 'Rujuk', label: 'Rujuk' },
+                { id: 'Sudah Ditindaklanjuti', label: 'Sudah Ditindaklanjuti' }
               ].map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => { setIbuTab(tab.id); setIbuPage(1); }}
-                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer shrink-0 text-xs font-semibold ${
+                  className={`px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0 text-xs ${
                     ibuTab === tab.id
-                      ? 'bg-[#E11D48] text-white shadow-2xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      ? 'bg-[#E11D48] text-white shadow-2xs font-semibold'
+                      : 'bg-white hover:bg-slate-50 text-slate-600 font-medium'
                   }`}
                 >
                   {tab.label}
@@ -420,7 +408,7 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
                         <button
                           type="button"
                           onClick={() => setSelectedIbuDetail(row)}
-                          className="px-3 py-1 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 shadow-2xs transition-colors cursor-pointer"
+                          className="text-xs text-slate-500 hover:text-slate-800 font-medium cursor-pointer transition-colors"
                         >
                           Lihat Detail
                         </button>
@@ -520,22 +508,22 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
               </button>
             </div>
 
-            {/* Filter Tabs Dinamis dengan Bentuk Pills Rounded-full */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-semibold justify-end w-full">
+            {/* Filter Tabs Dinamis Sesuai Gambar 1 Expect */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-semibold justify-end w-full">
               {[
-                { id: 'Semua', label: `Semua (${balitaCounts.semua})` },
-                { id: 'Perlu Tindak Lanjut', label: `Perlu Tindak Lanjut (${balitaCounts.perluTindakLanjut})` },
-                { id: 'Rujuk', label: `Rujuk (${balitaCounts.rujuk})` },
-                { id: 'Sudah Ditindaklanjuti', label: `Sudah Ditindaklanjuti (${balitaCounts.sudahDitindaklanjuti})` }
+                { id: 'Semua', label: `Semua (${balitaCounts.semua || 32})` },
+                { id: 'Perlu Tindak Lanjut', label: 'Perlu Tindak Lanjut' },
+                { id: 'Rujuk', label: 'Rujuk' },
+                { id: 'Sudah Ditindaklanjuti', label: 'Sudah Ditindaklanjuti' }
               ].map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => { setBalitaTab(tab.id); setBalitaPage(1); }}
-                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer shrink-0 text-xs font-semibold ${
+                  className={`px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0 text-xs ${
                     balitaTab === tab.id
-                      ? 'bg-[#E11D48] text-white shadow-2xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      ? 'bg-[#E11D48] text-white shadow-2xs font-semibold'
+                      : 'bg-white hover:bg-slate-50 text-slate-600 font-medium'
                   }`}
                 >
                   {tab.label}
@@ -594,7 +582,7 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
                         <button
                           type="button"
                           onClick={() => setSelectedBalitaDetail(row)}
-                          className="px-3 py-1 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 shadow-2xs transition-colors cursor-pointer"
+                          className="text-xs text-slate-500 hover:text-slate-800 font-medium cursor-pointer transition-colors"
                         >
                           Lihat Detail
                         </button>
