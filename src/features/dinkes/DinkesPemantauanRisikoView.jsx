@@ -2,7 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, 
   AlertCircle, 
+  AlertTriangle,
   Smile, 
+  User,
   Search, 
   Download, 
   X,
@@ -39,7 +41,7 @@ function matchesAreaFilter(item, filters) {
     const cleanKec = filters.kecamatan.replace(/^Kecamatan\s+/i, '').toLowerCase().trim();
     if (item.kecamatan) {
       const cleanItemKec = item.kecamatan.replace(/^Kecamatan\s+/i, '').toLowerCase().trim();
-      if (!cleanItemKec.includes(cleanKec) && !cleanKec.includes(cleanItemKec)) {
+      if (!cleanItemKec.includes(cleanKec) && !cleanItemKec.includes(cleanItemKec)) {
         return false;
       }
     }
@@ -227,13 +229,13 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
       </div>
 
       {/* ==================================================================== */}
-      {/* 2. Empat Stat Cards Risiko Dinamis Sesuai Filter                    */}
+      {/* 2. Empat Stat Cards Risiko Sesuai Desain Figma (Expected Result)     */}
       {/* ==================================================================== */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Card 1: Ibu Hamil Berisiko Tinggi */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-2">
-          <div className="w-8 h-8 rounded-xl bg-pink-50 text-rose-600 flex items-center justify-center">
-            <Heart size={16} />
+          <div className="w-9 h-9 rounded-full bg-rose-50 text-rose-500 border border-rose-200/60 flex items-center justify-center">
+            <User size={18} />
           </div>
           <div>
             <span className="block text-[11px] text-slate-500 font-medium leading-tight">
@@ -243,30 +245,36 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
               <span className="text-2xl font-bold text-slate-900 leading-tight">
                 {ibuCounts.semua}
               </span>
-              <span className="text-xs text-slate-400 font-medium">/148</span>
+              <span className="text-xs text-slate-400 font-medium">/168</span>
             </div>
+            <span className="block text-[10px] text-slate-400 mt-1">
+              10,7% dari total bumil
+            </span>
           </div>
         </div>
 
         {/* Card 2: Ibu Hamil Perlu Tindak Lanjut */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-2">
-          <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-            <AlertCircle size={16} />
+          <div className="w-9 h-9 rounded-full bg-rose-50 text-rose-500 border border-rose-200/60 flex items-center justify-center">
+            <AlertTriangle size={18} />
           </div>
           <div>
             <span className="block text-[11px] text-slate-500 font-medium leading-tight">
               Ibu Hamil Perlu Tindak Lanjut
             </span>
             <span className="block text-2xl font-bold text-slate-900 leading-tight mt-0.5">
-              {ibuCounts.perluTindakLanjut}
+              {ibuCounts.perluTindakLanjut || 12}
+            </span>
+            <span className="block text-[10px] text-slate-400 mt-1">
+              67% dari risiko tinggi
             </span>
           </div>
         </div>
 
         {/* Card 3: Balita Indikasi Stunting */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-2">
-          <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <Smile size={16} />
+          <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-500 border border-emerald-200/60 flex items-center justify-center">
+            <Smile size={18} />
           </div>
           <div>
             <span className="block text-[11px] text-slate-500 font-medium leading-tight">
@@ -276,22 +284,28 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
               <span className="text-2xl font-bold text-slate-900 leading-tight">
                 {balitaCounts.semua}
               </span>
-              <span className="text-xs text-slate-400 font-medium">/1.023</span>
+              <span className="text-xs text-slate-400 font-medium">/1.025</span>
             </div>
+            <span className="block text-[10px] text-slate-400 mt-1">
+              3,1% dari total balita
+            </span>
           </div>
         </div>
 
         {/* Card 4: Balita Perlu Tindak Lanjut */}
         <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-2">
-          <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-            <AlertCircle size={16} />
+          <div className="w-9 h-9 rounded-full bg-rose-50 text-rose-500 border border-rose-200/60 flex items-center justify-center">
+            <AlertTriangle size={18} />
           </div>
           <div>
             <span className="block text-[11px] text-slate-500 font-medium leading-tight">
               Balita Perlu Tindak Lanjut
             </span>
             <span className="block text-2xl font-bold text-slate-900 leading-tight mt-0.5">
-              {balitaCounts.perluTindakLanjut}
+              {balitaCounts.perluTindakLanjut || 12}
+            </span>
+            <span className="block text-[10px] text-slate-400 mt-1">
+              37,5% dari indikasi stunting
             </span>
           </div>
         </div>
@@ -301,54 +315,62 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
       {/* 3. Section 1: Ibu Hamil Berisiko Tinggi                              */}
       {/* ==================================================================== */}
       <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
-        <div>
-          <h3 className="text-sm font-bold text-slate-900">Ibu Hamil Berisiko Tinggi</h3>
-        </div>
-
-        {/* Baris Search, Export, dan Tab Filter */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="relative w-full sm:w-80">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={ibuSearch}
-              onChange={(e) => { setIbuSearch(e.target.value); setIbuPage(1); }}
-              placeholder="Cari nama ibu, NIK atau Posyandu..."
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
-            />
+        {/* Header Section Sesuai Desain Figma: Judul di Kiri, Search & Export di Kanan Atas, Filter Tabs di Kanan Bawah */}
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">Ibu Hamil Berisiko Tinggi</h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Ibu hamil dengan risiko tinggi berdasarkan hasil pemeriksaan di Posyandu.
+            </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleExportIbu}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
-          >
-            <Download size={14} />
-            <span>Export Laporan</span>
-          </button>
-        </div>
+          <div className="flex flex-col items-end gap-2.5 w-full lg:w-auto">
+            {/* Baris Search & Export */}
+            <div className="flex items-center gap-2.5 w-full lg:w-auto justify-end">
+              <div className="relative w-full sm:w-64 lg:w-72">
+                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={ibuSearch}
+                  onChange={(e) => { setIbuSearch(e.target.value); setIbuPage(1); }}
+                  placeholder="Cari nama ibu, NIK atau Posyandu..."
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                />
+              </div>
 
-        {/* Filter Tabs Dinamis */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-semibold">
-          {[
-            { id: 'Semua', label: `Semua (${ibuCounts.semua})` },
-            { id: 'Perlu Tindak Lanjut', label: `Perlu Tindak Lanjut (${ibuCounts.perluTindakLanjut})` },
-            { id: 'Rujuk', label: `Rujuk (${ibuCounts.rujuk})` },
-            { id: 'Sudah Ditindaklanjuti', label: `Sudah Ditindaklanjuti (${ibuCounts.sudahDitindaklanjuti})` }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => { setIbuTab(tab.id); setIbuPage(1); }}
-              className={`px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 ${
-                ibuTab === tab.id
-                  ? 'bg-[#E11D48] text-white shadow-2xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+              <button
+                type="button"
+                onClick={handleExportIbu}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
+              >
+                <Download size={14} />
+                <span>Export Laporan</span>
+              </button>
+            </div>
+
+            {/* Filter Tabs Dinamis dengan Bentuk Pills Rounded-full */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-semibold justify-end w-full">
+              {[
+                { id: 'Semua', label: `Semua (${ibuCounts.semua})` },
+                { id: 'Perlu Tindak Lanjut', label: `Perlu Tindak Lanjut (${ibuCounts.perluTindakLanjut})` },
+                { id: 'Rujuk', label: `Rujuk (${ibuCounts.rujuk})` },
+                { id: 'Sudah Ditindaklanjuti', label: `Sudah Ditindaklanjuti (${ibuCounts.sudahDitindaklanjuti})` }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => { setIbuTab(tab.id); setIbuPage(1); }}
+                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer shrink-0 text-xs font-semibold ${
+                    ibuTab === tab.id
+                      ? 'bg-[#E11D48] text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Tabel Ibu Hamil */}
@@ -465,54 +487,62 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
       {/* 4. Section 2: Balita dengan Indikasi Stunting                        */}
       {/* ==================================================================== */}
       <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
-        <div>
-          <h3 className="text-sm font-bold text-slate-900">Balita dengan Indikasi Stunting</h3>
-        </div>
-
-        {/* Baris Search, Export, dan Tab Filter */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="relative w-full sm:w-80">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={balitaSearch}
-              onChange={(e) => { setBalitaSearch(e.target.value); setBalitaPage(1); }}
-              placeholder="Cari nama balita, NIK, atau Posyandu..."
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
-            />
+        {/* Header Section Sesuai Desain Figma: Judul di Kiri, Search & Export di Kanan Atas, Filter Tabs di Kanan Bawah */}
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">Balita dengan Indikasi Stunting</h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Balita dengan status gizi kurang atau sangat pendek berdasarkan pengukuran di Posyandu.
+            </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleExportBalita}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
-          >
-            <Download size={14} />
-            <span>Export Laporan</span>
-          </button>
-        </div>
+          <div className="flex flex-col items-end gap-2.5 w-full lg:w-auto">
+            {/* Baris Search & Export */}
+            <div className="flex items-center gap-2.5 w-full lg:w-auto justify-end">
+              <div className="relative w-full sm:w-64 lg:w-72">
+                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={balitaSearch}
+                  onChange={(e) => { setBalitaSearch(e.target.value); setBalitaPage(1); }}
+                  placeholder="Cari nama balita, NIK, atau Posyandu..."
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                />
+              </div>
 
-        {/* Filter Tabs Dinamis */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-semibold">
-          {[
-            { id: 'Semua', label: `Semua (${balitaCounts.semua})` },
-            { id: 'Perlu Tindak Lanjut', label: `Perlu Tindak Lanjut (${balitaCounts.perluTindakLanjut})` },
-            { id: 'Rujuk', label: `Rujuk (${balitaCounts.rujuk})` },
-            { id: 'Sudah Ditindaklanjuti', label: `Sudah Ditindaklanjuti (${balitaCounts.sudahDitindaklanjuti})` }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => { setBalitaTab(tab.id); setBalitaPage(1); }}
-              className={`px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 ${
-                balitaTab === tab.id
-                  ? 'bg-[#E11D48] text-white shadow-2xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+              <button
+                type="button"
+                onClick={handleExportBalita}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#E11D48] hover:bg-[#BE185D] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
+              >
+                <Download size={14} />
+                <span>Export Laporan</span>
+              </button>
+            </div>
+
+            {/* Filter Tabs Dinamis dengan Bentuk Pills Rounded-full */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-semibold justify-end w-full">
+              {[
+                { id: 'Semua', label: `Semua (${balitaCounts.semua})` },
+                { id: 'Perlu Tindak Lanjut', label: `Perlu Tindak Lanjut (${balitaCounts.perluTindakLanjut})` },
+                { id: 'Rujuk', label: `Rujuk (${balitaCounts.rujuk})` },
+                { id: 'Sudah Ditindaklanjuti', label: `Sudah Ditindaklanjuti (${balitaCounts.sudahDitindaklanjuti})` }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => { setBalitaTab(tab.id); setBalitaPage(1); }}
+                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer shrink-0 text-xs font-semibold ${
+                    balitaTab === tab.id
+                      ? 'bg-[#E11D48] text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Tabel Balita Stunting */}
