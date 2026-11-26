@@ -303,9 +303,6 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
       <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
         <div>
           <h3 className="text-sm font-bold text-slate-900">Ibu Hamil Berisiko Tinggi</h3>
-          <p className="text-[11px] text-slate-400">
-            Ibu hamil dengan risiko tinggi berdasarkan hasil pemeriksaan di Posyandu.
-          </p>
         </div>
 
         {/* Baris Search, Export, dan Tab Filter */}
@@ -470,9 +467,6 @@ export default function DinkesPemantauanRisikoView({ onShowToast }) {
       <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
         <div>
           <h3 className="text-sm font-bold text-slate-900">Balita dengan Indikasi Stunting</h3>
-          <p className="text-[11px] text-slate-400">
-            Balita dengan status gizi kurang atau sangat pendek berdasarkan pengukuran di Posyandu.
-          </p>
         </div>
 
         {/* Baris Search, Export, dan Tab Filter */}

@@ -353,7 +353,6 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
       <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
         <div>
           <h3 className="text-sm font-bold text-slate-900">Rekapitulasi Kunjungan</h3>
-          <p className="text-[11px] text-slate-400">Jumlah kunjungan berdasarkan posyandu</p>
         </div>
 
         {/* Search & Export Button */}
@@ -485,7 +484,6 @@ export default function DinkesPersebaranWilayahView({ onShowToast }) {
       <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
         <div>
           <h3 className="text-sm font-bold text-slate-900">Rekapitulasi Kunjungan</h3>
-          <p className="text-[11px] text-slate-400">Jumlah kunjungan berdasarkan desa</p>
         </div>
 
         {/* Search & Export Button */}

@@ -112,6 +112,50 @@ export default function DinkesDashboardView({ onNavigate }) {
     return { total, lengkap, belum, pctLengkap, pctBelum };
   }, [selectedPosyanduImunisasi, stats, rekapPosyanduList]);
 
+  // Kalkulasi geometri & posisi teks di dalam slice Donut Imunisasi
+  const imunisasiGeometry = useMemo(() => {
+    const total = imunisasiData.total || 0;
+    const lengkap = imunisasiData.lengkap || 0;
+    const belum = imunisasiData.belum || 0;
+
+    const pctLengkap = total > 0 ? (lengkap / total) * 100 : 72;
+    const pctBelum = total > 0 ? (belum / total) * 100 : 28;
+
+    const r = 36;
+    const circumference = 2 * Math.PI * r;
+
+    const strokeLengkap = (pctLengkap / 100) * circumference;
+    const strokeBelum = (pctBelum / 100) * circumference;
+
+    const angleLengkap = (pctLengkap / 100) * 360;
+    const angleBelum = 360 - angleLengkap;
+
+    const midAngleGreen = -90 + (angleLengkap / 2);
+    const midAnglePink = -90 + angleLengkap + (angleBelum / 2);
+
+    const radGreen = (midAngleGreen * Math.PI) / 180;
+    const radPink = (midAnglePink * Math.PI) / 180;
+
+    const xGreen = 50 + r * Math.cos(radGreen);
+    const yGreen = 50 + r * Math.sin(radGreen);
+
+    const xPink = 50 + r * Math.cos(radPink);
+    const yPink = 50 + r * Math.sin(radPink);
+
+    return {
+      pctLengkap,
+      pctBelum,
+      r,
+      circumference,
+      strokeLengkap,
+      strokeBelum,
+      xGreen,
+      yGreen,
+      xPink,
+      yPink,
+    };
+  }, [imunisasiData]);
+
   // Kalkulasi data Bar Chart Pertumbuhan (Stunting) dinamis dari tabel balita stunting database
   const stuntingData = useMemo(() => {
     const list = (!selectedPosyanduPertumbuhan || selectedPosyanduPertumbuhan === 'Semua Posyandu')
@@ -629,7 +673,6 @@ export default function DinkesDashboardView({ onNavigate }) {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-slate-900">Top 5 Posyandu dengan Kunjungan Tertinggi</h3>
-            <p className="text-[11px] text-slate-400">Peringkat fasilitas dengan aktivitas pelayanan teraktif</p>
           </div>
           {onNavigate && (
             <button
@@ -691,7 +734,6 @@ export default function DinkesDashboardView({ onNavigate }) {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-900">Ibu Hamil Berisiko Tinggi</h3>
-                <p className="text-[11px] text-slate-400">Ibu hamil dengan faktor risiko klinis yang perlu pemantauan</p>
               </div>
               {onNavigate && (
                 <button
@@ -751,7 +793,6 @@ export default function DinkesDashboardView({ onNavigate }) {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-900">Balita dengan Indikasi Stunting</h3>
-                <p className="text-[11px] text-slate-400">Balita dengan status gizi kurang / sangat pendek</p>
               </div>
               {onNavigate && (
                 <button
@@ -830,32 +871,62 @@ export default function DinkesDashboardView({ onNavigate }) {
             <div className="flex items-center justify-center gap-6 py-3">
               {/* SVG Donut */}
               <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
-                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                  {/* Background Circle (Belum Lengkap) */}
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                  {/* Segmen 1: Sudah Lengkap (Green) */}
                   <circle
-                    cx="18"
-                    cy="18"
-                    r="15.91549430918954"
+                    cx="50"
+                    cy="50"
+                    r={imunisasiGeometry.r}
                     fill="transparent"
-                    stroke="#F43F5E"
-                    strokeWidth="4"
-                    strokeDasharray={`${Math.round(imunisasiData.pctBelum)} ${100 - Math.round(imunisasiData.pctBelum)}`}
+                    stroke="#5FB999"
+                    strokeWidth="18"
+                    strokeDasharray={`${imunisasiGeometry.strokeLengkap} ${imunisasiGeometry.circumference}`}
                     strokeDashoffset="0"
+                    transform="rotate(-90 50 50)"
                   />
-                  {/* Foreground Circle (Sudah Lengkap) */}
+                  {/* Segmen 2: Belum Lengkap (Pink) */}
                   <circle
-                    cx="18"
-                    cy="18"
-                    r="15.91549430918954"
+                    cx="50"
+                    cy="50"
+                    r={imunisasiGeometry.r}
                     fill="transparent"
-                    stroke="#10B981"
-                    strokeWidth="4"
-                    strokeDasharray={`${Math.round(imunisasiData.pctLengkap)} ${100 - Math.round(imunisasiData.pctLengkap)}`}
-                    strokeDashoffset={`-${Math.round(imunisasiData.pctBelum)}`}
+                    stroke="#EC628C"
+                    strokeWidth="18"
+                    strokeDasharray={`${imunisasiGeometry.strokeBelum} ${imunisasiGeometry.circumference}`}
+                    strokeDashoffset={-imunisasiGeometry.strokeLengkap}
+                    transform="rotate(-90 50 50)"
                   />
+                  {/* Label Persentase di Dalam Lengkungan Hijau */}
+                  {imunisasiGeometry.pctLengkap >= 5 && (
+                    <text
+                      x={imunisasiGeometry.xGreen}
+                      y={imunisasiGeometry.yGreen}
+                      fill="#FFFFFF"
+                      fontSize="8"
+                      fontWeight="bold"
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                    >
+                      {Math.round(imunisasiGeometry.pctLengkap)}%
+                    </text>
+                  )}
+                  {/* Label Persentase di Dalam Lengkungan Pink */}
+                  {imunisasiGeometry.pctBelum >= 5 && (
+                    <text
+                      x={imunisasiGeometry.xPink}
+                      y={imunisasiGeometry.yPink}
+                      fill="#FFFFFF"
+                      fontSize="8"
+                      fontWeight="bold"
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                    >
+                      {Math.round(imunisasiGeometry.pctBelum)}%
+                    </text>
+                  )}
                 </svg>
                 {/* Center Number */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
                   <span className="text-2xl font-bold text-slate-900 leading-none">
                     {imunisasiData.total.toLocaleString('id-ID')}
                   </span>
@@ -867,7 +938,7 @@ export default function DinkesDashboardView({ onNavigate }) {
               <div className="space-y-3 text-xs">
                 <div>
                   <div className="flex items-center gap-1.5 font-bold text-slate-800">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#5FB999]" />
                     <span>Sudah Lengkap</span>
                   </div>
                   <span className="text-[11px] text-slate-500 pl-4 block">
@@ -876,7 +947,7 @@ export default function DinkesDashboardView({ onNavigate }) {
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5 font-bold text-slate-800">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#F43F5E]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#EC628C]" />
                     <span>Belum Lengkap</span>
                   </div>
                   <span className="text-[11px] text-slate-500 pl-4 block">
